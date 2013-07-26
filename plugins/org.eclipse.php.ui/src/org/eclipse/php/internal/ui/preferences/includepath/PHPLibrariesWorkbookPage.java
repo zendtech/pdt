@@ -16,9 +16,7 @@ import java.util.*;
 import java.util.Map.Entry;
 
 import org.eclipse.core.resources.*;
-import org.eclipse.core.runtime.CoreException;
-import org.eclipse.core.runtime.IPath;
-import org.eclipse.core.runtime.IProgressMonitor;
+import org.eclipse.core.runtime.*;
 import org.eclipse.dltk.compiler.util.Util;
 import org.eclipse.dltk.core.*;
 import org.eclipse.dltk.core.environment.EnvironmentManager;
@@ -37,6 +35,9 @@ import org.eclipse.jface.viewers.StructuredSelection;
 import org.eclipse.jface.window.Window;
 import org.eclipse.php.internal.core.PHPCorePlugin;
 import org.eclipse.php.internal.core.buildpath.BuildPathUtils;
+import org.eclipse.php.internal.ui.PHPUiPlugin;
+import org.eclipse.php.ui.preferences.IPHPLibraryButtonHandler;
+import org.eclipse.php.ui.wizards.AbstractUserLibraryWizard;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.KeyEvent;
 import org.eclipse.swt.widgets.Composite;
@@ -46,6 +47,9 @@ import org.eclipse.ui.PlatformUI;
 import org.eclipse.ui.preferences.IWorkbenchPreferenceContainer;
 
 public class PHPLibrariesWorkbookPage extends BuildPathBasePage {
+
+	private static final String WIZARD_EXTENSION = "userLibraryWizardContribution";
+
 	private ListDialogField fBuildPathList;
 	private IScriptProject fCurrJProject;
 	private TreeListDialogField fLibrariesList;
@@ -841,11 +845,46 @@ public class PHPLibrariesWorkbookPage extends BuildPathBasePage {
 		return null;
 	}
 
+	private IBuildpathEntry[] chooseContainerEntries(Shell shell,
+			IScriptProject project, IBuildpathEntry[] currentBuildpath) {
+		if (currentBuildpath == null) {
+			throw new IllegalArgumentException();
+		}
+		AbstractUserLibraryWizard customWizard = getCustomUserLibraryWizard();
+		if (customWizard != null) {
+			customWizard.init(project, currentBuildpath);
+			return customWizard.getNewEntries(shell);
+		} else {
+			return BuildpathDialogAccess.chooseContainerEntries(getShell(),
+					fCurrJProject, getRawBuildpath());
+		}
+	}
+
+	private IBuildpathEntry configureContainerEntry(Shell shell,
+			IBuildpathEntry initialEntry, IScriptProject project,
+			IBuildpathEntry[] currentBuildpath) {
+		if (initialEntry == null || currentBuildpath == null) {
+			throw new IllegalArgumentException();
+		}
+		AbstractUserLibraryWizard customWizard = getCustomUserLibraryWizard();
+		IBuildpathEntry[] created = null;
+		if (customWizard != null) {
+			customWizard.init(initialEntry, project, currentBuildpath);
+			created = customWizard.getNewEntries(shell);
+		} else {
+			created = BuildpathDialogAccess.chooseContainerEntries(getShell(),
+					fCurrJProject, getRawBuildpath());
+		}
+		if (created != null && created.length == 1) {
+			return created[0];
+		}
+		return null;
+	}
+
 	private BPListElement[] openContainerSelectionDialog(BPListElement existing) {
 		if (existing == null) {
-			IBuildpathEntry[] created = BuildpathDialogAccess
-					.chooseContainerEntries(getShell(), fCurrJProject,
-							getRawBuildpath());
+			IBuildpathEntry[] created = chooseContainerEntries(getShell(),
+					fCurrJProject, getRawBuildpath());
 			if (created != null) {
 				BPListElement[] res = new BPListElement[created.length];
 				for (int i = 0; i < res.length; i++) {
@@ -856,10 +895,9 @@ public class PHPLibrariesWorkbookPage extends BuildPathBasePage {
 				return res;
 			}
 		} else {
-			IBuildpathEntry created = BuildpathDialogAccess
-					.configureContainerEntry(getShell(), existing
-							.getBuildpathEntry(), fCurrJProject,
-							getRawBuildpath());
+			IBuildpathEntry created = configureContainerEntry(getShell(),
+					existing.getBuildpathEntry(), fCurrJProject,
+					getRawBuildpath());
 			if (created != null) {
 				BPListElement elem = BPListElement.createFromExisting(created,
 						fCurrJProject);
@@ -877,6 +915,25 @@ public class PHPLibrariesWorkbookPage extends BuildPathBasePage {
 			currEntries[i] = curr.getBuildpathEntry();
 		}
 		return currEntries;
+	}
+
+	private AbstractUserLibraryWizard getCustomUserLibraryWizard() {
+		IConfigurationElement[] elements = Platform.getExtensionRegistry()
+				.getConfigurationElementsFor(PHPUiPlugin.ID, WIZARD_EXTENSION);
+		List<IPHPLibraryButtonHandler> result = new ArrayList<IPHPLibraryButtonHandler>();
+		for (IConfigurationElement element : elements) {
+			if ("wizard".equals(element.getName())) { //$NON-NLS-1$
+				try {
+					Object handler = element.createExecutableExtension("class"); //$NON-NLS-1$
+					if (handler instanceof AbstractUserLibraryWizard) {
+						return (AbstractUserLibraryWizard) handler;
+					}
+				} catch (CoreException e) {
+					PHPUiPlugin.log(e);
+				}
+			}
+		}
+		return null;
 	}
 
 	public boolean isEntryKind(int kind) {

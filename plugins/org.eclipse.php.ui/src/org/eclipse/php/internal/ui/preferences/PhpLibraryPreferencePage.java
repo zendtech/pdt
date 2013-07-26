@@ -24,6 +24,7 @@ import org.eclipse.core.runtime.*;
 import org.eclipse.dltk.core.*;
 import org.eclipse.dltk.core.environment.EnvironmentManager;
 import org.eclipse.dltk.core.environment.EnvironmentPathUtils;
+import org.eclipse.dltk.internal.core.UserLibraryBuildpathContainer;
 import org.eclipse.dltk.internal.core.UserLibraryManager;
 import org.eclipse.dltk.internal.ui.IUIConstants;
 import org.eclipse.dltk.internal.ui.wizards.BuildpathAttributeConfiguration;
@@ -321,14 +322,25 @@ public class PhpLibraryPreferencePage extends UserLibraryPreferencePage {
 		ArrayList elements = new ArrayList();
 
 		for (int i = 0; i < names.length; i++) {
-			IPath path = new Path(DLTKCore.USER_LIBRARY_CONTAINER_ID)
-					.append(UserLibraryManager.makeLibraryName(names[i],
-							getLanguageToolkit()));
+			boolean builtIn = DLTKCore.isBuiltInUserLibrary(names[i],
+					getLanguageToolkit());
+			IPath path = null;
+			if (builtIn) {
+				path = new Path(DLTKCore.USER_LIBRARY_CONTAINER_ID)
+						.append(names[i]);
+			} else {
+				path = new Path(DLTKCore.USER_LIBRARY_CONTAINER_ID)
+						.append(UserLibraryManager.makeLibraryName(names[i],
+								getLanguageToolkit()));
+			}
+			String version = DLTKCore.getUserLibraryVersion(names[i],
+					getLanguageToolkit());
+			
 			try {
 				IBuildpathContainer container = DLTKCore.getBuildpathContainer(
 						path, fDummyProject);
 				elements.add(new BPUserLibraryElement(names[i], container,
-						fDummyProject));
+						fDummyProject, version, builtIn));
 			} catch (ModelException e) {
 				DLTKUIPlugin.log(e);
 				// ignore
@@ -587,11 +599,41 @@ public class PhpLibraryPreferencePage extends UserLibraryPreferencePage {
 		dialog.open();
 	}
 
+	protected boolean canAdd(List list) {
+		if (getSingleSelectedLibrary(list) == null) {
+			return false;
+		}
+		Object firstElement = list.get(0);
+		if (firstElement instanceof BPUserLibraryElement) {
+			BPUserLibraryElement lib = (BPUserLibraryElement) firstElement;
+			if (lib.isfBuildIn()) {
+				return false;
+			}
+		}
+		return true;
+	}
+
 	private boolean canEdit(List list) {
 		if (list.size() != 1)
 			return false;
 
 		Object firstElement = list.get(0);
+		if (firstElement instanceof BPUserLibraryElement) {
+			BPUserLibraryElement lib = (BPUserLibraryElement) firstElement;
+			if (lib.isfBuildIn()) {
+				return false;
+			}
+		}
+		if (firstElement instanceof BPListElement) {
+			BPListElement listElem = (BPListElement) firstElement;
+			Object parent = listElem.getParentContainer();
+			if (parent instanceof BPUserLibraryElement) {
+				BPUserLibraryElement lib = (BPUserLibraryElement) parent;
+				if (lib.isfBuildIn()) {
+					return false;
+				}
+			}
+		}
 		if (firstElement instanceof IAccessRule) {
 			return false;
 		}
@@ -635,9 +677,19 @@ public class PhpLibraryPreferencePage extends UserLibraryPreferencePage {
 					}
 				}
 			} else if (elem instanceof BPListElement) {
-				// ok to remove
+				BPListElement listElem = (BPListElement) elem;
+				Object parent = listElem.getParentContainer();
+				if (parent instanceof BPUserLibraryElement) {
+					BPUserLibraryElement lib = (BPUserLibraryElement) parent;
+					if (lib.isfBuildIn()) {
+						return false;
+					}
+				}
 			} else if (elem instanceof BPUserLibraryElement) {
-				// ok to remove
+				BPUserLibraryElement lib = (BPUserLibraryElement) elem;
+				if (lib.isfBuildIn()) {
+					return false;
+				}
 			} else { // unknown element
 				return false;
 			}
