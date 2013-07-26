@@ -29,7 +29,7 @@
 	<extension-point id="quickAssistProcessors" name="%quickAssistProcessorExtensionPoint" schema="schema/quickAssistProcessors.exsd"/>
 	<extension-point id="phpProjectWizard" name="%extension-point.name.13" schema="schema/phpNewProjectWizard.exsd" />
  <extension-point id="libraryButtonHandlers" name="Library Button Handlers" schema="schema/libraryButtonHandlers.exsd"/>
-	
+	<extension-point id="userLibraryWizardContribution" name="Custom User Library Wizaard" schema="schema/userLibraryWizardContribution.exsd"/>
 	
 	<!--PHP formatter processoer registration, for PHP Content:-->
 	<extension point="org.eclipse.wst.sse.core.formatProcessors">
