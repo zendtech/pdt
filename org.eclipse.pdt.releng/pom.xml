@@ -44,7 +44,7 @@
 		<repository>
 			<id>dltk</id>
 			<layout>p2</layout>
-			<url>http://il-studiodev2.zend.net/targets/dltk</url>
+			<url>http://il-studiodev2.zend.net:8080/job/zend-dltk/lastSuccessfulBuild/artifact/org.eclipse.dltk.releng/build/update.site/target/site</url>
 		</repository>
 		<repository>
 			<id>juno</id>
