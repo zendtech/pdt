@@ -18,6 +18,7 @@ import org.eclipse.dltk.ast.expressions.Expression;
 import org.eclipse.dltk.ast.statements.Block;
 import org.eclipse.dltk.ast.statements.Statement;
 import org.eclipse.php.internal.core.compiler.ast.nodes.ClassDeclaration;
+import org.eclipse.php.internal.core.compiler.ast.nodes.NamespaceDeclaration;
 import org.eclipse.php.internal.core.compiler.ast.nodes.TraitUseStatement;
 
 /**
@@ -52,12 +53,13 @@ public abstract class TraitUseStatementASTVisitor extends ASTVisitor {
 	}
 
 	/**
-	 * The visitor must look into a {@link TypeDeclaration} only if it a
-	 * {@link ClassDeclaration}.
+	 * The visitor must look into a {@link TypeDeclaration} only if it is a
+	 * {@link NamespaceDeclaration} or a {@link ClassDeclaration}.
 	 */
 	@Override
 	public boolean visit(TypeDeclaration s) throws Exception {
-		return s instanceof ClassDeclaration;
+		return s instanceof NamespaceDeclaration
+				|| s instanceof ClassDeclaration;
 	}
 
 	/**
