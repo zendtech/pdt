@@ -1,0 +1,11 @@
+--TEST--
+Get a trait declaration inside an anonymous function
+--FILE--
+<?php
+$greet = function($name) {
+	trait MyTrait {}
+};
+$greet('World');
+?>
+--EXPECT--
+MyTrait

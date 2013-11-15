@@ -1,0 +1,10 @@
+--TEST--
+Get a trait declaration inside a for loop
+--FILE--
+<?php
+for (;;) {
+	trait MyTrait {}
+}
+?>
+--EXPECT--
+MyTrait

@@ -1,0 +1,8 @@
+--TEST--
+Get a trait declaration in a simple example
+--FILE--
+<?php
+trait MyTrait {}
+?>
+--EXPECT--
+MyTrait

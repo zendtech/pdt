@@ -1,0 +1,13 @@
+--TEST--
+Get trait declarations inside a try-catch block
+--FILE--
+<?php
+try {
+	trait MyTrait {}
+} catch (Exception $e) {
+	trait MyTrait2 {}
+}
+?>
+--EXPECT--
+MyTrait
+MyTrait2

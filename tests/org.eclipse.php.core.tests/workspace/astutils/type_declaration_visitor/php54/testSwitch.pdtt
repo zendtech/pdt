@@ -1,0 +1,16 @@
+--TEST--
+Get trait declarations inside a switch block
+--FILE--
+<?php
+$i = 0;
+switch ($i) {
+    case 0:
+		trait MyTrait {}
+        break;
+    default:
+		trait MyTrait2 {}
+}
+?>
+--EXPECT--
+MyTrait
+MyTrait2

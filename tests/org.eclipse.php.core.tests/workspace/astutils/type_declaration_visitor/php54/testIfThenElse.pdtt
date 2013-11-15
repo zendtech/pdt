@@ -1,0 +1,17 @@
+--TEST--
+Get trait declarations inside an if-then-else block
+--FILE--
+<?php
+$i = 0;
+if ($i = 0) {
+	trait MyTrait {}
+} elseif ($i = 1) {
+	trait MyTrait2 {}
+} else {
+	trait MyTrait3 {}
+}
+?>
+--EXPECT--
+MyTrait
+MyTrait2
+MyTrait3

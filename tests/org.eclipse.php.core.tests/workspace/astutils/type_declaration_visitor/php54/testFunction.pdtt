@@ -1,0 +1,10 @@
+--TEST--
+Get a trait declaration inside a function
+--FILE--
+<?php
+function foo() {
+	trait MyTrait {}
+}
+?>
+--EXPECT--
+MyTrait

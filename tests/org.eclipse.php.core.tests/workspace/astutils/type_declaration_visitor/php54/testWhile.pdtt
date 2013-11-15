@@ -1,0 +1,10 @@
+--TEST--
+Get a trait declaration inside a while loop
+--FILE--
+<?php
+while (true) {
+	trait MyTrait {}
+}
+?>
+--EXPECT--
+MyTrait
