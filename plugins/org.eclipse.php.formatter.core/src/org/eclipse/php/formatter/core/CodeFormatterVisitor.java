@@ -204,8 +204,7 @@ public class CodeFormatterVisitor extends AbstractVisitor implements
 	// insert chars to the buffer except space
 	private void appendToBuffer(Object obj) {
 		isPrevSpace = false;
-		if (obj == null)
-			return;
+		if (obj == null) return;
 		replaceBuffer.append(obj);
 		if (!lineSeparator.equals(obj)) {
 			lineWidth += obj.toString().length();
