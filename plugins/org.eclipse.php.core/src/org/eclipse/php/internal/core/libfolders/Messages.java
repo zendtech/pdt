@@ -16,7 +16,7 @@ import org.eclipse.osgi.util.NLS;
  * @author Kaloyan Raev
  */
 public class Messages extends NLS {
-	private static final String BUNDLE_NAME = "org.eclipse.php.core.libfolders.messages"; //$NON-NLS-1$
+	private static final String BUNDLE_NAME = "org.eclipse.php.internal.core.libfolders.messages"; //$NON-NLS-1$
 	public static String AutoDetectLibraryFolderListener_JobName;
 	static {
 		// initialize resource bundle
