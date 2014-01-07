@@ -8,7 +8,7 @@
  * Contributors:
  *     Zend Technologies - initial API and implementation
  *******************************************************************************/
-package org.eclipse.php.internal.core.refactoring;
+package org.eclipse.php.core.libfolders;
 
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IProgressMonitor;
@@ -17,28 +17,35 @@ import org.eclipse.dltk.core.IModelElement;
 import org.eclipse.ltk.core.refactoring.Change;
 import org.eclipse.ltk.core.refactoring.RefactoringStatus;
 import org.eclipse.osgi.util.NLS;
-import org.eclipse.php.core.libfolders.LibraryFolderManager;
 
 /**
  * A refactoring change that updates the WTP Validation Framework when a library
- * folder is renamed.
+ * folder is renamed or moved.
  * 
  * @author Kaloyan Raev
  */
 public class RenameLibraryFolderChange extends Change {
 
-	private IModelElement fOldElement;
+	private IModelElement fElement;
 	private IModelElement fNewElement;
 
-	public RenameLibraryFolderChange(IModelElement oldElement,
+	/**
+	 * Creates the change.
+	 * 
+	 * @param element
+	 *            the model element of the library folder to be renamed or moved
+	 * @param newElement
+	 *            the model element of the renamed/moved library folder
+	 */
+	public RenameLibraryFolderChange(IModelElement element,
 			IModelElement newElement) {
-		fOldElement = oldElement;
+		fElement = element;
 		fNewElement = newElement;
 	}
 
 	@Override
 	public Object getModifiedElement() {
-		return fOldElement;
+		return fElement;
 	}
 
 	@Override
@@ -61,10 +68,10 @@ public class RenameLibraryFolderChange extends Change {
 	public Change perform(IProgressMonitor monitor) throws CoreException {
 		// update the WTP Validation Framework for the renamed folder
 		LibraryFolderManager lfm = LibraryFolderManager.getInstance();
-		lfm.enableValidation(fOldElement);
+		lfm.enableValidation(fElement);
 		lfm.disableValidation(fNewElement);
 
-		return new RenameLibraryFolderChange(fNewElement, fOldElement);
+		return new RenameLibraryFolderChange(fNewElement, fElement);
 	}
 
 }
