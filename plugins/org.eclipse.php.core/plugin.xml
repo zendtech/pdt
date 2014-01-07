@@ -400,7 +400,7 @@
    <extension
          point="org.eclipse.ltk.core.refactoring.renameParticipants">
       <renameParticipant
-            class="org.eclipse.php.internal.core.refactoring.LibraryFolderRenameParticipant"
+            class="org.eclipse.php.internal.core.libfolders.LibraryFolderRenameParticipant"
             name="%libraryFolderRenameParticipant.name"
             id="org.eclipse.php.core.refactoring.libraryFolderRename"> 
          <enablement>

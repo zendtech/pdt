@@ -594,7 +594,6 @@ Export-Package: org.eclipse.php.core.codeassist,
    org.eclipse.php.ui,
    org.eclipse.php.ui.performance.tests,
    org.eclipse.php.ui.tests",
- org.eclipse.php.internal.core.refactoring,
  org.eclipse.php.internal.core.search;
   x-friends:="org.eclipse.php.core.performance.tests,
    org.eclipse.php.core.tests,

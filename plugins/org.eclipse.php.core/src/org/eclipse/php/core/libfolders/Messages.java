@@ -8,7 +8,7 @@
  * Contributors:
  *     Zend Technologies - initial API and implementation
  *******************************************************************************/
-package org.eclipse.php.internal.core.refactoring;
+package org.eclipse.php.core.libfolders;
 
 import org.eclipse.osgi.util.NLS;
 
@@ -16,7 +16,7 @@ import org.eclipse.osgi.util.NLS;
  * @author Kaloyan Raev
  */
 public class Messages extends NLS {
-	private static final String BUNDLE_NAME = "org.eclipse.php.internal.core.refactoring.messages"; //$NON-NLS-1$
+	private static final String BUNDLE_NAME = "org.eclipse.php.core.libfolders.messages"; //$NON-NLS-1$
 	public static String RenameLibraryFolderChange_name;
 	static {
 		// initialize resource bundle

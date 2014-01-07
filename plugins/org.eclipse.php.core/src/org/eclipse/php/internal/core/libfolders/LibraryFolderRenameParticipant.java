@@ -8,7 +8,7 @@
  * Contributors:
  *     Zend Technologies - initial API and implementation
  *******************************************************************************/
-package org.eclipse.php.internal.core.refactoring;
+package org.eclipse.php.internal.core.libfolders;
 
 import org.eclipse.core.resources.IProject;
 import org.eclipse.core.runtime.CoreException;
@@ -21,6 +21,7 @@ import org.eclipse.ltk.core.refactoring.RefactoringStatus;
 import org.eclipse.ltk.core.refactoring.participants.CheckConditionsContext;
 import org.eclipse.ltk.core.refactoring.participants.RenameParticipant;
 import org.eclipse.php.core.libfolders.LibraryFolderManager;
+import org.eclipse.php.core.libfolders.RenameLibraryFolderChange;
 
 /**
  * A rename participant that watches if a topmost library folder is renamed.
