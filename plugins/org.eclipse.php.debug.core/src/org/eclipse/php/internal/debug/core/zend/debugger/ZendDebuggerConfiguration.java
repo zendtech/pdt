@@ -15,6 +15,7 @@
 package org.eclipse.php.internal.debug.core.zend.debugger;
 
 import java.io.File;
+import java.util.Properties;
 
 import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.Status;
@@ -26,6 +27,7 @@ import org.eclipse.php.internal.debug.core.launching.PHPWebPageLaunchDelegate;
 import org.eclipse.php.internal.debug.core.preferences.PHPDebugCorePreferenceNames;
 import org.eclipse.php.internal.debug.core.preferences.PHPexeItem;
 import org.eclipse.php.internal.debug.core.preferences.PHPexes;
+import org.eclipse.php.internal.server.core.Server;
 import org.eclipse.swt.widgets.Shell;
 
 /**
@@ -137,6 +139,26 @@ public class ZendDebuggerConfiguration extends AbstractDebuggerConfiguration {
 					IStatus.WARNING,
 					PHPDebugPlugin.ID,
 					PHPDebugCoreMessages.ZendDebuggerConfiguration_ZendDebuggerNotInstalledError);
+		}
+		return Status.OK_STATUS;
+	}
+
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see
+	 * org.eclipse.php.internal.debug.core.debugger.AbstractDebuggerConfiguration
+	 * #validate(org.eclipse.php.internal.server.core.Server)
+	 */
+	public IStatus validate(Server server) {
+		Properties props = executeValidationScript(server);
+		if (props != null) {
+			if (!props.containsKey(EXTENSION_ID)) {
+				return new Status(
+						IStatus.WARNING,
+						PHPDebugPlugin.ID,
+						PHPDebugCoreMessages.ZendDebuggerConfiguration_ZendDebuggerNotInstalledError);
+			}
 		}
 		return Status.OK_STATUS;
 	}

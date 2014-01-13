@@ -14,15 +14,21 @@
  */
 package org.eclipse.php.internal.debug.core.debugger;
 
-import java.io.File;
-import java.io.IOException;
+import java.io.*;
+import java.net.InetAddress;
+import java.net.URL;
+import java.net.URLConnection;
+import java.net.UnknownHostException;
 import java.util.HashMap;
+import java.util.Properties;
+import java.util.Random;
 
-import org.eclipse.core.runtime.IStatus;
-import org.eclipse.core.runtime.Preferences;
+import org.eclipse.core.runtime.*;
 import org.eclipse.php.debug.daemon.communication.ICommunicationDaemon;
 import org.eclipse.php.internal.debug.core.PHPDebugPlugin;
 import org.eclipse.php.internal.debug.core.preferences.PHPexeItem;
+import org.eclipse.php.internal.server.core.Server;
+import org.osgi.framework.Bundle;
 
 /**
  * An abstract implementation of the IDebuggerConfiguration.
@@ -33,10 +39,12 @@ import org.eclipse.php.internal.debug.core.preferences.PHPexeItem;
 public abstract class AbstractDebuggerConfiguration implements
 		IDebuggerConfiguration {
 
+	private static final String EMPTY_STRING = ""; //$NON-NLS-1$
+	private static final String DEBUGGER_SCRIPT = "resources/debugger/validation.php"; //$NON-NLS-1$
+
 	protected Preferences preferences;
 	private HashMap<String, String> attributes;
 	private ICommunicationDaemon communicationDaemon;
-	private static final String EMPTY_STRING = ""; //$NON-NLS-1$
 
 	/**
 	 * AbstractDebuggerConfiguration constructor.
@@ -173,6 +181,13 @@ public abstract class AbstractDebuggerConfiguration implements
 	 */
 	public abstract IStatus validate(PHPexeItem item);
 
+	/**
+	 * Validate debugger configuration for specified {@link Server} instance.
+	 * 
+	 * @return validation status
+	 */
+	public abstract IStatus validate(Server server);
+
 	protected boolean isInstalled(PHPexeItem exeItem, String extensionId) {
 		try {
 			String output = null;
@@ -190,6 +205,65 @@ public abstract class AbstractDebuggerConfiguration implements
 			PHPDebugPlugin.log(e);
 		}
 		return false;
+	}
+
+	protected static Properties executeValidationScript(Server server) {
+		try {
+			InetAddress address = InetAddress.getByName(server.getHost());
+			if (!address.isLoopbackAddress() && !address.isSiteLocalAddress()) {
+				return null;
+			}
+		} catch (UnknownHostException e) {
+			// ignore and skip debugger validation
+			return null;
+		}
+		String docRoot = server.getDocumentRoot();
+		if (docRoot.isEmpty() || !new File(docRoot).exists()) {
+			return null;
+		}
+		Bundle bundle = Platform.getBundle(PHPDebugPlugin.ID);
+		BufferedReader input = null;
+		BufferedWriter output = null;
+		String tempScriptName = +new Random().nextLong() + ".php"; //$NON-NLS-1$
+		File tempScriptFile = new File(docRoot + File.separator
+				+ tempScriptName);
+		try {
+			input = new BufferedReader(new InputStreamReader(
+					FileLocator.openStream(bundle, new Path(DEBUGGER_SCRIPT),
+							false)));
+			output = new BufferedWriter(new FileWriter(tempScriptFile));
+			String line = null;
+			while ((line = input.readLine()) != null) {
+				output.append(line);
+				output.append('\n');
+			}
+			input.close();
+			output.close();
+			URLConnection connection = new URL(server.getRootURL() + "/" //$NON-NLS-1$
+					+ tempScriptName).openConnection();
+			input = new BufferedReader(new InputStreamReader(
+					connection.getInputStream()));
+			Properties properties = new Properties();
+			properties.load(input);
+			return properties;
+		} catch (IOException e) {
+			PHPDebugPlugin.log(e);
+		} finally {
+			if (tempScriptFile.exists()) {
+				tempScriptFile.delete();
+			}
+			try {
+				if (input != null) {
+					input.close();
+				}
+				if (output != null) {
+					output.close();
+				}
+			} catch (IOException e) {
+				PHPDebugPlugin.log(e);
+			}
+		}
+		return null;
 	}
 
 }

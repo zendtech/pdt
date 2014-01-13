@@ -234,7 +234,7 @@ public class ServerEditDialog extends TitleAreaDialog implements
 			CTabItem item = (CTabItem) e.item;
 			CompositeFragment fragment = (CompositeFragment) item.getControl();
 			setTitle(fragment.getTitle());
-			setDescription(fragment.getDescription());
+			fragment.validate();
 		}
 
 	}
