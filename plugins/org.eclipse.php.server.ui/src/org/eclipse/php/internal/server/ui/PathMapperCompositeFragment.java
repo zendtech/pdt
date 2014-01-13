@@ -14,8 +14,8 @@ package org.eclipse.php.internal.server.ui;
 import org.eclipse.jface.dialogs.Dialog;
 import org.eclipse.jface.dialogs.IMessageProvider;
 import org.eclipse.php.internal.debug.core.pathmapper.PathMapper;
-import org.eclipse.php.internal.debug.core.pathmapper.PathMapperRegistry;
 import org.eclipse.php.internal.debug.core.pathmapper.PathMapper.Mapping;
+import org.eclipse.php.internal.debug.core.pathmapper.PathMapperRegistry;
 import org.eclipse.php.internal.debug.ui.pathmapper.PathMappingComposite;
 import org.eclipse.php.internal.server.core.Server;
 import org.eclipse.php.internal.ui.wizards.CompositeFragment;
@@ -85,7 +85,7 @@ public class PathMapperCompositeFragment extends CompositeFragment {
 		}
 	}
 
-	protected void validate() {
+	public void validate() {
 		setMessage(getDescription(), IMessageProvider.NONE);
 		setComplete(true);
 

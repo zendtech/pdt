@@ -25,7 +25,9 @@ import org.eclipse.php.internal.debug.core.IPHPDebugConstants;
 import org.eclipse.php.internal.debug.core.Logger;
 import org.eclipse.php.internal.debug.core.PHPDebugCoreMessages;
 import org.eclipse.php.internal.debug.core.PHPDebugPlugin;
+import org.eclipse.php.internal.debug.core.debugger.AbstractDebuggerConfiguration;
 import org.eclipse.php.internal.debug.core.pathmapper.PathMapperRegistry;
+import org.eclipse.php.internal.debug.core.preferences.PHPDebuggersRegistry;
 import org.eclipse.php.internal.debug.core.preferences.PHPProjectPreferences;
 import org.eclipse.php.internal.debug.core.xdebug.IDELayerFactory;
 import org.eclipse.php.internal.debug.core.xdebug.XDebugPreferenceMgr;
@@ -88,6 +90,18 @@ public class XDebugWebLaunchConfigurationDelegate extends
 			displayErrorMessage(PHPDebugCoreMessages.XDebug_WebLaunchConfigurationDelegate_1); 
 			DebugPlugin.getDefault().getLaunchManager().removeLaunch(launch);
 			return;
+		}
+
+		if (mode.equals(ILaunchManager.DEBUG_MODE)) {
+			AbstractDebuggerConfiguration debugger = PHPDebuggersRegistry
+					.getDebuggerConfiguration(debuggerId);
+			IStatus status = debugger.validate(server);
+			if (status.getSeverity() != IStatus.OK) {
+				displayErrorMessage(status.getMessage());
+				DebugPlugin.getDefault().getLaunchManager()
+						.removeLaunch(launch);
+				return;
+			}
 		}
 
 		// Get the project from the file name
