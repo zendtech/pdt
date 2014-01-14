@@ -470,7 +470,7 @@ public class PHPDebugPlugin extends Plugin {
 		if (prefs != null) {
 			String exeName = prefs
 					.getString(PHPDebugCorePreferenceNames.DEFAULT_PHP);
-			if (exeName != null) {
+			if (exeName != null && !exeName.isEmpty()) {
 				return PHPexes.getInstance().getItem(exeName);
 			}
 		}
