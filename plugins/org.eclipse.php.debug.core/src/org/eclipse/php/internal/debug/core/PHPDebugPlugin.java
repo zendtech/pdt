@@ -474,7 +474,17 @@ public class PHPDebugPlugin extends Plugin {
 				return PHPexes.getInstance().getItem(exeName);
 			}
 		}
-		return PHPexes.getInstance().getDefaultItem(getCurrentDebuggerId());
+		PHPexeItem item = PHPexes.getInstance().getDefaultItem(
+				getCurrentDebuggerId());
+		if (item == null) {
+			PHPexeItem[] items = PHPexes.getInstance().getAllItems();
+			for (PHPexeItem phpExeItem : items) {
+				if (phpExeItem.isDefault()) {
+					return phpExeItem;
+				}
+			}
+		}
+		return null;
 	}
 
 	// Creates a preferences scope for the given project.
