@@ -483,6 +483,8 @@ public class PHPDebugPlugin extends Plugin {
 					return phpExeItem;
 				}
 			}
+		} else {
+			return item;
 		}
 		return null;
 	}
