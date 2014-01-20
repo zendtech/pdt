@@ -1,12 +1,10 @@
 --TEST--
-Get type declarations in a simple example
+Get class and interface declarations in a simple example
 --FILE--
 <?php
 class MyClass {}
 interface MyInterface {}
-trait MyTrait {}
 ?>
 --EXPECT--
 MyClass
 MyInterface
-MyTrait

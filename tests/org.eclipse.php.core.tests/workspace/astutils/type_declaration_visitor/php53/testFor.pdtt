@@ -1,0 +1,12 @@
+--TEST--
+Get class and interface declarations inside a for loop
+--FILE--
+<?php
+for (;;) {
+	class MyClass {}
+	interface MyInterface {}
+}
+?>
+--EXPECT--
+MyClass
+MyInterface
