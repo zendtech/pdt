@@ -157,7 +157,13 @@ public class PHPDebugPreferencesBlock extends AbstractPHPPreferencePageBlock {
 		if (fDefaultPHPExe.indexOf(phpExeName) != -1) {
 			fDefaultPHPExe.select(fDefaultPHPExe.indexOf(phpExeName));
 		} else {
-			fDefaultPHPExe.select(0);
+			PHPexeItem defaultItem = PHPDebugPlugin.getWorkspaceDefaultExe();
+			if (defaultItem != null) {
+				fDefaultPHPExe.select(fDefaultPHPExe.indexOf(defaultItem
+						.getName()));
+			} else {
+				fDefaultPHPExe.select(fDefaultPHPExe.getItemCount() - 1);
+			}
 		}
 		PHPexeItem item = PHPexes.getInstance().getItem(
 				fDefaultPHPExe.getText());
