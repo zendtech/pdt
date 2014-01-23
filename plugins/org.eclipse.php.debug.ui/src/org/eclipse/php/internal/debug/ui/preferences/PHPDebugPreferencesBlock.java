@@ -650,6 +650,10 @@ public class PHPDebugPreferencesBlock extends AbstractPHPPreferencePageBlock {
 						.equals(phpExe)) {
 					prefs.setValue(PHPDebugCorePreferenceNames.DEFAULT_PHP,
 							phpExe);
+					PHPexeItem item = PHPexes.getInstance().getItem(phpExe);
+					String debuggerId = item.getDebuggerID();
+					prefs.setValue(PHPDebugCorePreferenceNames.PHP_DEBUGGER_ID,
+							item.getDebuggerID());
 				}
 				ServersManager.setDefaultServer(project,
 						fDefaultServer.getText());
