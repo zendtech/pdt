@@ -98,5 +98,34 @@
 		<module>../tests/org.eclipse.php.ui.tests</module>
 		<module>../tests/org.eclipse.php.formatter.core.tests</module>
 	</modules>
-
+	<profiles>
+		<profile>
+			<id>sign</id>
+			<activation>
+				<property>
+					<name>sign</name>
+				</property>
+			</activation>
+			<build>
+				<plugins>
+					<plugin>
+						<artifactId>maven-jarsigner-plugin</artifactId>
+						<version>1.2</version>
+						<executions>
+							<execution>
+								<phase>package</phase>
+								<goals>
+									<goal>sign</goal>
+								</goals>
+							</execution>
+						</executions>
+						<configuration>
+							<keystore>${keystore}</keystore>
+							<alias>zend</alias>
+							<storepass>${password}</storepass>
+						</configuration>
+					</plugin>
+				</plugins>
+			</build>
+		</profile>
 </project>
