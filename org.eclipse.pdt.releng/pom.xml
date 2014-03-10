@@ -10,11 +10,28 @@
 
 	<!-- this is the parent POM from which all modules inherit common settings -->
 	<properties>
-		<tycho-version>0.18.1</tycho-version>
+		<tycho-version>0.19.0</tycho-version>
 		<antrun-version>1.6</antrun-version>
 		<maven.test.failure.ignore>true</maven.test.failure.ignore>
+		<test.vmargs />
+		<sonar.core.codeCoveragePlugin>jacoco</sonar.core.codeCoveragePlugin>
+		<sonar.dynamicAnalysis>reuseReports</sonar.dynamicAnalysis>
+    <sonar.exclusions>**/parser/*/CompilerAstParser.java,**/parser/DocumentorLexer.java,**/scanner/*/PhpAstLexer.java,**/scanner/*/PhpAstParser.java,**/documentModel/parser/PHPTokenizer.java,**/parser/*/PhpLexer.java,**/*Messages.java</sonar.exclusions>
+		<sonar.jacoco.reportPath>../../org.eclipse.pdt.releng/target/jacoco.exec</sonar.jacoco.reportPath>
 	</properties>
-
+	<profiles>
+		<profile>
+			<id>macosx</id>
+			<activation>
+				<os>
+					<family>mac</family>
+				</os>
+			</activation>
+			<properties>
+				<test.vmargs>-XstartOnFirstThread</test.vmargs>
+			</properties>
+		</profile>
+	</profiles>
 	<build>
 		<plugins>
 			<plugin>
@@ -37,6 +54,25 @@
 					</execution>
 				</executions>
 			</plugin>
+			<plugin>
+				<groupId>org.jacoco</groupId>
+				<artifactId>jacoco-maven-plugin</artifactId>
+				<version>0.6.4.201312101107</version>
+				<executions>
+					<execution>
+						<goals>
+							<goal>prepare-agent</goal>
+						</goals>
+						<configuration>
+							<destFile>${sonar.jacoco.reportPath}</destFile>
+							<includes>
+								<include>org.eclipse.php.*</include>
+							</includes>
+							<append>true</append>
+						</configuration>
+					</execution>
+				</executions>
+			</plugin>
 		</plugins>
 	</build>
 
@@ -47,9 +83,9 @@
 			<url>http://il-studiodev2.zend.net:8080/job/zend-dltk/lastSuccessfulBuild/artifact/org.eclipse.dltk.releng/build/update.site/target/site</url>
 		</repository>
 		<repository>
-			<id>juno</id>
+			<id>kepler</id>
 			<layout>p2</layout>
-			<url>http://download.eclipse.org/releases/juno</url>
+			<url>http://download.eclipse.org/releases/kepler</url>
 		</repository>
 		<repository>
 			<id>eclipse-tests</id>
@@ -61,7 +97,7 @@
 	<pluginRepositories>
 		<pluginRepository>
 			<id>maven.eclipse.org</id>
-			<url>http://maven.eclipse.org/nexus/content/groups/public/</url>
+			<url>https://repo.eclipse.org/content/repositories/releases/</url>
 		</pluginRepository>
 		<pluginRepository>
 			<id>jboss-public-repository-group</id>
@@ -98,6 +134,7 @@
 		<module>../tests/org.eclipse.php.ui.tests</module>
 		<module>../tests/org.eclipse.php.formatter.core.tests</module>
 	</modules>
+
 	<profiles>
 		<profile>
 			<id>sign</id>

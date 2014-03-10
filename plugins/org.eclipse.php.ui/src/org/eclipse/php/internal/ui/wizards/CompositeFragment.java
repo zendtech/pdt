@@ -203,7 +203,7 @@ public abstract class CompositeFragment extends Composite {
 	}
 
 	/**
-	 * Validate data values.
+	 * Validate data values in current composite.
 	 */
 	public abstract void validate();
 
