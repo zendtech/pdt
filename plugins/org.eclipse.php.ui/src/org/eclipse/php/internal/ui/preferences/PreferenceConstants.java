@@ -1024,12 +1024,6 @@ public class PreferenceConstants {
 						AbstractDecoratedTextEditorPreferenceConstants.EDITOR_CURRENT_LINE,
 						true);
 
-		// Show line numbers:
-		editorStore
-				.setDefault(
-						AbstractDecoratedTextEditorPreferenceConstants.EDITOR_LINE_NUMBER_RULER,
-						true);
-
 		// disabling the spelling detection till we find a way to refine it the
 		// run only on strings and comments.
 		editorStore.setDefault(SpellingService.PREFERENCE_SPELLING_ENABLED,
