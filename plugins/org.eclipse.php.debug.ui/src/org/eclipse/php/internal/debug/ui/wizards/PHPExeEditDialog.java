@@ -11,12 +11,14 @@
  *******************************************************************************/
 package org.eclipse.php.internal.debug.ui.wizards;
 
+import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 
 import org.eclipse.jface.dialogs.IDialogConstants;
 import org.eclipse.jface.dialogs.TitleAreaDialog;
+import org.eclipse.jface.operation.IRunnableWithProgress;
 import org.eclipse.jface.resource.ImageDescriptor;
 import org.eclipse.php.internal.debug.core.preferences.PHPexeItem;
 import org.eclipse.php.internal.ui.util.SWTUtil;
@@ -131,6 +133,12 @@ public class PHPExeEditDialog extends TitleAreaDialog implements
 			}
 			button.setEnabled(true);
 		}
+	}
+
+	public void run(boolean fork, boolean cancelable,
+			IRunnableWithProgress runnable) throws InvocationTargetException,
+			InterruptedException {
+		// not supported
 	}
 
 }

@@ -43,7 +43,7 @@ public class PathMapperCompositeFragment extends CompositeFragment {
 		setTitle(Messages.PathMapperCompositeFragment_3);
 		setDescription(Messages.PathMapperCompositeFragment_4);
 		if (isForEditing) {
-			setData(((ServerEditDialog) controlHandler).getServer());
+			setData(((ServerEditPage) controlHandler).getServer());
 		}
 		createControl(isForEditing);
 	}

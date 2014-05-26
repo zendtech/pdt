@@ -12,6 +12,7 @@
  -->
 
 <plugin>
+   <extension-point id="serverTypes" name="PHP Server Types" schema="schema/serverTypes.exsd"/>
 
 	<extension point="org.eclipse.debug.ui.launchConfigurationTypeImages">
 		<launchConfigurationTypeImage
@@ -81,10 +82,10 @@
 	
 	<extension point="org.eclipse.php.ui.wizardAndCompositeFragments">
 		<wizardAndCompositeFragment
-			class="org.eclipse.php.internal.server.ui.wizard.BasicCompositeFragmentFactory"
-			fragmentsGroupID="org.eclipse.php.server.ui.serverWizardAndComposite"
-			id="org.eclipse.php.server.ui.wizard.BasicCompositeFragmentFactory"
-			name="Basic Factory" />
+        class="org.eclipse.php.internal.server.ui.wizard.BasicCompositeFragmentFactory"
+        fragmentsGroupID="org.eclipse.php.server.ui.serverWizardAndComposite"
+        id="org.eclipse.php.server.ui.wizard.BasicCompositeFragmentFactory"
+        name="Basic Factory"/>
 		<wizardAndCompositeFragment
 			class="org.eclipse.php.internal.server.ui.PathMapperFragmentFactory"
 			fragmentsGroupID="org.eclipse.php.server.ui.serverWizardAndComposite"

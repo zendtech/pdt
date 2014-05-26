@@ -40,4 +40,18 @@ public interface ICompositeFragmentFactory {
 	public CompositeFragment createComposite(Composite parent,
 			IControlHandler controlHandler);
 
+	/**
+	 * Check if specified element is supported by this fragment factory.
+	 * 
+	 * @param element
+	 * @return <code>true</code> if element is supported; otherwise return
+	 *         <code>false</code>
+	 */
+	boolean isSupported(Object element);
+
+	/**
+	 * @return fragment factory id
+	 */
+	String getId();
+
 }

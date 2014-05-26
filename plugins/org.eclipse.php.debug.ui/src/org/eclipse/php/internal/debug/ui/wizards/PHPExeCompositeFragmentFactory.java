@@ -20,6 +20,8 @@ import org.eclipse.swt.widgets.Composite;
 public class PHPExeCompositeFragmentFactory implements
 		ICompositeFragmentFactory {
 
+	private static final String ID = "org.eclipse.php.debug.ui.wizards.PHPExeCompositeFragmentFactory"; //$NON-NLS-1$
+
 	public CompositeFragment createComposite(Composite parent,
 			IControlHandler controlHandler) {
 		return new PHPExeCompositeFragment(parent, controlHandler, true);
@@ -28,4 +30,13 @@ public class PHPExeCompositeFragmentFactory implements
 	public WizardFragment createWizardFragment() {
 		return new PHPExeWizardFragment();
 	}
+
+	public boolean isSupported(Object element) {
+		return true;
+	}
+
+	public String getId() {
+		return ID;
+	}
+
 }

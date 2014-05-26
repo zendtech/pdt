@@ -456,19 +456,24 @@ public class ServerCompositeFragment extends CompositeFragment {
 
 	private boolean checkServerUrl(String url) {
 		url = url.trim();
+		// if (originalValuesCache.serverName != null
+		// && originalValuesCache.serverName.trim().length() > 0) {
+		// if (url.equals(originalValuesCache.url)) {
+		// return true;
+		// }
+		// }
+		Server[] allServers = ServersManager.getServers();
+		String currentName = null;
 		if (originalValuesCache.serverName != null
 				&& originalValuesCache.serverName.trim().length() > 0) {
-			if (url.equals(originalValuesCache.url)) {
-				return true;
-			}
+			currentName = originalValuesCache.serverName;
 		}
-		Server[] allServers = ServersManager.getServers();
-
 		if (allServers != null) {
 			int size = allServers.length;
 			for (int i = 0; i < size; i++) {
 				Server server = allServers[i];
-				if (url.equals(server.getBaseURL()))
+				if (!server.getName().equals(currentName)
+						&& url.equals(server.getBaseURL()))
 					return false;
 			}
 		}

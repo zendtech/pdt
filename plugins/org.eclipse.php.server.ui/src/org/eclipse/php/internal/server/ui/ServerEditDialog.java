@@ -11,18 +11,21 @@
  *******************************************************************************/
 package org.eclipse.php.internal.server.ui;
 
+import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
 import java.util.Iterator;
 
 import org.eclipse.jface.dialogs.IDialogConstants;
 import org.eclipse.jface.dialogs.TitleAreaDialog;
+import org.eclipse.jface.operation.IRunnableWithProgress;
 import org.eclipse.jface.resource.ImageDescriptor;
 import org.eclipse.php.internal.server.PHPServerUIMessages;
 import org.eclipse.php.internal.server.core.Server;
 import org.eclipse.php.internal.ui.util.SWTUtil;
 import org.eclipse.php.internal.ui.wizards.CompositeFragment;
 import org.eclipse.php.internal.ui.wizards.IControlHandler;
-import org.eclipse.php.internal.ui.wizards.WizardFragmentsFactoryRegistry;
+import org.eclipse.php.server.ui.types.IServerType;
+import org.eclipse.php.server.ui.types.ServerTypesManager;
 import org.eclipse.php.ui.wizards.ICompositeFragmentFactory;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.custom.CTabFolder;
@@ -78,9 +81,13 @@ public class ServerEditDialog extends TitleAreaDialog implements
 	protected Control createDialogArea(Composite parent) {
 		// Create a tabbed container that will hold all the fragments
 		tabs = SWTUtil.createTabFolder(parent);
-		ICompositeFragmentFactory[] factories = WizardFragmentsFactoryRegistry
-				.getFragmentsFactories(FRAGMENT_GROUP_ID);
+		ICompositeFragmentFactory[] factories = ServerTypesManager
+				.getInstance().getSettingsFragmentFactories(
+						server.getAttribute(IServerType.TYPE, null));
 		for (ICompositeFragmentFactory element : factories) {
+			if (!element.isSupported(server)) {
+				continue;
+			}
 			CTabItem tabItem = new CTabItem(tabs, SWT.BORDER);
 			CompositeFragment fragment = element.createComposite(tabs, this);
 			fragment.setData(server);
@@ -218,5 +225,11 @@ public class ServerEditDialog extends TitleAreaDialog implements
 			fragment.validate();
 		}
 
+	}
+
+	public void run(boolean fork, boolean cancelable,
+			IRunnableWithProgress runnable) throws InvocationTargetException,
+			InterruptedException {
+		// not supported
 	}
 }

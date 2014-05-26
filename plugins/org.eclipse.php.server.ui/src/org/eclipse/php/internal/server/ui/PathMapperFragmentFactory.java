@@ -25,15 +25,29 @@ import org.eclipse.ui.PlatformUI;
  */
 public class PathMapperFragmentFactory implements ICompositeFragmentFactory {
 
+	private static final String ID = "org.eclipse.php.internal.server.ui.PathMapperFragmentFactory"; //$NON-NLS-1$
+
 	public CompositeFragment createComposite(Composite parent,
 			IControlHandler controlHandler) {
 		// HELP
-		PlatformUI.getWorkbench().getHelpSystem().setHelp(parent,
-				IPHPHelpContextIds.ADDING_A_SERVER_LOCATION_PATH_MAP);
+		PlatformUI
+				.getWorkbench()
+				.getHelpSystem()
+				.setHelp(parent,
+						IPHPHelpContextIds.ADDING_A_SERVER_LOCATION_PATH_MAP);
 		return new PathMapperCompositeFragment(parent, controlHandler, true);
 	}
 
 	public WizardFragment createWizardFragment() {
 		return new PathMapperWizardFragment();
 	}
+
+	public boolean isSupported(Object element) {
+		return true;
+	}
+
+	public String getId() {
+		return ID;
+	}
+
 }
