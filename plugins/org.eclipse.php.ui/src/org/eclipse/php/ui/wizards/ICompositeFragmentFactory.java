@@ -52,6 +52,6 @@ public interface ICompositeFragmentFactory {
 	/**
 	 * @return fragment factory id
 	 */
-	String getId();
+	public String getId();
 
 }
