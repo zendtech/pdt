@@ -36,8 +36,8 @@ public class ServersPluginImages {
 	// Otherwise low color
 	// images are used
 	static {
-		fgIconBaseURL = Activator.getDefault().getBundle().getEntry(
-				"/icons/full/"); //$NON-NLS-1$
+		fgIconBaseURL = Activator.getDefault().getBundle()
+				.getEntry("/icons/full/"); //$NON-NLS-1$
 	}
 
 	// The plug-in registry
@@ -45,11 +45,15 @@ public class ServersPluginImages {
 	private static HashMap fgAvoidSWTErrorMap = null;
 
 	private static final String T_OBJ = "obj16"; //$NON-NLS-1$
+	private static final String T_OBJ32 = "obj32"; //$NON-NLS-1$
 	private static final String T_WIZBAN = "wizban"; //$NON-NLS-1$
 
 	public static final String IMG_SERVER = NAME_PREFIX + "server.gif"; //$NON-NLS-1$
+	public static final String IMG_SERVER_TYPE = NAME_PREFIX + "server.png"; //$NON-NLS-1$
 	public static final String IMG_WIZ_SERVER = NAME_PREFIX + "server_wiz.gif"; //$NON-NLS-1$
 
+	public static final ImageDescriptor DESC_SERVER_TYPE = createManaged(
+			T_OBJ32, IMG_SERVER_TYPE);
 	public static final ImageDescriptor DESC_SERVER = createManaged(T_OBJ,
 			IMG_SERVER);
 	public static final ImageDescriptor DESC_WIZ_SERVER = createManaged(
@@ -101,8 +105,8 @@ public class ServersPluginImages {
 			for (Iterator iter = fgAvoidSWTErrorMap.keySet().iterator(); iter
 					.hasNext();) {
 				String key = (String) iter.next();
-				fgImageRegistry.put(key, (ImageDescriptor) fgAvoidSWTErrorMap
-						.get(key));
+				fgImageRegistry.put(key,
+						(ImageDescriptor) fgAvoidSWTErrorMap.get(key));
 			}
 			fgAvoidSWTErrorMap = null;
 		}
@@ -135,8 +139,8 @@ public class ServersPluginImages {
 			int flags, Point size) {
 		try {
 			ImageDescriptor result = ImageDescriptor
-					.createFromURL(makeIconFileURL(prefix, name
-							.substring(NAME_PREFIX_LENGTH)));
+					.createFromURL(makeIconFileURL(prefix,
+							name.substring(NAME_PREFIX_LENGTH)));
 			if (fgAvoidSWTErrorMap == null) {
 				fgAvoidSWTErrorMap = new HashMap();
 			}

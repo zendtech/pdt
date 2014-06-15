@@ -9,7 +9,11 @@ public interface IServerType {
 
 	String getName();
 
+	String getDescription();
+
 	Image getViewIcon();
+
+	Image getTypeIcon();
 
 	ImageDescriptor getWizardImage();
 

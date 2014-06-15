@@ -31,6 +31,10 @@ public class BasicServerType implements IServerType {
 		return PHPServerUIMessages.getString("BasicServerType.Name"); //$NON-NLS-1$
 	}
 
+	public String getDescription() {
+		return PHPServerUIMessages.getString("BasicServerType.Description"); //$NON-NLS-1$
+	}
+
 	/*
 	 * (non-Javadoc)
 	 * 
@@ -38,6 +42,10 @@ public class BasicServerType implements IServerType {
 	 */
 	public Image getViewIcon() {
 		return ServersPluginImages.get(ServersPluginImages.IMG_SERVER);
+	}
+
+	public Image getTypeIcon() {
+		return ServersPluginImages.get(ServersPluginImages.IMG_SERVER_TYPE);
 	}
 
 	/*
