@@ -119,7 +119,7 @@ public class ServerTypesManager {
 				result.add(type);
 			}
 		}
-		types = new HashMap<String, IServerType>();
+		types = new LinkedHashMap<String, IServerType>();
 		for (IServerType type : result) {
 			types.put(type.getId(), type);
 		}

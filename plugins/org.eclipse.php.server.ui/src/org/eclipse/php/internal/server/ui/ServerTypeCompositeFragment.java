@@ -11,11 +11,10 @@
  *******************************************************************************/
 package org.eclipse.php.internal.server.ui;
 
-import java.util.ArrayList;
 import java.util.Collection;
-import java.util.List;
 
 import org.eclipse.jface.dialogs.Dialog;
+import org.eclipse.jface.viewers.*;
 import org.eclipse.php.internal.server.PHPServerUIMessages;
 import org.eclipse.php.internal.server.core.Server;
 import org.eclipse.php.internal.ui.wizards.CompositeFragment;
@@ -23,12 +22,10 @@ import org.eclipse.php.internal.ui.wizards.IControlHandler;
 import org.eclipse.php.server.ui.types.IServerType;
 import org.eclipse.php.server.ui.types.ServerTypesManager;
 import org.eclipse.swt.SWT;
-import org.eclipse.swt.events.SelectionAdapter;
-import org.eclipse.swt.events.SelectionEvent;
+import org.eclipse.swt.custom.StyleRange;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
-import org.eclipse.swt.widgets.Button;
-import org.eclipse.swt.widgets.Composite;
+import org.eclipse.swt.widgets.*;
 
 /**
  * Composite fragment for server type selection page.
@@ -38,13 +35,31 @@ import org.eclipse.swt.widgets.Composite;
  */
 public class ServerTypeCompositeFragment extends CompositeFragment {
 
-	private List<Button> typeButtons;
+	private class TypesLabelProvider extends StyledCellLabelProvider {
+
+		@Override
+		public void update(ViewerCell cell) {
+			Object element = cell.getElement();
+			if (element instanceof IServerType) {
+				String name = ((IServerType) element).getName();
+				String description = ((IServerType) element).getDescription();
+				cell.setText(name + "\n" + description); //$NON-NLS-1$
+				cell.setImage(((IServerType) element).getTypeIcon());
+				StyleRange greyDesc = new StyleRange(name.length() + 1,
+						description.length(), Display.getDefault()
+								.getSystemColor(SWT.COLOR_DARK_GRAY), null);
+				StyleRange[] range = { greyDesc };
+				cell.setStyleRanges(range);
+			}
+			super.update(cell);
+		}
+	};
+
 	private IServerType currentType;
 
 	public ServerTypeCompositeFragment(Composite parent,
 			IControlHandler handler, boolean isForEditing) {
 		super(parent, handler, isForEditing);
-		this.typeButtons = new ArrayList<Button>();
 		setTitle(PHPServerUIMessages
 				.getString("ServerTypeCompositeFragment.Title")); //$NON-NLS-1$
 		setDescription(PHPServerUIMessages
@@ -96,26 +111,49 @@ public class ServerTypeCompositeFragment extends CompositeFragment {
 		setLayout(layout);
 		setLayoutData(new GridData(GridData.FILL_BOTH));
 
-		Composite container = new Composite(this, SWT.NULL);
-		container.setLayout(new GridLayout(1, false));
-
 		Collection<IServerType> types = ServerTypesManager.getInstance()
 				.getAll();
-		for (IServerType type : types) {
-			final Button button = new Button(container, SWT.RADIO);
-			button.setText(type.getName());
-			button.setData(type);
-			button.addSelectionListener(new SelectionAdapter() {
 
-				@Override
-				public void widgetSelected(SelectionEvent e) {
-					currentType = (IServerType) ((Button) e.getSource())
-							.getData();
+		TableViewer viewer = new TableViewer(this);
+		Table table = viewer.getTable();
+		table.addListener(SWT.MeasureItem, new Listener() {
+			public void handleEvent(Event event) {
+				event.height = 40;
+			}
+		});
+		table.setLayoutData(new GridData(GridData.FILL_BOTH));
+		viewer.setContentProvider(new IStructuredContentProvider() {
+
+			public void inputChanged(Viewer viewer, Object oldInput,
+					Object newInput) {
+			}
+
+			public void dispose() {
+			}
+
+			public Object[] getElements(Object input) {
+				if (input instanceof Collection<?>) {
+					Collection<?> entries = (Collection<?>) input;
+					return entries.toArray(new IServerType[entries.size()]);
+				}
+				return new IServerType[0];
+			}
+
+		});
+		viewer.setLabelProvider(new TypesLabelProvider());
+		viewer.setInput(types);
+		viewer.addSelectionChangedListener(new ISelectionChangedListener() {
+
+			public void selectionChanged(SelectionChangedEvent event) {
+				ISelection selection = event.getSelection();
+				IStructuredSelection structuredSelection = (IStructuredSelection) selection;
+				if (!structuredSelection.isEmpty()) {
+					currentType = (IServerType) structuredSelection.toArray()[0];
 					controlHandler.update();
 				}
-			});
-			typeButtons.add(button);
-		}
+			}
+		});
+
 		validate();
 		Dialog.applyDialogFont(this);
 	}
