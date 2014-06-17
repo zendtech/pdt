@@ -12,9 +12,7 @@
 package org.eclipse.php.internal.core.preferences;
 
 import java.io.File;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.List;
+import java.util.*;
 
 import org.eclipse.core.resources.IProject;
 import org.eclipse.core.resources.ProjectScope;
@@ -22,7 +20,7 @@ import org.eclipse.core.runtime.IPath;
 import org.eclipse.core.runtime.Preferences;
 import org.eclipse.core.runtime.Preferences.IPropertyChangeListener;
 import org.eclipse.core.runtime.Preferences.PropertyChangeEvent;
-import org.eclipse.core.runtime.preferences.IEclipsePreferences;
+import org.eclipse.core.runtime.preferences.*;
 import org.eclipse.core.runtime.preferences.IEclipsePreferences.INodeChangeListener;
 import org.eclipse.core.runtime.preferences.IEclipsePreferences.IPreferenceChangeListener;
 import org.eclipse.core.runtime.preferences.IEclipsePreferences.NodeChangeEvent;
@@ -40,7 +38,7 @@ public class PreferencesPropagator extends AbstractPreferencesPropagator {
 	private HashMap projectToPropagator;
 	private HashMap projectToScope;
 	private HashMap projectToNodeListener;
-	private HashMap preferenceChangeListeners; // Inside the node listeners
+	private Map preferenceChangeListeners; // Inside the node listeners
 	private String nodeQualifier;
 
 	private IPropertyChangeListener propertyChangeListener;
@@ -67,8 +65,8 @@ public class PreferencesPropagator extends AbstractPreferencesPropagator {
 	 */
 	public void addPropagatorListener(IPreferencesPropagatorListener listener,
 			String preferencesKey) {
-		addNodeListener(listener.getProject(), getProjectScope(listener
-				.getProject()));
+		addNodeListener(listener.getProject(),
+				getProjectScope(listener.getProject()));
 		if (isProjectSpecific(listener.getProject(), preferencesKey)) {
 			addToProjectPropagator(listener, preferencesKey);
 		} else {
@@ -120,7 +118,7 @@ public class PreferencesPropagator extends AbstractPreferencesPropagator {
 		projectToPropagator = new HashMap();
 		projectToScope = new HashMap();
 		projectToNodeListener = new HashMap();
-		preferenceChangeListeners = new HashMap();
+		preferenceChangeListeners = Collections.synchronizedMap(new HashMap());
 		propertyChangeListener = new InnerPropertyChangeListener();
 		preferenceStore.addPropertyChangeListener(propertyChangeListener);
 		super.install();
@@ -141,9 +139,8 @@ public class PreferencesPropagator extends AbstractPreferencesPropagator {
 				ProjectScope scope = (ProjectScope) projectToScope.get(project);
 				IEclipsePreferences node = scope.getNode(nodeQualifier);
 				if (node != null) {
-					node
-							.removeNodeChangeListener((INodeChangeListener) projectToNodeListener
-									.get(project));
+					node.removeNodeChangeListener((INodeChangeListener) projectToNodeListener
+							.get(project));
 				}
 			}
 		} catch (Exception e) {
@@ -314,15 +311,18 @@ public class PreferencesPropagator extends AbstractPreferencesPropagator {
 
 			Object childNode = event.getChild();
 			if (preferenceChangeListeners.containsValue(childNode)) {
-				// search for the listener to be removed
-				Iterator keys = preferenceChangeListeners.keySet().iterator();
-				while (keys.hasNext()) {
-					Object key = keys.next();
-					IEclipsePreferences aNode = (IEclipsePreferences) preferenceChangeListeners
-							.get(key);
-					if (aNode == childNode) {
-						preferenceChangeListeners.remove(key);
-						return;
+				synchronized (preferenceChangeListeners) {
+					// search for the listener to be removed
+					Iterator keys = preferenceChangeListeners.keySet()
+							.iterator();
+					while (keys.hasNext()) {
+						Object key = keys.next();
+						IEclipsePreferences aNode = (IEclipsePreferences) preferenceChangeListeners
+								.get(key);
+						if (aNode == childNode) {
+							preferenceChangeListeners.remove(key);
+							return;
+						}
 					}
 				}
 			}
@@ -352,9 +352,9 @@ public class PreferencesPropagator extends AbstractPreferencesPropagator {
 				// preferences
 				moveToProjectPropagator(key, project);
 			}
-			PreferencesPropagatorEvent e = new PreferencesPropagatorEvent(event
-					.getSource(), event.getOldValue(), event.getNewValue(),
-					event.getKey());
+			PreferencesPropagatorEvent e = new PreferencesPropagatorEvent(
+					event.getSource(), event.getOldValue(),
+					event.getNewValue(), event.getKey());
 			notifyEvent(e, key, (newValue == null) ? null : project);
 		}
 	}
@@ -417,9 +417,9 @@ public class PreferencesPropagator extends AbstractPreferencesPropagator {
 			// Collect and notify the listeners that are defined to listen to
 			// workspace preferences changes
 			// for the arrived event.
-			PreferencesPropagatorEvent e = new PreferencesPropagatorEvent(event
-					.getSource(), event.getOldValue(), event.getNewValue(),
-					event.getProperty());
+			PreferencesPropagatorEvent e = new PreferencesPropagatorEvent(
+					event.getSource(), event.getOldValue(),
+					event.getNewValue(), event.getProperty());
 			notifyEvent(e, event.getProperty(), null);
 		}
 	}
