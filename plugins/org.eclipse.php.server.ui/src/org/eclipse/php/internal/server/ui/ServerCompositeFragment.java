@@ -15,12 +15,10 @@ import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.LinkedList;
 
-import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.Path;
 import org.eclipse.jface.dialogs.Dialog;
 import org.eclipse.jface.dialogs.IMessageProvider;
 import org.eclipse.php.internal.debug.core.PHPDebugPlugin;
-import org.eclipse.php.internal.debug.core.debugger.AbstractDebuggerConfiguration;
 import org.eclipse.php.internal.debug.core.preferences.PHPDebuggersRegistry;
 import org.eclipse.php.internal.server.PHPServerUIMessages;
 import org.eclipse.php.internal.server.core.Server;
@@ -346,12 +344,12 @@ public class ServerCompositeFragment extends CompositeFragment {
 				server.setDocumentRoot(modifiedValuesCache.webroot);
 				server.setDebuggerId(modifiedValuesCache.debuggerId);
 				server.setBaseURL(modifiedValuesCache.url);
-				AbstractDebuggerConfiguration debugger = PHPDebuggersRegistry
-						.getDebuggerConfiguration(modifiedValuesCache.debuggerId);
-				IStatus status = debugger.validate(server);
-				if (status.getSeverity() != IStatus.OK) {
-					setMessage(status.getMessage(), status.getSeverity());
-				}
+				// AbstractDebuggerConfiguration debugger = PHPDebuggersRegistry
+				// .getDebuggerConfiguration(modifiedValuesCache.debuggerId);
+				// IStatus status = debugger.validate(server);
+				// if (status.getSeverity() != IStatus.OK) {
+				// setMessage(status.getMessage(), status.getSeverity());
+				// }
 			} catch (MalformedURLException e) {
 				// continue validation
 			}
