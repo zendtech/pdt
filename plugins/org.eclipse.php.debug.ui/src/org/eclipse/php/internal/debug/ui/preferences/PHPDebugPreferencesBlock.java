@@ -565,7 +565,7 @@ public class PHPDebugPreferencesBlock extends AbstractPHPPreferencePageBlock {
 	private void updateServerDebugger() {
 		Server server = ServersManager.getServer(fDefaultServer.getText());
 		if (ServersManager.isEmptyServer(server)) {
-			fServerDebugger.setText("-");
+			fServerDebugger.setText("");
 		} else {
 			String serverDebuggerId = PHPDebugPlugin
 					.getDebuggerId(fDefaultServer.getText());
