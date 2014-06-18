@@ -1321,6 +1321,8 @@ public class RemoteDebugger implements IRemoteDebugger {
 	}
 
 	public List<IPath> getIncludePaths(IProject project) throws ModelException {
+		if (project == null)
+			return new ArrayList<IPath>();
 		List<IPath> includePaths = resolvedIncludePaths.get(project.getName());
 		if (includePaths != null) {
 			return includePaths;
