@@ -60,8 +60,13 @@ public class ServersManager implements PropertyChangeListener, IAdaptable {
 	private static ServersManager instance;
 	private static final String NODE_QUALIFIER = Activator.PLUGIN_ID
 			+ ".phpServersPrefs"; //$NON-NLS-1$
-	private static final String BASE_URL = "http://localhost"; //$NON-NLS-1$
-	public static final String Default_Server_Name = "Default PHP Web Server"; //$NON-NLS-1$
+	private static final String BASE_URL = "http://<no_php_server>"; //$NON-NLS-1$
+	private static final String OLD_DEFAULT_SERVER_NAME = "Default PHP Web Server"; //$NON-NLS-1$
+	public static final String DEFAULT_SERVER_NAME = "---"; //$NON-NLS-1$
+
+	// if true then server is an empty server which cannot be used for
+	// launching/debugging
+	public static final String EMPTY_SERVER = "emptyServer"; //$NON-NLS-1$
 
 	public static ServersManager getInstance() {
 		if (instance == null) {
@@ -138,6 +143,27 @@ public class ServersManager implements PropertyChangeListener, IAdaptable {
 		// Register the manager as a Server lister to get nofitications about
 		// attribute changes.
 		server.addPropertyChangeListener(manager);
+
+		// Check if empty server is a default one and if it is then change it to
+		// the new one
+		if (!isEmptyServer(server)) {
+			Server defaultServer = ServersManager.getDefaultServer(null);
+			if (isEmptyServer(defaultServer)) {
+				ServersManager.setDefaultServer(null, server);
+			}
+		}
+	}
+
+	/**
+	 * Check if specified PHP server is an empty one (Default PHP Web Server).
+	 * 
+	 * @param server
+	 * @return <code>true</code> if specified server is empty; otherwise return
+	 *         <code>false</code>
+	 */
+	public static boolean isEmptyServer(Server server) {
+		return Boolean.valueOf(server.getAttribute(ServersManager.EMPTY_SERVER,
+				String.valueOf(false)));
 	}
 
 	/**
@@ -208,6 +234,9 @@ public class ServersManager implements PropertyChangeListener, IAdaptable {
 	 */
 	public static Server getServer(String serverName) {
 		ServersManager manager = getInstance();
+		if (OLD_DEFAULT_SERVER_NAME.equals(serverName)) {
+			return getServer(DEFAULT_SERVER_NAME);
+		}
 		return (Server) manager.servers.get(serverName);
 	}
 
@@ -298,8 +327,11 @@ public class ServersManager implements PropertyChangeListener, IAdaptable {
 				// Create a default server and hook it as a workspace and the
 				// project server (can be the same).
 				try {
-					server = createServer(Default_Server_Name, BASE_URL);
-
+					server = new Server(DEFAULT_SERVER_NAME,
+							"localhost", BASE_URL, ""); //$NON-NLS-1$ //$NON-NLS-2$
+					server.setAttribute(EMPTY_SERVER, String.valueOf(true));
+					server = ServersManager.getServer(server);
+					addServer(server);
 				} catch (MalformedURLException e) {
 					// safe server creation
 				}

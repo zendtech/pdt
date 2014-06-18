@@ -241,7 +241,9 @@ public class PHPServersConfigurationBlock implements
 			int size = servers.length;
 			for (int i = 0; i < size; i++) {
 				Server server = servers[i];
-				serverList.add(server);
+				if (!ServersManager.isEmptyServer(server)) {
+					serverList.add(server);
+				}
 			}
 		}
 	}
@@ -271,8 +273,7 @@ public class PHPServersConfigurationBlock implements
 			List selectedElements = field.getSelectedElements();
 			field.enableButton(IDX_EDIT, hasActiveSelection(selectedElements));
 			// Do not allow the removal of the last element
-			field.enableButton(IDX_REMOVE, hasActiveSelection(selectedElements)
-					&& field.getElements().size() > 1);
+			field.enableButton(IDX_REMOVE, hasActiveSelection(selectedElements));
 
 			// handle default button enablement
 			if (selectedElements.size() == 1) {
