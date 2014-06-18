@@ -62,7 +62,7 @@ public class ServersManager implements PropertyChangeListener, IAdaptable {
 			+ ".phpServersPrefs"; //$NON-NLS-1$
 	private static final String BASE_URL = "http://<no_php_server>"; //$NON-NLS-1$
 	private static final String OLD_DEFAULT_SERVER_NAME = "Default PHP Web Server"; //$NON-NLS-1$
-	public static final String DEFAULT_SERVER_NAME = "---"; //$NON-NLS-1$
+	public static final String DEFAULT_SERVER_NAME = " "; //$NON-NLS-1$
 
 	// if true then server is an empty server which cannot be used for
 	// launching/debugging
