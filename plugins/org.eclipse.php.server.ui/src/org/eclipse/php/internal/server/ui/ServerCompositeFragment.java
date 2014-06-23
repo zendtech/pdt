@@ -244,7 +244,7 @@ public class ServerCompositeFragment extends CompositeFragment {
 		if (originalValuesCache.serverName != null
 				&& originalValuesCache.serverName.length() > 0) {
 			setTitle(PHPServerUIMessages
-					.getString("ServerCompositeFragment.editServer") + " [" + originalValuesCache.serverName + ']'); //$NON-NLS-1$ //$NON-NLS-2$
+					.getString("ServerCompositeFragment.editServer")); //$NON-NLS-1$
 		} else {
 			setTitle(PHPServerUIMessages
 					.getString("ServerCompositeFragment.configureServer")); //$NON-NLS-1$
