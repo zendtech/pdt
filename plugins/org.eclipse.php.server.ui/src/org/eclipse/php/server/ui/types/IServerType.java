@@ -19,4 +19,6 @@ public interface IServerType {
 
 	String getId();
 
+	String getHelp();
+
 }

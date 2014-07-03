@@ -16,6 +16,7 @@ import java.util.ArrayList;
 
 import org.eclipse.jface.operation.IRunnableWithProgress;
 import org.eclipse.jface.wizard.WizardPage;
+import org.eclipse.php.internal.server.IHelpContextIds;
 import org.eclipse.php.internal.server.PHPServerUIMessages;
 import org.eclipse.php.internal.server.core.Server;
 import org.eclipse.php.internal.ui.wizards.CompositeFragment;
@@ -24,12 +25,16 @@ import org.eclipse.php.server.ui.types.IServerType;
 import org.eclipse.php.server.ui.types.ServerTypesManager;
 import org.eclipse.php.ui.wizards.ICompositeFragmentFactory;
 import org.eclipse.swt.SWT;
+import org.eclipse.swt.events.HelpEvent;
+import org.eclipse.swt.events.HelpListener;
 import org.eclipse.swt.events.SelectionAdapter;
 import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.layout.GridData;
+import org.eclipse.swt.program.Program;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.TabFolder;
 import org.eclipse.swt.widgets.TabItem;
+import org.eclipse.ui.internal.help.WorkbenchHelpSystem;
 
 /**
  * Wizard page for editing PHP server settings.
@@ -175,6 +180,14 @@ public class ServerEditPage extends WizardPage implements IControlHandler {
 		if (type != null) {
 			setImageDescriptor(type.getWizardImage());
 		}
+
+		parent.setData(WorkbenchHelpSystem.HELP_KEY,
+				IHelpContextIds.EDIT_PHP_SERVER);
+		parent.addHelpListener(new HelpListener() {
+			public void helpRequested(HelpEvent event) {
+				Program.launch(IHelpContextIds.EDIT_PHP_SERVER);
+			}
+		});
 	}
 
 	/*
