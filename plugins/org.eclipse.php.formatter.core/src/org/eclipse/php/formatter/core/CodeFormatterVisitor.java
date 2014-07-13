@@ -18,6 +18,7 @@ import java_cup.runtime.Symbol;
 
 import org.eclipse.core.runtime.NullProgressMonitor;
 import org.eclipse.dltk.ast.references.SimpleReference;
+import org.eclipse.dltk.ast.references.TypeReference;
 import org.eclipse.jface.text.*;
 import org.eclipse.php.internal.core.PHPVersion;
 import org.eclipse.php.internal.core.ast.nodes.*;
@@ -25,6 +26,7 @@ import org.eclipse.php.internal.core.ast.scanner.AstLexer;
 import org.eclipse.php.internal.core.ast.visitor.AbstractVisitor;
 import org.eclipse.php.internal.core.compiler.ast.nodes.PHPDocBlock;
 import org.eclipse.php.internal.core.compiler.ast.nodes.PHPDocTag;
+import org.eclipse.php.internal.core.compiler.ast.nodes.VarComment;
 import org.eclipse.php.internal.core.compiler.ast.parser.php5.CompilerAstLexer;
 import org.eclipse.php.internal.core.documentModel.parser.PHPRegionContext;
 import org.eclipse.php.internal.core.documentModel.partitioner.PHPPartitionTypes;
@@ -76,6 +78,7 @@ public class CodeFormatterVisitor extends AbstractVisitor implements
 	private static final char SPACE = ' ';
 	private static final char COMMA = ',';
 	private static final char QUESTION_MARK = '?';
+	private static final char PHPDOC_CLASS_SEPARATOR = '|';
 	private String lineSeparator;
 
 	private CodeFormatterPreferences preferences;
@@ -779,13 +782,29 @@ public class CodeFormatterVisitor extends AbstractVisitor implements
 			// workaround; remove this after fixing of
 			// https://bugs.eclipse.org/bugs/show_bug.cgi?id=326384
 			int start = array[i].getStart();
-			if (array[i] instanceof NamespaceName
-					&& ((NamespaceName) array[i]).isGlobal()) {
-				start -= 1;
-			} else if (i == 0 && array[i] instanceof UseStatementPart
-					&& ((UseStatementPart) array[i]).getName() != null
-					&& ((UseStatementPart) array[i]).getName().isGlobal()) {
-				start -= 1;
+			try {
+				// a NamespaceName object can be wrapped in
+				// a FormalParameter object
+				Object obj = array[i] instanceof FormalParameter ? ((FormalParameter) array[i])
+						.getParameterType() : array[i];
+
+				// obj may be null
+				if (obj instanceof NamespaceName
+						&& ((NamespaceName) obj).isGlobal()) {
+					if (Character.isWhitespace(document.getChar(start - 1))
+							|| document.getChar(start - 1) == '\\') {
+						start -= 1;
+					}
+				} else if (i == 0 && array[i] instanceof UseStatementPart
+						&& ((UseStatementPart) array[i]).getName() != null
+						&& ((UseStatementPart) array[i]).getName().isGlobal()) {
+					if (Character.isWhitespace(document.getChar(start - 1))
+							|| document.getChar(start - 1) == '\\') {
+						start -= 1;
+					}
+				}
+			} catch (BadLocationException e) {
+				// should not be here
 			}
 			// workaround end
 			handleChars1(lastPosition, start,
@@ -846,7 +865,7 @@ public class CodeFormatterVisitor extends AbstractVisitor implements
 		boolean previousCommentIsSingleLine = false;
 		justCommentLine = false;
 
-		for (Iterator<org.eclipse.php.internal.core.compiler.ast.nodes.Comment> iter = commentList
+		comments: for (Iterator<org.eclipse.php.internal.core.compiler.ast.nodes.Comment> iter = commentList
 				.iterator(); iter.hasNext();) {
 			org.eclipse.php.internal.core.compiler.ast.nodes.Comment comment = iter
 					.next();
@@ -1119,7 +1138,6 @@ public class CodeFormatterVisitor extends AbstractVisitor implements
 				}
 
 				start = comment.sourceEnd() + offset;
-				startLine = commentStartLine;
 				break;
 			case org.eclipse.php.internal.core.compiler.ast.nodes.Comment.TYPE_PHPDOC:
 				previousCommentIsSingleLine = false;
@@ -1183,6 +1201,14 @@ public class CodeFormatterVisitor extends AbstractVisitor implements
 								lastLineIsBlank = false;
 							}
 						} else if (!this.preferences.comment_clear_blank_lines_in_javadoc_comment) {
+							// don't duplicate first blank line
+							if (isFirst
+									&& this.preferences.comment_new_lines_at_javadoc_boundaries
+									&& commentWords.isEmpty()) {
+								isFirst = false;
+								lastLineIsBlank = true;
+								continue;
+							}
 							isFirst = false;
 							initCommentWords();
 							formatPHPDocText(commentWords, null, false, false);
@@ -1195,6 +1221,7 @@ public class CodeFormatterVisitor extends AbstractVisitor implements
 					if (!commentWords.isEmpty()) {
 						initCommentWords();
 						formatPHPDocText(commentWords, null, false, false);
+						lastLineIsBlank = false;
 					}
 
 					if (tags != null && tags.length > 0) {
@@ -1216,9 +1243,16 @@ public class CodeFormatterVisitor extends AbstractVisitor implements
 							commentWords = new ArrayList<String>();
 
 							if (getNonblankWords(words).length == 0) {
+								boolean hasRefs = phpDocTag
+										.getReferencesWithOrigOrder().length != 0;
+								int nbLines = words.length;
+								// https://bugs.eclipse.org/bugs/show_bug.cgi?id=433938
+								if (!hasRefs && nbLines > 1) {
+									nbLines--;
+								}
 								// insert several lines
 								formatCommentWords(phpDocTag, insertTag, false);
-								for (int j = 0; j < words.length; j++) {
+								for (int j = 0; j < nbLines; j++) {
 									insertNewLineForPHPDoc();
 								}
 							} else {
@@ -1274,18 +1308,24 @@ public class CodeFormatterVisitor extends AbstractVisitor implements
 				break;
 			case org.eclipse.php.internal.core.compiler.ast.nodes.Comment.TYPE_MULTILINE:
 				previousCommentIsSingleLine = false;
-				IRegion startLinereg = document.getLineInformation(startLine);
-				// ignore multi line comment in the middle of code in one line
+				// ignore multi line comments in the middle of code
 				// example while /* kuku */ ( /* kuku */$a > 0 )
-				if (getBufferFirstChar() == '\0'
-						&& (startLine == endLine
-								&& document
-										.get(comment.sourceEnd() + offset,
-												startLinereg.getOffset()
-														+ startLinereg
-																.getLength()
-														- (comment.sourceEnd() + offset))
-										.trim().length() == 0 || startLine != endLine)) {
+				if (getBufferFirstChar() != '\0') {
+					replaceBuffer.setLength(0);
+					resetEnableStatus(document.get(comment.sourceStart()
+							+ offset,
+							comment.sourceEnd() - comment.sourceStart()));
+					for (; iter.hasNext();) {
+						org.eclipse.php.internal.core.compiler.ast.nodes.Comment nextComment = iter
+								.next();
+						resetEnableStatus(document.get(
+								nextComment.sourceStart() + offset,
+								nextComment.sourceEnd()
+										- nextComment.sourceStart()));
+					}
+					start = end;
+					break comments;
+				} else {
 					// buffer contains only whitespace chars
 					indentOnFirstColumn = !startAtFirstColumn
 							|| !this.preferences.never_indent_block_comments_on_first_column;
@@ -1296,6 +1336,8 @@ public class CodeFormatterVisitor extends AbstractVisitor implements
 									replaceBuffer.length());
 							replaceBuffer.replace(position,
 									replaceBuffer.length(), " "); //$NON-NLS-1$
+							IRegion startLinereg = document
+									.getLineInformation(startLine);
 							lineWidth = comment.sourceStart() + offset
 									- startLinereg.getOffset() + 1;
 							indentOnFirstColumn = false;
@@ -1335,7 +1377,8 @@ public class CodeFormatterVisitor extends AbstractVisitor implements
 						}
 						if (indentationLevelDesending || blockEnd) {
 							// add single indentationChar * indentationSize
-							// Because the comment is the previous indentation
+							// Because the comment is the previous
+							// indentation
 							// level
 							for (int i = 0; i < preferences.indentationSize; i++) {
 								appendToBuffer(preferences.indentationChar);
@@ -1348,26 +1391,25 @@ public class CodeFormatterVisitor extends AbstractVisitor implements
 					if (startLine != commentStartLine && blockEnd) {
 						recordCommentIndentVariables = true;
 					}
-					if (start <= comment.sourceStart() + offset) {
-						doNotIndent = true;
-						if (indentOnFirstColumn) {
-							indent();
-							doNotIndent = false;
-							if (lineWidth > 0) {
-								startAtFirstColumn = false;
-							}
-						}
-
-						handleCharsWithoutComments(start, comment.sourceStart()
-								+ offset);
+					doNotIndent = true;
+					if (indentOnFirstColumn) {
+						indent();
 						doNotIndent = false;
+						if (lineWidth > 0) {
+							startAtFirstColumn = false;
+						}
 					}
+
+					handleCharsWithoutComments(start, comment.sourceStart()
+							+ offset);
+					doNotIndent = false;
 					start = comment.sourceEnd() + offset;
 					resetEnableStatus(document.get(comment.sourceStart()
 							+ offset,
 							comment.sourceEnd() - comment.sourceStart()));
 					if (this.editsEnabled
-							&& this.preferences.comment_format_block_comment) {
+							&& this.preferences.comment_format_block_comment
+							&& !(comment instanceof VarComment)) {
 						if (startLine == commentStartLine) {
 							initCommentIndentVariables(offset, startLine,
 									comment, endWithNewLineIndent);
@@ -1454,12 +1496,14 @@ public class CodeFormatterVisitor extends AbstractVisitor implements
 						} else {
 
 						}
+						newLineOfComment = false;
 						if (this.preferences.comment_new_lines_at_block_boundaries) {
 							insertNewLineForPHPBlockComment(
 									indentLengthForComment,
 									indentStringForComment);
+							newLineOfComment = true;
 						}
-
+						boolean isFirst = true;
 						for (int j = 0; j < lines.size(); j++) {
 							String word = lines.get(j).trim();
 							if (word.startsWith("*")) { //$NON-NLS-1$
@@ -1468,24 +1512,48 @@ public class CodeFormatterVisitor extends AbstractVisitor implements
 							if (word.length() > 0) {
 								commentWords.add(word);
 								if (this.preferences.join_lines_in_comments) {
-
+									if (!isFirst) {
+										insertNewLineForPHPBlockComment(
+												indentLengthForComment,
+												indentStringForComment);
+										newLineOfComment = true;
+									}
+									isFirst = false;
 									formatCommentBlockWords(
 											indentLengthForComment,
 											indentStringForComment);
 								}
 							} else if (!this.preferences.comment_clear_blank_lines_in_block_comment) {
-
 								if (j != 0 && j != lines.size() - 1) {
 									formatCommentBlockWords(
 											indentLengthForComment,
 											indentStringForComment);
+									// don't duplicate first blank line
+									if (isFirst
+											&& this.preferences.comment_new_lines_at_block_boundaries) {
+										newLineOfComment = true;
+										isFirst = false;
+										continue;
+									}
+									insertNewLineForPHPBlockComment(
+											indentLengthForComment,
+											indentStringForComment);
+									newLineOfComment = true;
+									isFirst = false;
 								}
 							}
 
 						}
-						formatCommentBlockWords(indentLengthForComment,
-								indentStringForComment);
-						if (this.preferences.comment_new_lines_at_block_boundaries) {
+						if (!commentWords.isEmpty()) {
+							formatCommentBlockWords(indentLengthForComment,
+									indentStringForComment);
+							isFirst = false;
+						}
+						if (isFirst
+								&& this.preferences.comment_new_lines_at_block_boundaries) {
+							appendToBuffer("/"); //$NON-NLS-1$
+						} else if (newLineOfComment
+								|| this.preferences.comment_new_lines_at_block_boundaries) {
 							insertNewLine();
 							if (indentLengthForComment >= 0) {
 								appendToBuffer(indentStringForComment);
@@ -1497,19 +1565,12 @@ public class CodeFormatterVisitor extends AbstractVisitor implements
 						} else {
 							indertWordToComment("*/"); //$NON-NLS-1$
 						}
+						newLineOfComment = false;
 						handleCharsWithoutComments(comment.sourceStart()
 								+ offset, comment.sourceEnd() + offset, true);
 
 					}
 					insertNewLine();
-					startLine = endLine;
-				} else {
-					// don't handle multiline
-					start = end;
-					replaceBuffer.setLength(0);
-					resetEnableStatus(document.get(comment.sourceStart()
-							+ offset,
-							comment.sourceEnd() - comment.sourceStart()));
 				}
 				break;
 			}
@@ -1839,7 +1900,13 @@ public class CodeFormatterVisitor extends AbstractVisitor implements
 		SimpleReference[] reference = phpDocTag.getReferencesWithOrigOrder();
 		StringBuffer sb = new StringBuffer();
 		for (int i = 0; i < reference.length; i++) {
-			sb.append(" ").append(reference[i].getName()); //$NON-NLS-1$
+			if (i > 0 && reference[i - 1] instanceof TypeReference
+					&& reference[i] instanceof TypeReference) {
+				sb.append(PHPDOC_CLASS_SEPARATOR)
+						.append(reference[i].getName()); //$NON-NLS-1$
+			} else {
+				sb.append(" ").append(reference[i].getName()); //$NON-NLS-1$
+			}
 		}
 		return sb.toString();
 	}
@@ -1969,6 +2036,13 @@ public class CodeFormatterVisitor extends AbstractVisitor implements
 		// check if the statement end with ; or ?>
 		if (isContainChar(start, end, SEMICOLON)) {
 			appendToBuffer(SEMICOLON);
+			if (isHeredocSemicolon && isPhpEqualTag) {
+				// https://bugs.eclipse.org/bugs/show_bug.cgi?id=411322
+				// always insert a new line after the closing HEREDOC tag
+				isPhpEqualTag = false;
+				insertNewLine();
+				isPhpEqualTag = true;
+			}
 			isHeredocSemicolon = false;
 		} else if (isContainChar(start, end, QUESTION_MARK)) {
 			handlePhpEndTag(start, end, "?>"); //$NON-NLS-1$
@@ -2884,9 +2958,16 @@ public class CodeFormatterVisitor extends AbstractVisitor implements
 			// workaround
 			// remove this after fixing of
 			// https://bugs.eclipse.org/bugs/show_bug.cgi?id=326384
-			if (superClass instanceof NamespaceName
-					&& ((NamespaceName) superClass).isGlobal()) {
-				start -= 1;
+			try {
+				if (superClass instanceof NamespaceName
+						&& ((NamespaceName) superClass).isGlobal()) {
+					if (Character.isWhitespace(document.getChar(start - 1))
+							|| document.getChar(start - 1) == '\\') {
+						start -= 1;
+					}
+				}
+			} catch (BadLocationException e) {
+				// should not be here
 			}
 			// end
 
@@ -4558,6 +4639,13 @@ public class CodeFormatterVisitor extends AbstractVisitor implements
 			int i = quote.getEnd();
 			if (isContainChar(i, i + 1, SEMICOLON)) {
 				isHeredocSemicolon = true;
+			} else {
+				// https://bugs.eclipse.org/bugs/show_bug.cgi?id=411322
+				// always insert a new line after the closing HEREDOC tag
+				boolean isPhpEqualTagOld = isPhpEqualTag;
+				isPhpEqualTag = false;
+				insertNewLine();
+				isPhpEqualTag = isPhpEqualTagOld;
 			}
 		}
 		return false;
@@ -4906,12 +4994,14 @@ public class CodeFormatterVisitor extends AbstractVisitor implements
 	public boolean visit(NamespaceDeclaration namespaceDeclaration) {
 		appendToBuffer("namespace"); //$NON-NLS-1$
 		insertSpace();
-		handleChars(namespaceDeclaration.getStart(), namespaceDeclaration
-				.getName().getStart());
+		int lastPosition = namespaceDeclaration.getStart();
+		if (namespaceDeclaration.getName() != null) {
+			handleChars(namespaceDeclaration.getStart(), namespaceDeclaration
+					.getName().getStart());
+			namespaceDeclaration.getName().accept(this);
 
-		namespaceDeclaration.getName().accept(this);
-		int lastPosition = namespaceDeclaration.getName().getEnd();
-
+			lastPosition = namespaceDeclaration.getName().getEnd();
+		}
 		if (namespaceDeclaration.isBracketed()) {
 			// handle class body
 			boolean isIndentationAdded = handleBlockOpenBrace(
