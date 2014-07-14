@@ -940,7 +940,8 @@ public class CodeFormatterVisitor extends AbstractVisitor implements
 							lineWidth = 0;
 						} else {
 							insertNewLine();
-							if (!isIndented) {
+							if (!isIndented
+									&& !commentIndetationStack.isEmpty()) {
 								CommentIndentationObject cio = commentIndetationStack
 										.peek();
 								if (!cio.indented) {
@@ -1622,7 +1623,7 @@ public class CodeFormatterVisitor extends AbstractVisitor implements
 					return false;
 				}
 			} catch (BadLocationException e) {
-				e.printStackTrace();
+				Logger.logException(e);
 			}
 		}
 		return false;
