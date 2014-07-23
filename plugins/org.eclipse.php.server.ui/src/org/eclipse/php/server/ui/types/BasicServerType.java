@@ -12,6 +12,7 @@
 package org.eclipse.php.server.ui.types;
 
 import org.eclipse.jface.resource.ImageDescriptor;
+import org.eclipse.php.internal.server.IHelpContextIds;
 import org.eclipse.php.internal.server.PHPServerUIMessages;
 import org.eclipse.php.internal.server.ui.ServersPluginImages;
 import org.eclipse.swt.graphics.Image;
@@ -63,6 +64,15 @@ public class BasicServerType implements IServerType {
 	 */
 	public String getId() {
 		return ID;
+	}
+
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see org.eclipse.php.server.ui.types.IServerType#getHelp()
+	 */
+	public String getHelp() {
+		return IHelpContextIds.ADDING_A_SERVER_GENERIC_PHP_SERVER;
 	}
 
 }

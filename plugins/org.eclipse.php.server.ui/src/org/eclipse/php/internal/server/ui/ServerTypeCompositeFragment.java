@@ -15,6 +15,7 @@ import java.util.Collection;
 
 import org.eclipse.jface.dialogs.Dialog;
 import org.eclipse.jface.viewers.*;
+import org.eclipse.php.internal.server.IHelpContextIds;
 import org.eclipse.php.internal.server.PHPServerUIMessages;
 import org.eclipse.php.internal.server.core.Server;
 import org.eclipse.php.internal.ui.wizards.CompositeFragment;
@@ -23,9 +24,13 @@ import org.eclipse.php.server.ui.types.IServerType;
 import org.eclipse.php.server.ui.types.ServerTypesManager;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.custom.StyleRange;
+import org.eclipse.swt.events.HelpEvent;
+import org.eclipse.swt.events.HelpListener;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
+import org.eclipse.swt.program.Program;
 import org.eclipse.swt.widgets.*;
+import org.eclipse.ui.internal.help.WorkbenchHelpSystem;
 
 /**
  * Composite fragment for server type selection page.
@@ -150,12 +155,26 @@ public class ServerTypeCompositeFragment extends CompositeFragment {
 				if (!structuredSelection.isEmpty()) {
 					currentType = (IServerType) structuredSelection.toArray()[0];
 					controlHandler.update();
+					getParent().setData(WorkbenchHelpSystem.HELP_KEY,
+							currentType.getHelp());
 				}
 			}
 		});
 
 		validate();
 		Dialog.applyDialogFont(this);
+
+		getParent().setData(WorkbenchHelpSystem.HELP_KEY,
+				IHelpContextIds.ADDING_PHP_SERVERS);
+		getParent().addHelpListener(new HelpListener() {
+			public void helpRequested(HelpEvent event) {
+				if (currentType != null) {
+					Program.launch(currentType.getHelp());
+				} else {
+					Program.launch(IHelpContextIds.ADDING_PHP_SERVERS);
+				}
+			}
+		});
 	}
 
 }
