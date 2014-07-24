@@ -95,7 +95,6 @@ public class CodeFormatterVisitor extends AbstractVisitor implements
 	private boolean isPrevSpace = false;
 	private boolean isHeredocSemicolon = false;
 	private int lineWidth = 0;
-	private int lineNumber = 0;
 	private int binaryExpressionLineWrapPolicy = -1;// use this as local since
 	// it changes its state
 	private int binaryExpressionIndentGap = 0;// use this as local since it
@@ -110,7 +109,6 @@ public class CodeFormatterVisitor extends AbstractVisitor implements
 	// append chars to buffer through insertSpace or appendToBuffer
 	private StringBuffer replaceBuffer = new StringBuffer();
 	private List<Symbol> tokens = new ArrayList<Symbol>();
-	private boolean secondReplaceBufferNeeded = false;
 
 	/**
 	 * list of <ReplaceEdit>
@@ -852,9 +850,7 @@ public class CodeFormatterVisitor extends AbstractVisitor implements
 		boolean oldIgnoreEmptyLineSetting = ignoreEmptyLineSetting;
 		ignoreEmptyLineSetting = false;
 
-		String secondReplaceBuffer = null;
 		int startLine = document.getLineOfOffset(offset);
-		int endLine = document.getLineOfOffset(end);
 		int commentStartLine = -1;
 		// int commentEndLine = -1;
 		int start = offset;
@@ -863,6 +859,7 @@ public class CodeFormatterVisitor extends AbstractVisitor implements
 		boolean indentationLevelDesending = this.indentationLevelDesending;
 		inComment = true;
 		boolean previousCommentIsSingleLine = false;
+		boolean previousCommentWasSingleLine = false;
 		justCommentLine = false;
 
 		comments: for (Iterator<org.eclipse.php.internal.core.compiler.ast.nodes.Comment> iter = commentList
@@ -884,7 +881,9 @@ public class CodeFormatterVisitor extends AbstractVisitor implements
 			case org.eclipse.php.internal.core.compiler.ast.nodes.Comment.TYPE_SINGLE_LINE:
 				indentOnFirstColumn = !startAtFirstColumn
 						|| !this.preferences.never_indent_line_comments_on_first_column;
+
 				if (startLine == commentStartLine) {
+
 					if (position >= 0) {
 						afterNewLine = replaceBuffer.substring(position
 								+ lineSeparator.length(),
@@ -925,32 +924,28 @@ public class CodeFormatterVisitor extends AbstractVisitor implements
 									: 3;
 						}
 					}
-					if (position >= 0) {
-						if (!secondReplaceBufferNeeded)
-							secondReplaceBuffer = replaceBuffer
-									.substring(position
-											+ lineSeparator.length());
-						replaceBuffer.replace(
-								position + lineSeparator.length(),
-								replaceBuffer.length(), ""); //$NON-NLS-1$
-						lineWidth = 0;
-					} else {
-						if (replaceBuffer.toString().trim().length() == 0) {
+
+					if (replaceBuffer.toString().trim().length() == 0) {
+						if (replaceBuffer.toString().contains(lineSeparator)) {
 							replaceBuffer.setLength(0);
 							lineWidth = 0;
-						} else {
 							insertNewLine();
-							if (!isIndented
-									&& !commentIndetationStack.isEmpty()) {
-								CommentIndentationObject cio = commentIndetationStack
-										.peek();
-								if (!cio.indented) {
-									cio.indented = true;
-									indentationLevel += indentGap;
-								}
-							}
-							// TODO should add indent level
+						} else {
+							replaceBuffer.setLength(0);
+							lineWidth = 0;
 						}
+
+					} else {
+						insertNewLine();
+						if (!isIndented && !commentIndetationStack.isEmpty()) {
+							CommentIndentationObject cio = commentIndetationStack
+									.peek();
+							if (!cio.indented) {
+								cio.indented = true;
+								indentationLevel += indentGap;
+							}
+						}
+						// TODO should add indent level
 					}
 					if (indentationLevelDesending || blockEnd) {
 						for (int i = 0; i < preferences.indentationSize; i++) {
@@ -980,43 +975,11 @@ public class CodeFormatterVisitor extends AbstractVisitor implements
 					}
 					doNotIndent = false;
 				}
+				previousCommentWasSingleLine = previousCommentIsSingleLine;
 				previousCommentIsSingleLine = true;
 				handleCharsWithoutComments(start, comment.sourceStart()
 						+ offset);
 
-				// fix for format removing close_parn of array with comment
-				IRegion endLineInformation = document
-						.getLineInformation(endLine);
-
-				if (!isComment(document
-						.getLineInformation(commentStartLine - 1))) {
-					search: for (int i = 0; i < endLineInformation.getLength(); i++) {
-						switch (document.getChar(endLineInformation.getOffset()
-								+ i)) {
-						case CLOSE_PARN:
-						case CLOSE_BRACKET:
-							secondReplaceBufferNeeded = true;
-							break search;
-						case ' ':
-						case '\t':
-						case '\r':
-						case '\n':
-							break;
-						default:
-							break search;
-						}
-					}
-				}
-				/*
-				 * if (preferences.comment_line_length == -1 &&
-				 * secondReplaceBufferNeeded && !isComment(document
-				 * .getLineInformation(commentStartLine + 1))) { replaceBuffer =
-				 * secondReplaceBuffer;
-				 * handleCharsWithoutComments(comment.sourceEnd() + offset,
-				 * comment.sourceEnd() + offset + 1); secondReplaceBufferNeeded
-				 * = false; }
-				 */
-				// end of fix
 				doNotIndent = false;
 				resetEnableStatus(document.get(comment.sourceStart() + offset,
 						comment.sourceEnd() - comment.sourceStart()));
@@ -1062,25 +1025,9 @@ public class CodeFormatterVisitor extends AbstractVisitor implements
 					commentWords = removeEmptyString(commentWords);
 					commentContent = join(commentWords, " "); //$NON-NLS-1$
 					commentContent = commentContent.trim();
-					IRegion commentLineInformation = document
-							.getLineInformation(commentStartLine);
-					String commentLineContent = document.get(
-							commentLineInformation.getOffset(),
-							commentLineInformation.getLength()).trim();
 
-					if (commentLineContent.startsWith("//") //$NON-NLS-1$
-							|| commentLineContent.startsWith("/*") //$NON-NLS-1$
-							|| commentLineContent.startsWith("*")) //$NON-NLS-1$
-						justCommentLine = true;
+					justCommentLine = true;
 
-					/*
-					 * if (!justCommentLine) { if (commentWords != null &&
-					 * (lineWidth + 1 + commentWords.get(0).length() >
-					 * this.preferences.comment_line_length)) { insertNewLine();
-					 * indentBaseOnPrevLine(commentStartLine); }
-					 * 
-					 * }
-					 */
 					boolean newLineStart = true;
 					appendToBuffer("//"); //$NON-NLS-1$
 
@@ -1114,27 +1061,11 @@ public class CodeFormatterVisitor extends AbstractVisitor implements
 							newLineStart = false;
 						}
 					}
-					if (secondReplaceBufferNeeded
-							&& !isComment(document
-									.getLineInformation(commentStartLine + 1))) {
-						insertNewLine();
-						indent();
-						needInsertNewLine = false;
-						needIndentNewLine = false;
-						if (secondReplaceBuffer == null) {
-							secondReplaceBuffer = afterNewLine;
-						}
-						appendToBuffer(secondReplaceBuffer);
-						afterNewLine = EMPTY_STRING;
-						secondReplaceBufferNeeded = false;
-					}
 					handleCharsWithoutComments(comment.sourceStart() + offset,
 							comment.sourceEnd() + offset, true);
 					if (needInsertNewLine) {
 						insertNewLine();
-						indent();
-						needIndentNewLine = false;
-						afterNewLine = EMPTY_STRING;
+						needInsertNewLine = false;
 					}
 				}
 
@@ -1342,6 +1273,7 @@ public class CodeFormatterVisitor extends AbstractVisitor implements
 							lineWidth = comment.sourceStart() + offset
 									- startLinereg.getOffset() + 1;
 							indentOnFirstColumn = false;
+
 						}
 					} else {
 						afterNewLine = EMPTY_STRING;
@@ -1765,15 +1697,6 @@ public class CodeFormatterVisitor extends AbstractVisitor implements
 		return result;
 	}
 
-	private boolean isAll(String word, char c) {
-		for (int i = 0; i < word.length(); i++) {
-			if (word.charAt(i) != c) {
-				return false;
-			}
-		}
-		return true;
-	}
-
 	private void resetEnableStatus(String content) {
 		int enablingTagIndex = -1;
 		int disablingTagIndex = -1;
@@ -1841,13 +1764,14 @@ public class CodeFormatterVisitor extends AbstractVisitor implements
 			boolean insertTag, boolean hasDesc) {
 		boolean insertSpace = true;
 		String tag = ""; //$NON-NLS-1$
-		int indentLength = 0;
+		// int indentLength = 0;
 		if (phpDocTag != null) {
 			tag = "@" + PHPDocTag.getTagKind(phpDocTag.getTagKind()); //$NON-NLS-1$
 			if (indentationLevelDesending) {
 				for (int i = 0; i < preferences.indentationSize; i++) {
-					indentLength += (preferences.indentationChar == CodeFormatterPreferences.SPACE_CHAR) ? 1
-							: 4;
+					// indentLength += (preferences.indentationChar ==
+					// CodeFormatterPreferences.SPACE_CHAR) ? 1
+					// : 4;
 				}
 			}
 		}
@@ -2093,7 +2017,6 @@ public class CodeFormatterVisitor extends AbstractVisitor implements
 			if (lineForStart == lineForEnd) {
 				lineWidth += node.getLength();
 			} else {
-				lineNumber += (lineForEnd - lineForStart);
 				lineWidth = document.getLineLength(lineForEnd);
 			}
 		} catch (BadLocationException e) {
@@ -2104,7 +2027,6 @@ public class CodeFormatterVisitor extends AbstractVisitor implements
 	private void insertNewLine() {
 		if (!isPhpEqualTag) {
 			appendToBuffer(lineSeparator);
-			lineNumber++;
 			lineWidth = 0;
 		}
 	}
@@ -2158,9 +2080,7 @@ public class CodeFormatterVisitor extends AbstractVisitor implements
 
 	private void handleSplittedPhpBlock(int offset, int end)
 			throws BadLocationException {
-		int line = document.getLineOfOffset(offset);
 		IRegion lineRegion = document.getLineInformationOfOffset(offset);
-		int lineLength = document.getLineLength(line);
 		switch (getPhpStartTag(offset)) {
 		case PHP_OPEN_ASP_TAG:
 		case PHP_OPEN_SHORT_TAG:
@@ -3095,13 +3015,11 @@ public class CodeFormatterVisitor extends AbstractVisitor implements
 		// start
 		// condition ? true : false
 		conditionalExpression.getCondition().accept(this);
-		int lastPosition = conditionalExpression.getCondition().getEnd();
 		// condition -> if true
 		if (this.preferences.insert_space_before_conditional_question_mark) {
 			insertSpace();
 		}
 		appendToBuffer(QUESTION_MARK);
-		lastPosition++;
 		if (this.preferences.insert_space_after_conditional_question_mark) {
 			insertSpace();
 		}
@@ -5205,7 +5123,7 @@ public class CodeFormatterVisitor extends AbstractVisitor implements
 
 	public boolean visit(TraitUseStatement node) {
 		if (node.getTraitList().size() > 0) {
-			int lastPosition = node.getStart() + 3;
+			// int lastPosition = node.getStart() + 3;
 			lineWidth += 3;// the word 'use'
 			insertSpace();
 			handleChars(node.getStart() + 3, node.getTraitList().get(0)
@@ -5319,8 +5237,9 @@ public class CodeFormatterVisitor extends AbstractVisitor implements
 				}
 			}
 			List<IRegion> temp = new ArrayList<IRegion>();
-			for (Iterator iterator = result.iterator(); iterator.hasNext();) {
-				IRegion iRegion = (IRegion) iterator.next();
+			for (Iterator<IRegion> iterator = result.iterator(); iterator
+					.hasNext();) {
+				IRegion iRegion = iterator.next();
 				if (isInSingleLine(iRegion.getOffset(), iRegion.getLength())) {
 					temp.add(iRegion);
 				}
