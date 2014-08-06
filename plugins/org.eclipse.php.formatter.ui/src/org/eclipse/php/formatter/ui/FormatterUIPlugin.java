@@ -12,9 +12,6 @@ package org.eclipse.php.formatter.ui;
 
 import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.Status;
-import org.eclipse.jface.preference.IPreferenceStore;
-import org.eclipse.php.formatter.ui.preferences.ProfileManager;
-import org.eclipse.php.internal.ui.preferences.PreferenceConstants;
 import org.eclipse.ui.plugin.AbstractUIPlugin;
 import org.osgi.framework.BundleContext;
 
@@ -45,7 +42,6 @@ public class FormatterUIPlugin extends AbstractUIPlugin {
 	 */
 	public void start(BundleContext context) throws Exception {
 		super.start(context);
-		initPreferenceDefaults();
 	}
 
 	/*
@@ -80,13 +76,6 @@ public class FormatterUIPlugin extends AbstractUIPlugin {
 
 	public static void logErrorMessage(String message) {
 		log(new Status(IStatus.ERROR, PLUGIN_ID, 10001, message, null));
-	}
-
-	private void initPreferenceDefaults() {
-		IPreferenceStore store = FormatterUIPlugin.getDefault()
-				.getPreferenceStore();
-		store.setDefault(PreferenceConstants.FORMATTER_PROFILE,
-				ProfileManager.PHP_PROFILE);
 	}
 
 	public String getID() {

@@ -31,4 +31,7 @@
            </adapter>
         </factory>
      </extension>
+     <extension point="org.eclipse.ui.startup">
+ 	    <startup class="org.eclipse.php.formatter.ui.FormatterPreferenceInitializer"/>
+     </extension>
 </plugin>

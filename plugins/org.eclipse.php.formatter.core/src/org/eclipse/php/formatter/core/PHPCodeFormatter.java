@@ -10,14 +10,13 @@
  *******************************************************************************/
 package org.eclipse.php.formatter.core;
 
-import java.util.*;
+import java.util.List;
+import java.util.Map;
 
 import org.eclipse.core.resources.*;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.Path;
 import org.eclipse.core.runtime.Platform;
-import org.eclipse.core.runtime.Preferences;
-import org.eclipse.core.runtime.preferences.IEclipsePreferences;
 import org.eclipse.core.runtime.preferences.IScopeContext;
 import org.eclipse.core.runtime.preferences.InstanceScope;
 import org.eclipse.debug.core.DebugPlugin;
@@ -33,7 +32,6 @@ import org.eclipse.php.internal.core.documentModel.DOMModelForPHP;
 import org.eclipse.php.internal.core.format.ICodeFormattingProcessor;
 import org.eclipse.php.internal.core.format.IFormatterProcessorFactory;
 import org.eclipse.php.internal.core.project.ProjectOptions;
-import org.eclipse.php.internal.ui.preferences.PreferenceConstants;
 import org.eclipse.ui.texteditor.MarkerUtilities;
 import org.eclipse.wst.html.core.internal.format.HTMLFormatProcessorImpl;
 import org.eclipse.wst.sse.core.StructuredModelManager;
@@ -58,43 +56,7 @@ public class PHPCodeFormatter implements IContentFormatter,
 
 	private CodeFormatterPreferences getPreferences(IProject project)
 			throws Exception {
-
-		IEclipsePreferences node = null;
-		if (project != null) {
-			ProjectScope scope = (ProjectScope) new ProjectScope(project);
-			node = scope.getNode(FormatterCorePlugin.PLUGIN_ID);
-		}
-
-		Map<String, Object> p = new HashMap<String, Object>(
-				defaultPrefrencesValues);
-		if (node != null
-				&& node.keys().length > 0
-				&& node.get(PreferenceConstants.FORMATTER_PROFILE, null) != null) {
-			Set<String> propetiesNames = p.keySet();
-			for (Iterator<String> iter = propetiesNames.iterator(); iter
-					.hasNext();) {
-				String property = (String) iter.next();
-				String value = node.get(property, null);
-				if (value != null) {
-					p.put(property, value);
-				}
-			}
-		} else {
-			Preferences preferences = FormatterCorePlugin.getDefault()
-					.getPluginPreferences();
-			String[] propetiesNames = preferences.propertyNames();
-			for (int i = 0; i < propetiesNames.length; i++) {
-				String property = propetiesNames[i];
-				String value = preferences.getString(property);
-				if (value != null) {
-					p.put(property, value);
-				}
-			}
-		}
-
-		fCodeFormatterPreferences.setPreferencesValues(p);
-
-		return fCodeFormatterPreferences;
+		return new PHPCodeFormatterCommonPreferences().getPreferences(project);
 	}
 
 	public void format(IDocument document, IRegion region) {
