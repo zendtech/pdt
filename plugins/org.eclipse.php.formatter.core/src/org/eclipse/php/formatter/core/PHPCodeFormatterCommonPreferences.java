@@ -127,13 +127,11 @@ public class PHPCodeFormatterCommonPreferences implements
 			ProjectScope scope = (ProjectScope) new ProjectScope(project);
 			node = scope.getNode(FormatterCorePlugin.PLUGIN_ID);
 		}
-
-		if (node != null
-				&& node.get(PreferenceConstants.FORMATTER_PROFILE, null) == null) {
+		if (node == null
+				|| node.get(PreferenceConstants.FORMATTER_PROFILE, null) == null) {
 			IScopeContext context = InstanceScope.INSTANCE;
 			node = context.getNode(FormatterCorePlugin.PLUGIN_ID);
 		}
-
 		Map<String, Object> p = new HashMap<String, Object>(
 				defaultPrefrencesValues);
 		if (node != null && node.keys().length > 0) {
