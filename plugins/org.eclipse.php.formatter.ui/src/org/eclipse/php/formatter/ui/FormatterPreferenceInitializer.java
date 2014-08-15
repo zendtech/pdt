@@ -11,10 +11,15 @@
 package org.eclipse.php.formatter.ui;
 
 import java.util.ArrayList;
+import java.util.List;
 
-import org.eclipse.core.runtime.preferences.IScopeContext;
+import org.eclipse.core.runtime.CoreException;
+import org.eclipse.core.runtime.preferences.DefaultScope;
 import org.eclipse.core.runtime.preferences.InstanceScope;
+import org.eclipse.php.formatter.ui.preferences.CodeFormatterConfigurationBlock;
 import org.eclipse.php.formatter.ui.preferences.ProfileManager;
+import org.eclipse.php.formatter.ui.preferences.ProfileManager.Profile;
+import org.eclipse.php.formatter.ui.preferences.ProfileStore;
 import org.eclipse.ui.IStartup;
 
 /**
@@ -30,11 +35,40 @@ public class FormatterPreferenceInitializer implements IStartup {
 	 */
 	@Override
 	public void earlyStartup() {
-		// workaround preferences initalization
-		IScopeContext instanceScope = InstanceScope.INSTANCE;
-		ProfileManager manager = new ProfileManager(
-				new ArrayList<ProfileManager.Profile>(), instanceScope);
-		manager.commitChanges(instanceScope);
+		// workaround preferences initialization
+		ProfileManager manager = new ProfileManager(getCustomProfiles(),
+				InstanceScope.INSTANCE);
+		manager.commitChanges(InstanceScope.INSTANCE);
+	}
+
+	/**
+	 * This method reads the custom profiles from preferences. It resolves
+	 * ZSTD-4451.
+	 * 
+	 * @TODO refactoring - the code is copy-pasted from
+	 *       {@link CodeFormatterConfigurationBlock#CodeFormatterConfigurationBlock}
+	 */
+	@SuppressWarnings({ "unchecked" })
+	private List<Profile> getCustomProfiles() {
+		List<Profile> profiles = null;
+		try {
+			profiles = ProfileStore.readProfiles(InstanceScope.INSTANCE);
+		} catch (CoreException e) {
+			Logger.logException(e);
+		}
+		if (profiles == null) {
+			try {
+				profiles = ProfileStore
+						.readProfilesFromPreferences(DefaultScope.INSTANCE);
+			} catch (CoreException e) {
+				Logger.logException(e);
+			}
+		}
+
+		if (profiles == null)
+			profiles = new ArrayList<Profile>();
+
+		return profiles;
 	}
 
 }
