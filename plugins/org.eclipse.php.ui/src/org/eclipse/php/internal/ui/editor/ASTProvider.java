@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2009 IBM Corporation and others.
+ * Copyright (c) 2014 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -14,6 +14,7 @@ package org.eclipse.php.internal.ui.editor;
 import java.util.Set;
 
 import org.eclipse.core.runtime.*;
+import org.eclipse.dltk.core.IExternalSourceModule;
 import org.eclipse.dltk.core.ISourceModule;
 import org.eclipse.php.internal.core.PHPVersion;
 import org.eclipse.php.internal.core.ast.nodes.ASTNode;
@@ -555,7 +556,9 @@ public final class ASTProvider {
 		synchronized (fReconcileLock) {
 			return javaElement != null
 					&& javaElement.equals(fReconcilingJavaElement)
-					&& fIsReconciling && !isValidatorDisabled(javaElement);
+					&& fIsReconciling
+					&& !(javaElement instanceof IExternalSourceModule)
+					&& !isValidatorDisabled(javaElement);
 		}
 	}
 
