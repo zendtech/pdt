@@ -124,19 +124,6 @@
 
 		</plugins>
 	</build>
-	<profiles>
-		<profile>
-			<id>macosx</id>
-			<activation>
-				<os>
-					<family>mac</family>
-				</os>
-			</activation>
-			<properties>
-				<test.vmargs>-XstartOnFirstThread</test.vmargs>
-			</properties>
-		</profile>
-	</profiles>
 	<repositories>
 		<repository>
 			<id>dltk</id>
