@@ -13,6 +13,8 @@ package org.eclipse.php.internal.server.ui;
 
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.util.ArrayList;
+import java.util.List;
 
 import org.eclipse.core.resources.*;
 import org.eclipse.core.runtime.CoreException;
@@ -166,64 +168,6 @@ public class ServerLaunchConfigurationTab extends
 		});
 	}
 
-	protected void createServerSelectionControl(Composite parent) {
-		Group group = new Group(parent, SWT.NONE);
-		group.setText(PHPServerUIMessages.getString("ServerTab.server")); //$NON-NLS-1$
-		GridLayout ly = new GridLayout(1, false);
-		ly.marginHeight = 0;
-		ly.marginWidth = 0;
-		group.setLayout(ly);
-		group.setLayoutData(new GridData(GridData.FILL_HORIZONTAL));
-
-		Composite phpServerComp = new Composite(group, SWT.NONE);
-		phpServerComp.setLayout(new GridLayout(4, false));
-		phpServerComp.setLayoutData(new GridData(GridData.FILL_HORIZONTAL));
-		phpServerComp.setFont(parent.getFont());
-
-		Label label = new Label(phpServerComp, SWT.WRAP);
-		GridData data = new GridData(GridData.BEGINNING);
-		data.widthHint = 100;
-		label.setLayoutData(data);
-		label.setFont(parent.getFont());
-		label.setText(PHPServerUIMessages
-				.getString("ServerLaunchConfigurationTab.0")); //$NON-NLS-1$
-
-		serverCombo = new Combo(phpServerComp, SWT.SINGLE | SWT.BORDER
-				| SWT.READ_ONLY);
-		serverCombo.setLayoutData(new GridData(GridData.FILL_HORIZONTAL));
-		serverCombo.addSelectionListener(new SelectionAdapter() {
-			public void widgetSelected(SelectionEvent e) {
-				handleServerSelection();
-			}
-		});
-
-		createNewServer = createPushButton(phpServerComp,
-				PHPServerUIMessages.getString("ServerTab.new"), null); //$NON-NLS-1$
-		createNewServer.addSelectionListener(fListener);
-
-		configureServers = createPushButton(phpServerComp,
-				PHPServerUIMessages.getString("ServerTab.configure"), null); //$NON-NLS-1$
-		configureServers.addSelectionListener(fListener);
-
-		servers = new ArrayList<Server>();
-		populateServerList(servers);
-
-		// initialize the servers list
-		if (!servers.isEmpty()) {
-			for (int i = 0; i < servers.size(); i++) {
-				Server svr = servers.get(i);
-				serverCombo.add(svr.getName());
-			}
-		}
-
-		// select first item in list
-		if (serverCombo.getItemCount() > 0) {
-			serverCombo.select(0);
-		}
-
-		serverCombo.forceFocus();
-	}
-
 	protected void populateServerList(List<Server> serverList) {
 		Server[] servers = ServersManager.getServers();
 
@@ -236,11 +180,6 @@ public class ServerLaunchConfigurationTab extends
 				serverList.add(servers[i]);
 			}
 		}
-	}
-
-	public void createServerControl(Composite parent) {
-		createServerSelectionControl(parent);
-		handleServerSelection();
 	}
 
 	protected void createFileComponent(Composite parent) {

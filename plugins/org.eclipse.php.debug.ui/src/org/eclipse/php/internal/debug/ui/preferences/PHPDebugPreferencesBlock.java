@@ -547,36 +547,6 @@ public class PHPDebugPreferencesBlock extends AbstractPHPPreferencePageBlock {
 				if (index != -1) {
 					fDefaultServer.select(index);
 				}
-				String serverDebuggerId = PHPDebugPlugin
-						.getDebuggerId(fDefaultServer.getText());
-				fServerDebugger.setText(PHPDebuggersRegistry
-						.getDebuggerName(serverDebuggerId));
-				String selectedPHP = fDefaultPHPExe.getText();
-				loadPHPExes(fDefaultPHPExe, PHPexes.getInstance().getAllItems());
-				index = fDefaultPHPExe.indexOf(selectedPHP);
-				fDefaultPHPExe.select(index != -1 ? index : 0);
-				PHPexeItem item = PHPexes.getInstance().getItem(
-						fDefaultPHPExe.getText());
-				if (item != null) {
-					fCLIDebugger.setText(PHPDebuggersRegistry
-							.getDebuggerName(item.getDebuggerID()));
-				} else {
-					fCLIDebugger
-							.setText(PHPDebugUIMessages.PhpDebugPreferencePage_noExeDefined);
-				}
-			}
-		});
-	}
-
-	private void refreshDebuggers() {
-		Display.getDefault().asyncExec(new Runnable() {
-			public void run() {
-				String selectedServer = fDefaultServer.getText();
-				loadServers(fDefaultServer);
-				int index = fDefaultServer.indexOf(selectedServer);
-				if (index != -1) {
-					fDefaultServer.select(index);
-				}
 				updateServerDebugger();
 				String selectedPHP = fDefaultPHPExe.getText();
 				loadPHPExes(fDefaultPHPExe, PHPexes.getInstance().getAllItems());
