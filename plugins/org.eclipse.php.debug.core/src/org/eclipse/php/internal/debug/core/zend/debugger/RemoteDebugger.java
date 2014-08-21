@@ -341,7 +341,7 @@ public class RemoteDebugger implements IRemoteDebugger {
 												.append(location
 														.makeRelativeTo(projectLocation)));
 					} catch (Exception ex) {
-						System.out.println(ex.getMessage());
+						Logger.logException(ex);
 					}
 					break;
 				}

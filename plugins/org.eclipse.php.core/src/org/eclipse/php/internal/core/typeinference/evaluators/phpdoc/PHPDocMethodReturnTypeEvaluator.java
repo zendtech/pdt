@@ -25,15 +25,14 @@ import org.eclipse.dltk.core.ModelException;
 import org.eclipse.dltk.core.SourceParserUtil;
 import org.eclipse.dltk.evaluation.types.MultiTypeType;
 import org.eclipse.dltk.ti.GoalState;
+import org.eclipse.dltk.ti.IContext;
 import org.eclipse.dltk.ti.goals.IGoal;
 import org.eclipse.dltk.ti.types.IEvaluatedType;
-import org.eclipse.php.internal.core.PHPCorePlugin;
+import org.eclipse.php.internal.core.Logger;
 import org.eclipse.php.internal.core.compiler.ast.nodes.*;
 import org.eclipse.php.internal.core.index.IPHPDocAwareElement;
-import org.eclipse.php.internal.core.typeinference.PHPClassType;
-import org.eclipse.php.internal.core.typeinference.PHPModelUtils;
-import org.eclipse.php.internal.core.typeinference.PHPSimpleTypes;
-import org.eclipse.php.internal.core.typeinference.PHPTypeInferenceUtils;
+import org.eclipse.php.internal.core.typeinference.*;
+import org.eclipse.php.internal.core.typeinference.context.IModelCacheContext;
 import org.eclipse.php.internal.core.typeinference.evaluators.AbstractMethodReturnTypeEvaluator;
 import org.eclipse.php.internal.core.typeinference.goals.AbstractMethodReturnTypeGoal;
 
@@ -54,6 +53,9 @@ public class PHPDocMethodReturnTypeEvaluator extends
 			.compile("array\\[.*\\]"); //$NON-NLS-1$
 
 	private final static String SELF_RETURN_TYPE = "self"; //$NON-NLS-1$
+
+	private final static Pattern MULTITYPE_PATTERN = Pattern.compile(
+			"^multitype:(.+)$", Pattern.CASE_INSENSITIVE); //$NON-NLS-1$
 
 	/**
 	 * Used for splitting the data types list of the returned tag
@@ -80,8 +82,15 @@ public class PHPDocMethodReturnTypeEvaluator extends
 
 			if (type != null) {
 				try {
-					IType[] superClasses = PHPModelUtils.getSuperClasses(type,
-							null);
+					IContext context = goal.getContext();
+					IModelAccessCache cache = null;
+					if (context instanceof IModelCacheContext) {
+						cache = ((IModelCacheContext) context).getCache();
+					}
+					IType[] superClasses = PHPModelUtils.getSuperClasses(
+							type,
+							cache == null ? null : cache.getSuperTypeHierarchy(
+									type, null));
 
 					for (IType superClass : superClasses) {
 						IMethod superClassMethod = superClass.getMethod(method
@@ -98,7 +107,7 @@ public class PHPDocMethodReturnTypeEvaluator extends
 						}
 					}
 				} catch (ModelException e) {
-					PHPCorePlugin.getDefault().log(e);
+					Logger.logException(e);
 				}
 			}
 		}
@@ -137,8 +146,10 @@ public class PHPDocMethodReturnTypeEvaluator extends
 						.size()]);
 			}
 			if (typeNames != null) {
+				MultiTypeType evalMultiType = null;
 				for (String typeName : typeNames) {
 					Matcher m = ARRAY_TYPE_PATTERN.matcher(typeName);
+					Matcher multi = MULTITYPE_PATTERN.matcher(typeName);
 					if (m.find()) {
 						int offset = 0;
 						try {
@@ -147,6 +158,7 @@ public class PHPDocMethodReturnTypeEvaluator extends
 						}
 						evaluated.add(getArrayType(m.group(), currentNamespace,
 								offset));
+
 					} else if (typeName.endsWith(BRACKETS)
 							&& typeName.length() > 2) {
 						int offset = 0;
@@ -158,6 +170,15 @@ public class PHPDocMethodReturnTypeEvaluator extends
 								typeName.substring(0, typeName.length() - 2),
 								currentNamespace, offset));
 					} else {
+						boolean isMulti = false;
+
+						if (multi.find()) {
+							if (evalMultiType == null) {
+								evalMultiType = new MultiTypeType();
+							}
+							isMulti = true;
+							typeName = multi.group(1);
+						}
 						AbstractMethodReturnTypeGoal goal = (AbstractMethodReturnTypeGoal) getGoal();
 						IType[] types = goal.getTypes();
 						if (typeName.equals(SELF_RETURN_TYPE) && types != null) {
@@ -165,7 +186,11 @@ public class PHPDocMethodReturnTypeEvaluator extends
 								IEvaluatedType type = getEvaluatedType(
 										PHPModelUtils.getFullName(t), null);
 								if (type != null) {
-									evaluated.add(type);
+									if (isMulti) {
+										evalMultiType.addType(type);
+									} else {
+										evaluated.add(type);
+									}
 								}
 							}
 						} else {
@@ -226,10 +251,17 @@ public class PHPDocMethodReturnTypeEvaluator extends
 							IEvaluatedType type = getEvaluatedType(typeName,
 									currentNamespace);
 							if (type != null) {
-								evaluated.add(type);
+								if (isMulti) {
+									evalMultiType.addType(type);
+								} else {
+									evaluated.add(type);
+								}
 							}
 						}
 					}
+				}
+				if (evalMultiType != null) {
+					evaluated.add(evalMultiType);
 				}
 			}
 		}

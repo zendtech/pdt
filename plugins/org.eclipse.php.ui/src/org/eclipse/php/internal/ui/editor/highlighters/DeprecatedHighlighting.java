@@ -12,10 +12,12 @@ package org.eclipse.php.internal.ui.editor.highlighters;
 
 import java.util.Collection;
 
+import org.eclipse.core.runtime.NullProgressMonitor;
 import org.eclipse.dltk.core.*;
-import org.eclipse.php.internal.core.Logger;
 import org.eclipse.php.internal.core.ast.nodes.*;
 import org.eclipse.php.internal.core.typeinference.IModelAccessCache;
+import org.eclipse.php.internal.core.typeinference.PHPModelUtils;
+import org.eclipse.php.internal.ui.Logger;
 import org.eclipse.php.internal.ui.editor.highlighter.AbstractSemanticApply;
 import org.eclipse.php.internal.ui.editor.highlighter.AbstractSemanticHighlighting;
 import org.eclipse.php.internal.ui.editor.highlighter.ModelUtils;
@@ -27,19 +29,25 @@ public class DeprecatedHighlighting extends AbstractSemanticHighlighting {
 		@Override
 		public boolean visit(Program program) {
 			try {
-				IModelElement[] children = getSourceModule().getChildren();
-				for (IModelElement child : children) {
-					if (ModelUtils.isDeprecated(child)) {
-						highlight(((IMember) child).getNameRange());
-					}
+				getSourceModule().accept(new IModelElementVisitor() {
 
-					IModelElement[] children1 = ((IParent) child).getChildren();
-					for (IModelElement child1 : children1) {
-						if (ModelUtils.isDeprecated(child1)) {
-							highlight(((IMember) child1).getNameRange());
+					@Override
+					public boolean visit(IModelElement element) {
+						if (element instanceof IMember) {
+
+							try {
+								if (ModelUtils.isDeprecated(element)) {
+									highlight(((IMember) element)
+											.getNameRange());
+								}
+							} catch (ModelException e) {
+								Logger.logException(e);
+							}
 						}
+						return true;
 					}
-				}
+				});
+
 			} catch (ModelException e) {
 				Logger.logException(e);
 			}
@@ -49,13 +57,15 @@ public class DeprecatedHighlighting extends AbstractSemanticHighlighting {
 		@Override
 		public boolean visit(ClassName classConst) {
 			if (classConst.getName() instanceof Identifier) {
+
 				String className = ((Identifier) classConst.getName())
 						.getName();
 				IModelAccessCache cache = classConst.getAST()
 						.getBindingResolver().getModelAccessCache();
-				if (cache != null) {
-					Collection<IType> types = cache.getTypes(getSourceModule(),
-							className, null, null);
+				try {
+					IType[] types = PHPModelUtils.getTypes(className,
+							getSourceModule(), classConst.getStart(), cache,
+							new NullProgressMonitor());
 					if (types != null) {
 						for (IType type : types) {
 							if (ModelUtils.isDeprecated(type)) {
@@ -64,7 +74,10 @@ public class DeprecatedHighlighting extends AbstractSemanticHighlighting {
 							}
 						}
 					}
+				} catch (ModelException e) {
+					Logger.logException(e);
 				}
+
 			}
 			return true;
 		}

@@ -214,6 +214,17 @@ public class ServerCompositeFragment extends CompositeFragment {
 				}
 			}
 		}
+		if (originalValuesCache.debuggerId != null) {
+			String name = PHPDebuggersRegistry
+					.getDebuggerName(originalValuesCache.debuggerId);
+			String[] values = debuggerCombo.getItems();
+			for (int i = 0; i < values.length; i++) {
+				if (values[i].equals(name)) {
+					debuggerCombo.select(i);
+					break;
+				}
+			}
+		}
 		String baseURL = originalValuesCache.url;
 		if (!baseURL.equals("")) { //$NON-NLS-1$
 			url.setText(baseURL);

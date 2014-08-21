@@ -56,8 +56,8 @@ public class ASTRewriteFlattener extends AbstractVisitor {
 	}
 
 	/**
-	 * Appends the text representation of the given modifier flags, followed by
-	 * a single space.
+	 * Appends the text representation of the given modifier modifiers, followed
+	 * by a single space.
 	 * 
 	 * @param modifiers
 	 *            the modifiers
@@ -334,13 +334,19 @@ public class ASTRewriteFlattener extends AbstractVisitor {
 		result.append("new "); //$NON-NLS-1$
 		classInstanceCreation.getClassName().accept(this);
 		Expression[] ctorParams = classInstanceCreation.getCtorParams();
-		if (ctorParams.length != 0) {
+		if (classInstanceCreation.getEnd() != classInstanceCreation
+				.getClassName().getEnd()) {
 			result.append("("); //$NON-NLS-1$
+		}
+		if (ctorParams.length != 0) {
 			ctorParams[0].accept(this);
 			for (int i = 1; i < ctorParams.length; i++) {
 				result.append(","); //$NON-NLS-1$
 				ctorParams[i].accept(this);
 			}
+		}
+		if (classInstanceCreation.getEnd() != classInstanceCreation
+				.getClassName().getEnd()) {
 			result.append(")"); //$NON-NLS-1$
 		}
 		return false;
@@ -1028,7 +1034,9 @@ public class ASTRewriteFlattener extends AbstractVisitor {
 	}
 
 	public boolean visit(ThrowStatement throwStatement) {
+		result.append("throw "); //$NON-NLS-1$
 		throwStatement.getExpression().accept(this);
+		result.append(";\n"); //$NON-NLS-1$
 		return false;
 	}
 

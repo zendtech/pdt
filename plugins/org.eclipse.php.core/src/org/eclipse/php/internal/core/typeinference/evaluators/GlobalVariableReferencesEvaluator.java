@@ -12,6 +12,7 @@
 package org.eclipse.php.internal.core.typeinference.evaluators;
 
 import java.util.*;
+import java.util.Map.Entry;
 
 import org.eclipse.dltk.ast.ASTNode;
 import org.eclipse.dltk.ast.Modifiers;
@@ -36,6 +37,7 @@ import org.eclipse.php.internal.core.typeinference.Declaration;
 import org.eclipse.php.internal.core.typeinference.DeclarationScope;
 import org.eclipse.php.internal.core.typeinference.PHPTypeInferenceUtils;
 import org.eclipse.php.internal.core.typeinference.VariableDeclarationSearcher;
+import org.eclipse.php.internal.core.typeinference.context.IModelCacheContext;
 import org.eclipse.php.internal.core.typeinference.goals.GlobalVariableReferencesGoal;
 
 /**
@@ -55,8 +57,11 @@ public class GlobalVariableReferencesEvaluator extends GoalEvaluator {
 
 		IContext context = goal.getContext();
 		ISourceModuleContext sourceModuleContext = null;
+		IScriptProject scriptProject = null;
 		if (context instanceof ISourceModuleContext) {
 			sourceModuleContext = (ISourceModuleContext) context;
+			scriptProject = sourceModuleContext.getSourceModule()
+					.getScriptProject();
 		}
 
 		String variableName = typedGoal.getVariableName();
@@ -64,8 +69,7 @@ public class GlobalVariableReferencesEvaluator extends GoalEvaluator {
 		boolean exploreOtherFiles = true;
 
 		// Find all global variables from mixin
-		IScriptProject scriptProject = sourceModuleContext.getSourceModule()
-				.getScriptProject();
+
 		IDLTKSearchScope scope = SearchEngine.createSearchScope(scriptProject);
 
 		IField[] elements = PhpModelAccess.getDefault().findFields(
@@ -104,16 +108,16 @@ public class GlobalVariableReferencesEvaluator extends GoalEvaluator {
 		}
 
 		List<IGoal> subGoals = new LinkedList<IGoal>();
-		Iterator<ISourceModule> sourceModuleIt = offsets.keySet().iterator();
-		while (sourceModuleIt.hasNext()) {
-			ISourceModule sourceModule = sourceModuleIt.next();
+		for (Entry<ISourceModule, SortedSet<ISourceRange>> entry : offsets
+				.entrySet()) {
+			ISourceModule sourceModule = entry.getKey();
 			if (exploreOtherFiles
 					|| (sourceModuleContext != null && sourceModuleContext
 							.getSourceModule().equals(sourceModule))) {
 
 				ModuleDeclaration moduleDeclaration = SourceParserUtil
 						.getModuleDeclaration(sourceModule);
-				SortedSet<ISourceRange> fileOffsets = offsets.get(sourceModule);
+				SortedSet<ISourceRange> fileOffsets = entry.getValue();
 
 				if (!fileOffsets.isEmpty()) {
 					GlobalReferenceDeclSearcher varSearcher = new GlobalReferenceDeclSearcher(
@@ -125,8 +129,16 @@ public class GlobalVariableReferencesEvaluator extends GoalEvaluator {
 						for (DeclarationScope s : scopes) {
 							for (Declaration decl : s
 									.getDeclarations(variableName)) {
-								subGoals.add(new ExpressionTypeGoal(s
-										.getContext(), decl.getNode()));
+
+								IContext context2 = s.getContext();
+								if (context2 instanceof IModelCacheContext
+										&& this.goal.getContext() instanceof IModelCacheContext) {
+									((IModelCacheContext) context2)
+											.setCache(((IModelCacheContext) this.goal
+													.getContext()).getCache());
+								}
+								subGoals.add(new ExpressionTypeGoal(context2,
+										decl.getNode()));
 							}
 						}
 					} catch (Exception e) {

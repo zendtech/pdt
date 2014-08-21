@@ -11,10 +11,8 @@
  *******************************************************************************/
 package org.eclipse.php.internal.core.typeinference.evaluators.phpdoc;
 
-import java.util.HashMap;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
+import java.util.Map.Entry;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -58,11 +56,10 @@ public class PHPDocClassVariableEvaluator extends AbstractPHPGoalEvaluator {
 		TypeContext context = (TypeContext) typedGoal.getContext();
 		String variableName = typedGoal.getVariableName();
 
-		IType[] types = PHPTypeInferenceUtils.getModelElements(
-				context.getInstanceType(), context);
-		Map<PHPDocBlock, IField> docs = new HashMap<PHPDocBlock, IField>();
-
 		IModelAccessCache cache = context.getCache();
+		IType[] types = PHPTypeInferenceUtils.getModelElements(
+				context.getInstanceType(), context, cache);
+		Map<PHPDocBlock, IField> docs = new HashMap<PHPDocBlock, IField>();
 
 		if (types != null) {
 			for (IType type : types) {
@@ -95,8 +92,9 @@ public class PHPDocClassVariableEvaluator extends AbstractPHPGoalEvaluator {
 			}
 		}
 
-		for (PHPDocBlock doc : docs.keySet()) {
-			IField typeField = docs.get(doc);
+		for (Entry<PHPDocBlock, IField> entry : docs.entrySet()) {
+			PHPDocBlock doc = entry.getKey();
+			IField typeField = entry.getValue();
 			IType currentNamespace = PHPModelUtils
 					.getCurrentNamespace(typeField);
 			for (PHPDocTag tag : doc.getTags()) {

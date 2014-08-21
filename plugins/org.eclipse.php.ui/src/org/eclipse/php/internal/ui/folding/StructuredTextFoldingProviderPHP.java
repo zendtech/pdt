@@ -12,6 +12,7 @@
 package org.eclipse.php.internal.ui.folding;
 
 import java.util.*;
+import java.util.Map.Entry;
 
 import org.eclipse.core.resources.IFile;
 import org.eclipse.core.resources.IMarker;
@@ -1028,9 +1029,12 @@ public class StructuredTextFoldingProviderPHP implements IProjectionListener,
 				final ProjectionModelNodeAdapterFactoryHTML factory2 = getAdapterFactoryHTML(true);
 				if (factory2 != null) {
 					factory2.addProjectionViewer(viewer);
+					factory2.suspendProjectionViewer(viewer);
 				}
-
 				addAllAdapters();
+				if (factory2 != null) {
+					factory2.activateProjectionViewer(viewer);
+				}
 			}
 		}
 
@@ -1229,11 +1233,10 @@ public class StructuredTextFoldingProviderPHP implements IProjectionListener,
 		Map<Object, Position> newStructure = ctx.fMap;
 		Map<IModelElement, Object> oldStructure = computeCurrentStructure(ctx);
 
-		Iterator<Object> e = newStructure.keySet().iterator();
-		while (e.hasNext()) {
-			PhpProjectionAnnotation newAnnotation = (PhpProjectionAnnotation) e
-					.next();
-			Position newPosition = newStructure.get(newAnnotation);
+		for (Entry<Object, Position> entry : newStructure.entrySet()) {
+			PhpProjectionAnnotation newAnnotation = (PhpProjectionAnnotation) entry
+					.getKey();
+			Position newPosition = entry.getValue();
 
 			IModelElement element = newAnnotation.getElement();
 			/*
@@ -1289,9 +1292,8 @@ public class StructuredTextFoldingProviderPHP implements IProjectionListener,
 			}
 		}
 
-		e = oldStructure.values().iterator();
-		while (e.hasNext()) {
-			List list = (List) e.next();
+		for (Object v : oldStructure.values()) {
+			List list = (List) v;
 			int size = list.size();
 			for (int i = 0; i < size; i++)
 				deletions.add(((Tuple) list.get(i)).annotation);

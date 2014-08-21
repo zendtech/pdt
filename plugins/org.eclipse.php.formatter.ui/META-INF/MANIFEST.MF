@@ -2,7 +2,7 @@ Manifest-Version: 1.0
 Bundle-ManifestVersion: 2
 Bundle-Name: Code Formatter UI Plug-in
 Bundle-SymbolicName: org.eclipse.php.formatter.ui;singleton:=true
-Bundle-Version: 3.2.0.qualifier
+Bundle-Version: 3.3.0.qualifier
 Bundle-Activator: org.eclipse.php.formatter.ui.FormatterUIPlugin
 Bundle-Vendor: Eclipse.org
 Bundle-Localization: plugin
@@ -17,3 +17,5 @@ Require-Bundle: org.eclipse.ui,
  org.eclipse.wst.sse.ui
 Eclipse-LazyStart: true
 Export-Package: org.eclipse.php.formatter.ui.preferences
+Bundle-RequiredExecutionEnvironment: JavaSE-1.6
+

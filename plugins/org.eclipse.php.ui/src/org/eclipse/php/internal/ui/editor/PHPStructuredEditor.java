@@ -23,7 +23,6 @@ import org.eclipse.core.filebuffers.manipulation.RemoveTrailingWhitespaceOperati
 import org.eclipse.core.internal.filebuffers.Progress;
 import org.eclipse.core.resources.IFile;
 import org.eclipse.core.resources.IProject;
-import org.eclipse.core.resources.IResource;
 import org.eclipse.core.runtime.*;
 import org.eclipse.core.runtime.jobs.IJobManager;
 import org.eclipse.core.runtime.jobs.Job;
@@ -290,9 +289,9 @@ public class PHPStructuredEditor extends StructuredTextEditor implements
 	private boolean fMarkImplementors;
 
 	/**
-	 * Fix for outline synchronization while reconcile 293
+	 * Fix for outline synchronization while reconcile
 	 */
-	private volatile boolean fReconcileSelection = false;
+	protected volatile boolean fReconcileSelection = false;
 
 	private boolean saveActionsEnabled = false;
 	private boolean saveActionsIgnoreEmptyLines = false;
@@ -2368,7 +2367,7 @@ public class PHPStructuredEditor extends StructuredTextEditor implements
 
 	@Override
 	protected void doSetInput(IEditorInput input) throws CoreException {
-		IResource resource = null;
+		IFile resource = null;
 		isExternal = false;
 
 		if (input instanceof IFileEditorInput) {
@@ -2389,7 +2388,7 @@ public class PHPStructuredEditor extends StructuredTextEditor implements
 
 		}
 
-		if (resource instanceof IFile) {
+		if (resource != null) {
 			if (PHPToolkitUtil.isPhpFile((IFile) resource)) {
 
 				PhpSourceParser.editFile.set(resource);
@@ -2860,7 +2859,6 @@ public class PHPStructuredEditor extends StructuredTextEditor implements
 		// Notify AST provider
 		PHPUiPlugin.getDefault().getASTProvider()
 				.aboutToBeReconciled((ISourceModule) getModelElement());
-
 		// Notify listeners
 		Object[] listeners = fReconcilingListeners.getListeners();
 		for (int i = 0, length = listeners.length; i < length; ++i)
@@ -2937,6 +2935,7 @@ public class PHPStructuredEditor extends StructuredTextEditor implements
 		if (unit != null) {
 			try {
 				if (reconcile) {
+					fReconcileSelection = false;
 					ScriptModelUtil.reconcile(unit);
 					return unit.getElementAt(offset);
 				} else if (unit.isConsistent())
@@ -3414,7 +3413,7 @@ public class PHPStructuredEditor extends StructuredTextEditor implements
 			int offset = sourceViewer.getVisibleRegion().getOffset();
 			caret[0] = offset + styledText.getCaretOffset();
 		}
-		IModelElement element = getElementAt(caret[0], this.fReconcileSelection);
+		IModelElement element = getElementAt(caret[0], false);
 		// IModelElement element = getElementAt(caret[0], true);
 		if (!(element instanceof ISourceReference))
 			return null;

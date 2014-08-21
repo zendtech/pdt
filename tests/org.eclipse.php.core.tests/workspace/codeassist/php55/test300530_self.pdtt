@@ -26,5 +26,5 @@ class foo extends bax
 --EXPECT--
 field(BAZ)
 field(SKIN)
+field(class)
 method(bar)
-?>

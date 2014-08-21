@@ -495,10 +495,10 @@ public class LineStyleProviderForPhp extends AbstractLineStyleProvider
 		ITextRegionList regions = blockedRegion.getRegions();
 		int nRegions = regions.size();
 		StyleRange styleRange = null;
+		TextAttribute previousAttr = null;
 		for (int i = 0; i < nRegions; i++) {
 			region = regions.get(i);
 			TextAttribute attr = null;
-			TextAttribute previousAttr = null;
 			final int startOffset = blockedRegion.getStartOffset(region);
 			if (startOffset > partitionEndOffset)
 				break;
@@ -531,8 +531,11 @@ public class LineStyleProviderForPhp extends AbstractLineStyleProvider
 						// the attribute has the same values.
 						// TODO: this needs to be improved to handle readonly
 						// regions correctly
-						if ((styleRange != null) && (previousAttr != null)
-								&& (previousAttr.equals(attr))) {
+						if ((styleRange != null)
+								&& (previousAttr != null)
+								&& (previousAttr.equals(attr))
+								&& styleRange.start + styleRange.length == region
+										.getStart()) {
 							styleRange.length += region.getLength();
 						} else {
 							styleRange = createStyleRange(blockedRegion,
@@ -604,8 +607,11 @@ public class LineStyleProviderForPhp extends AbstractLineStyleProvider
 							// TODO: this needs to be improved to handle
 							// readonly
 							// regions correctly
-							if ((styleRange != null) && (previousAttr != null)
-									&& (previousAttr.equals(attr))) {
+							if ((styleRange != null)
+									&& (previousAttr != null)
+									&& (previousAttr.equals(attr))
+									&& styleRange.start + styleRange.length == region
+											.getStart()) {
 								styleRange.length += region.getLength();
 							} else {
 								styleRange = createStyleRange(
@@ -673,7 +679,7 @@ public class LineStyleProviderForPhp extends AbstractLineStyleProvider
 				phpTokens = region.getUpdatedPhpTokens();
 				from = region.getUpdatedTokensStart();
 				partitionStartOffset = from + regionStart;
-				length = partitionLength = region.getUpdatedTokensLength();
+				partitionLength = region.getUpdatedTokensLength();
 
 			} else {
 				phpTokens = region.getPhpTokens(from,

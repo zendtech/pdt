@@ -44,6 +44,7 @@ import org.eclipse.php.internal.core.PHPCorePlugin;
 import org.eclipse.php.internal.core.PHPVersion;
 import org.eclipse.php.internal.core.ast.nodes.Identifier;
 import org.eclipse.php.internal.core.ast.nodes.NamespaceName;
+import org.eclipse.php.internal.core.codeassist.CodeAssistUtils;
 import org.eclipse.php.internal.core.compiler.ast.nodes.*;
 import org.eclipse.php.internal.core.compiler.ast.parser.ASTUtils;
 import org.eclipse.php.internal.core.compiler.ast.visitor.PHPASTVisitor;
@@ -166,14 +167,15 @@ public class PHPModelUtils {
 		}
 
 		boolean isGlobal = false;
-		if (elementName != null
-				&& elementName.length() > 0
-				&& elementName.charAt(0) == NamespaceReference.NAMESPACE_SEPARATOR) {
-			isGlobal = true;
+		int nsIndex = -1;
+		if (elementName != null) {
+			nsIndex = elementName
+					.lastIndexOf(NamespaceReference.NAMESPACE_SEPARATOR);
+			if (elementName.length() > 0
+					&& elementName.charAt(0) == NamespaceReference.NAMESPACE_SEPARATOR) {
+				isGlobal = true;
+			}
 		}
-
-		int nsIndex = elementName
-				.lastIndexOf(NamespaceReference.NAMESPACE_SEPARATOR);
 		if (nsIndex != -1) {
 			String namespace = elementName.substring(0, nsIndex);
 			if (isGlobal && namespace.length() > 0) {
@@ -878,7 +880,7 @@ public class PHPModelUtils {
 				functionName, MatchRule.EXACT, Modifiers.AccGlobal, 0, scope,
 				null);
 		Collection<IMethod> filteredElements = filterElements(sourceModule,
-				Arrays.asList(functions), cache, monitor);
+				Arrays.asList(functions), null, monitor);
 		return (IMethod[]) filteredElements
 				.toArray(new IMethod[filteredElements.size()]);
 	}
@@ -1005,6 +1007,7 @@ public class PHPModelUtils {
 		}
 
 		return current.getElementName().equals(field.getElementName())
+				&& current.getParent() != null
 				&& current.getParent().equals(field.getParent());
 
 	}
@@ -1661,6 +1664,12 @@ public class PHPModelUtils {
 		return getTypeHierarchyMethod(type, null, prefix, exactName, monitor);
 	}
 
+	public static PHPDocBlock[] getTypeHierarchyMethodDoc(IType type,
+			String prefix, boolean exactName, IProgressMonitor monitor)
+			throws CoreException {
+		return getTypeHierarchyMethodDoc(type, null, prefix, exactName, monitor);
+	}
+
 	/**
 	 * Finds method documentation by method name in the class hierarchy
 	 * 
@@ -1675,15 +1684,15 @@ public class PHPModelUtils {
 	 * @throws CoreException
 	 */
 	public static PHPDocBlock[] getTypeHierarchyMethodDoc(IType type,
-			String prefix, boolean exactName, IProgressMonitor monitor)
-			throws CoreException {
+			ITypeHierarchy hierarchy, String prefix, boolean exactName,
+			IProgressMonitor monitor) throws CoreException {
 
 		if (prefix == null) {
 			throw new NullPointerException();
 		}
 		final List<PHPDocBlock> docs = new LinkedList<PHPDocBlock>();
-		for (IMethod method : getTypeHierarchyMethod(type, prefix, exactName,
-				monitor)) {
+		for (IMethod method : getTypeHierarchyMethod(type, hierarchy, prefix,
+				exactName, monitor)) {
 			PHPDocBlock docBlock = getDocBlock(method);
 			if (docBlock != null) {
 				docs.add(docBlock);
@@ -2149,9 +2158,9 @@ public class PHPModelUtils {
 						for (UsePart usePart : useStatement.getParts()) {
 							if (usePart.getAlias() != null
 									&& usePart.getAlias().getName() != null) {
-								// TODO case non-sensitive
 								String name = usePart.getAlias().getName();
-								if (name.startsWith(prefix)) {
+								if (CodeAssistUtils.startsWithIgnoreCase(name,
+										prefix)) {
 									result.put(name, usePart);
 								}
 							} else {

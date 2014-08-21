@@ -16,10 +16,7 @@ import java.util.*;
 import org.eclipse.dltk.ast.ASTNode;
 import org.eclipse.dltk.ast.declarations.ModuleDeclaration;
 import org.eclipse.dltk.core.*;
-import org.eclipse.dltk.evaluation.types.AmbiguousType;
-import org.eclipse.dltk.evaluation.types.ModelClassType;
-import org.eclipse.dltk.evaluation.types.MultiTypeType;
-import org.eclipse.dltk.evaluation.types.UnknownType;
+import org.eclipse.dltk.evaluation.types.*;
 import org.eclipse.dltk.internal.core.ScriptProject;
 import org.eclipse.dltk.ti.IContext;
 import org.eclipse.dltk.ti.ISourceModuleContext;
@@ -27,6 +24,7 @@ import org.eclipse.dltk.ti.goals.ExpressionTypeGoal;
 import org.eclipse.dltk.ti.types.IEvaluatedType;
 import org.eclipse.php.core.compiler.PHPFlags;
 import org.eclipse.php.internal.core.compiler.ast.parser.ASTUtils;
+import org.eclipse.php.internal.core.typeinference.context.IModelCacheContext;
 import org.eclipse.php.internal.core.typeinference.evaluators.PHPTraitType;
 
 public class PHPTypeInferenceUtils {
@@ -89,9 +87,16 @@ public class PHPTypeInferenceUtils {
 	public static IEvaluatedType resolveExpression(ISourceModule sourceModule,
 			ModuleDeclaration moduleDeclaration, IContext context,
 			ASTNode expression) {
+		return resolveExpression(new PHPTypeInferencer(), sourceModule,
+				moduleDeclaration, context, expression);
+	}
+
+	public static IEvaluatedType resolveExpression(
+			IPHPTypeInferencer inferencer, ISourceModule sourceModule,
+			ModuleDeclaration moduleDeclaration, IContext context,
+			ASTNode expression) {
 		if (context != null) {
-			PHPTypeInferencer typeInferencer = new PHPTypeInferencer();
-			return typeInferencer.evaluateType(new ExpressionTypeGoal(context,
+			return inferencer.evaluateType(new ExpressionTypeGoal(context,
 					expression));
 		}
 		return UnknownType.INSTANCE;
@@ -109,8 +114,13 @@ public class PHPTypeInferenceUtils {
 	 */
 	public static IType[] getModelElements(IEvaluatedType evaluatedType,
 			ISourceModuleContext context) {
-		return PHPTypeInferenceUtils.getModelElements(evaluatedType, context,
-				0, null);
+		return PHPTypeInferenceUtils
+				.getModelElements(
+						evaluatedType,
+						context,
+						0,
+						context instanceof IModelCacheContext ? ((IModelCacheContext) context)
+								.getCache() : null);
 	}
 
 	/**
@@ -143,7 +153,12 @@ public class PHPTypeInferenceUtils {
 	 */
 	public static IType[] getModelElements(IEvaluatedType evaluatedType,
 			ISourceModuleContext context, int offset) {
-		return internalGetModelElements(evaluatedType, context, offset, null);
+		return internalGetModelElements(
+				evaluatedType,
+				context,
+				offset,
+				context instanceof IModelCacheContext ? ((IModelCacheContext) context)
+						.getCache() : null);
 	}
 
 	/**
@@ -232,5 +247,40 @@ public class PHPTypeInferenceUtils {
 		}
 
 		return null;
+	}
+
+	/**
+	 * Check if IEvaluatedType is Simpletype
+	 * 
+	 * array, mixed, object[] etc...
+	 * 
+	 * @param object
+	 * @return
+	 * @since 3.3
+	 */
+	public static boolean isSimple(Object object) {
+		if (object == null || object instanceof SimpleType) {
+			return true;
+		} else if (PHPSimpleTypes.RESOURCE == object
+				|| PHPSimpleTypes.OBJECT == object) {
+			return true;
+		} else if (object instanceof MultiTypeType) {
+			for (IEvaluatedType type : ((MultiTypeType) object).getTypes()) {
+				if (!isSimple(type)) {
+					return false;
+				}
+			}
+			return true;
+		} else if (object instanceof AmbiguousType) {
+			for (IEvaluatedType type : ((AmbiguousType) object)
+					.getPossibleTypes()) {
+				if (!isSimple(type)) {
+					return false;
+				}
+			}
+			return true;
+		}
+
+		return false;
 	}
 }

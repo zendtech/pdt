@@ -17,5 +17,6 @@ class MyClass {
 }
 ?>
 --EXPECT--
+field(class)
 method(sayHello)
 method(foo)

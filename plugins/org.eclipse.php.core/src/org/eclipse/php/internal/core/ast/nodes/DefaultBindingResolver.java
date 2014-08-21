@@ -25,9 +25,7 @@ import org.eclipse.php.internal.core.Logger;
 import org.eclipse.php.internal.core.ast.visitor.AbstractVisitor;
 import org.eclipse.php.internal.core.codeassist.CodeAssistUtils;
 import org.eclipse.php.internal.core.model.PerFileModelAccessCache;
-import org.eclipse.php.internal.core.typeinference.BindingUtility;
-import org.eclipse.php.internal.core.typeinference.IModelAccessCache;
-import org.eclipse.php.internal.core.typeinference.PHPClassType;
+import org.eclipse.php.internal.core.typeinference.*;
 
 /**
  * @author Roy, 2008 TODO : caching is a must have for this resolver
@@ -216,8 +214,8 @@ public class DefaultBindingResolver extends BindingResolver {
 					IType[] functionReturnTypes = CodeAssistUtils
 							.getFunctionReturnType(new IType[] { parent },
 									method.getElementName(),
-									CodeAssistUtils.USE_PHPDOC, method
-											.getSourceModule(), 0);
+									CodeAssistUtils.USE_PHPDOC,
+									method.getSourceModule(), 0);
 					for (IType currentEvaluatedType : functionReturnTypes) {
 						ITypeBinding typeBinding = getTypeBinding(currentEvaluatedType);
 						if (typeBinding != null) {
@@ -430,8 +428,8 @@ public class DefaultBindingResolver extends BindingResolver {
 	ITypeBinding getTypeBinding(SingleFieldDeclaration fieldDeclaration) {
 		IModelElement[] modelElements;
 		try {
-			modelElements = this.bindingUtil.getModelElement(fieldDeclaration
-					.getStart(), fieldDeclaration.getLength(),
+			modelElements = this.bindingUtil.getModelElement(
+					fieldDeclaration.getStart(), fieldDeclaration.getLength(),
 					getModelAccessCache());
 		} catch (ModelException e) {
 			Logger.log(IStatus.ERROR, e.toString());
@@ -777,8 +775,8 @@ public class DefaultBindingResolver extends BindingResolver {
 
 		if (modelElements != null) {
 			if (modelElements.getElementType() == IModelElement.FIELD) {
-				int id = LocalVariableIndex.perform(variable
-						.getEnclosingBodyNode(), variable);
+				int id = LocalVariableIndex.perform(
+						variable.getEnclosingBodyNode(), variable);
 				return new VariableBinding(this, (IMember) modelElements,
 						variable, id);
 			}
@@ -892,5 +890,15 @@ public class DefaultBindingResolver extends BindingResolver {
 
 	public IModelAccessCache getModelAccessCache() {
 		return modelAccessCache;
+	}
+
+	@Override
+	public void startBindingSession() {
+		bindingUtil.setCachedInferencer(new PHPCachedTypeInferencer());
+	}
+
+	@Override
+	public void stopBindingSession() {
+		bindingUtil.setCachedInferencer(new PHPTypeInferencer());
 	}
 }

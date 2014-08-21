@@ -14,6 +14,7 @@ package org.eclipse.php.internal.ui.corext.util;
 import java.io.File;
 import java.net.URI;
 import java.util.*;
+import java.util.Map.Entry;
 
 import org.eclipse.core.filesystem.EFS;
 import org.eclipse.core.resources.*;
@@ -55,10 +56,11 @@ public class Resources {
 				result = addOutOfSync(result, resource);
 			}
 		}
-		if (result != null)
+		if (result != null) {
 			return result;
+		}
 		return new Status(IStatus.OK, PHPUiPlugin.getPluginId(), IStatus.OK,
-				"", null); 		 //$NON-NLS-1$
+				"", null); //$NON-NLS-1$
 	}
 
 	/**
@@ -99,53 +101,55 @@ public class Resources {
 	 *      java.lang.Object)
 	 */
 	public static IStatus makeCommittable(IResource[] resources, Object context) {
-		List readOnlyFiles = new ArrayList();
+		List<IFile> readOnlyFiles = new ArrayList<IFile>();
 		for (int i = 0; i < resources.length; i++) {
 			IResource resource = resources[i];
-			if (resource.getType() == IResource.FILE && isReadOnly(resource))
-				readOnlyFiles.add(resource);
+			if (resource.getType() == IResource.FILE && isReadOnly(resource)) {
+				readOnlyFiles.add((IFile) resource);
+			}
 		}
-		if (readOnlyFiles.size() == 0)
+		if (readOnlyFiles.size() == 0) {
 			return new Status(IStatus.OK, PHPUiPlugin.getPluginId(),
 					IStatus.OK, "", null); //$NON-NLS-1$
+		}
 
-		Map oldTimeStamps = createModificationStampMap(readOnlyFiles);
-		IStatus status = ResourcesPlugin.getWorkspace().validateEdit(
-				(IFile[]) readOnlyFiles
-						.toArray(new IFile[readOnlyFiles.size()]), context);
-		if (!status.isOK())
+		Map<IFile, Long> oldTimeStamps = createModificationStampMap(readOnlyFiles);
+		IStatus status = ResourcesPlugin.getWorkspace()
+				.validateEdit(
+						readOnlyFiles.toArray(new IFile[readOnlyFiles.size()]),
+						context);
+		if (!status.isOK()) {
 			return status;
+		}
 
 		IStatus modified = null;
-		Map newTimeStamps = createModificationStampMap(readOnlyFiles);
-		for (Iterator iter = oldTimeStamps.keySet().iterator(); iter.hasNext();) {
-			IFile file = (IFile) iter.next();
-			if (!oldTimeStamps.get(file).equals(newTimeStamps.get(file)))
+		Map<IFile, Long> newTimeStamps = createModificationStampMap(readOnlyFiles);
+		for (Entry<IFile, Long> entry : oldTimeStamps.entrySet()) {
+			final IFile file = entry.getKey();
+			if (!entry.getValue().equals(newTimeStamps.get(file))) {
 				modified = addModified(modified, file);
+			}
 		}
-		if (modified != null)
+		if (modified != null) {
 			return modified;
+		}
+
 		return new Status(IStatus.OK, PHPUiPlugin.getPluginId(), IStatus.OK,
 				"", null); //$NON-NLS-1$
 	}
 
-	private static Map createModificationStampMap(List files) {
-		Map map = new HashMap();
-		for (Iterator iter = files.iterator(); iter.hasNext();) {
-			IFile file = (IFile) iter.next();
-			map.put(file, new Long(file.getModificationStamp()));
+	private static Map<IFile, Long> createModificationStampMap(List<IFile> files) {
+		Map<IFile, Long> map = new HashMap<IFile, Long>();
+		for (Iterator<IFile> iter = files.iterator(); iter.hasNext();) {
+			IFile file = iter.next();
+			map.put(file, Long.valueOf(file.getModificationStamp()));
 		}
 		return map;
 	}
 
 	private static IStatus addModified(IStatus status, IFile file) {
-		IStatus entry = new Status(
-				IStatus.ERROR,
-				PHPUiPlugin.getPluginId(),
-				NLS
-						.bind(
-								Messages.Resources_0,
-								file.getFullPath().toString()));
+		IStatus entry = new Status(IStatus.ERROR, PHPUiPlugin.getPluginId(),
+				NLS.bind(Messages.Resources_0, file.getFullPath().toString()));
 		if (status == null) {
 			return entry;
 		} else if (status.isMultiStatus()) {
@@ -162,9 +166,9 @@ public class Resources {
 
 	private static IStatus addOutOfSync(IStatus status, IResource resource) {
 		IStatus entry = new Status(IStatus.ERROR, ResourcesPlugin.PI_RESOURCES,
-				IResourceStatus.OUT_OF_SYNC_LOCAL, NLS.bind(
-						Messages.Resources_5,
-						resource.getFullPath().toString()), null);
+				IResourceStatus.OUT_OF_SYNC_LOCAL,
+				NLS.bind(Messages.Resources_5, resource.getFullPath()
+						.toString()), null);
 		if (status == null) {
 			return entry;
 		} else if (status.isMultiStatus()) {
@@ -172,8 +176,8 @@ public class Resources {
 			return status;
 		} else {
 			MultiStatus result = new MultiStatus(ResourcesPlugin.PI_RESOURCES,
-					IResourceStatus.OUT_OF_SYNC_LOCAL,
-					Messages.Resources_6, null);
+					IResourceStatus.OUT_OF_SYNC_LOCAL, Messages.Resources_6,
+					null);
 			result.add(status);
 			result.add(entry);
 			return result;
@@ -189,13 +193,14 @@ public class Resources {
 	 * @return the local locations
 	 */
 	public static String[] getLocationOSStrings(IResource[] resources) {
-		List result = new ArrayList(resources.length);
+		List<String> result = new ArrayList<String>(resources.length);
 		for (int i = 0; i < resources.length; i++) {
 			IPath location = resources[i].getLocation();
-			if (location != null)
+			if (location != null) {
 				result.add(location.toOSString());
+			}
 		}
-		return (String[]) result.toArray(new String[result.size()]);
+		return result.toArray(new String[result.size()]);
 	}
 
 	/**
@@ -210,29 +215,32 @@ public class Resources {
 	 */
 	public static String getLocationString(IResource resource) {
 		URI uri = resource.getLocationURI();
-		if (uri == null)
+		if (uri == null) {
 			return null;
+		}
 		return EFS.SCHEME_FILE.equalsIgnoreCase(uri.getScheme()) ? new File(uri)
-				.getAbsolutePath()
-				: uri.toString();
+				.getAbsolutePath() : uri.toString();
 	}
 
 	public static boolean isReadOnly(IResource resource) {
 		ResourceAttributes resourceAttributes = resource
 				.getResourceAttributes();
-		if (resourceAttributes == null) // not supported on this platform for
-										// this resource
+		if (resourceAttributes == null) {
+			// not supported on this platform for
+			// this resource
 			return false;
+		}
 		return resourceAttributes.isReadOnly();
 	}
 
 	static void setReadOnly(IResource resource, boolean readOnly) {
 		ResourceAttributes resourceAttributes = resource
 				.getResourceAttributes();
-		if (resourceAttributes == null) // not supported on this platform for
-										// this resource
+		if (resourceAttributes == null) {
+			// not supported on this platform for
+			// this resource
 			return;
-
+		}
 		resourceAttributes.setReadOnly(readOnly);
 		try {
 			resource.setResourceAttributes(resourceAttributes);

@@ -21,11 +21,13 @@ import org.eclipse.dltk.ast.references.VariableReference;
 import org.eclipse.dltk.core.*;
 import org.eclipse.dltk.evaluation.types.AmbiguousType;
 import org.eclipse.dltk.evaluation.types.MultiTypeType;
+import org.eclipse.dltk.ti.BasicContext;
 import org.eclipse.dltk.ti.IContext;
 import org.eclipse.dltk.ti.ISourceModuleContext;
 import org.eclipse.dltk.ti.goals.ExpressionTypeGoal;
 import org.eclipse.dltk.ti.types.IEvaluatedType;
 import org.eclipse.php.core.compiler.PHPFlags;
+import org.eclipse.php.internal.core.Logger;
 import org.eclipse.php.internal.core.PHPCorePlugin;
 import org.eclipse.php.internal.core.PHPVersion;
 import org.eclipse.php.internal.core.compiler.ast.nodes.ArrayVariableReference;
@@ -363,12 +365,14 @@ public class CodeAssistUtils {
 
 		int propertyEndPosition = PHPTextSequenceUtilities.readBackwardSpaces(
 				statementText, endPosition - triggerText.length());
+
 		int lastObjectOperator = PHPTextSequenceUtilities
 				.getPrivousTriggerIndex(statementText, propertyEndPosition);
 		String text = statementText.subSequence(0, propertyEndPosition)
 				.toString();
 		if (lastObjectOperator == -1
-				|| (text.indexOf('>') >= 0 && text.indexOf("->") < 0)) { //$NON-NLS-1$
+				|| (text.indexOf('>') >= 0
+						&& text.indexOf("=>") != text.indexOf('>') - 1 && text.indexOf("->") < 0)) { //$NON-NLS-1$ //$NON-NLS-2$
 			// if there is no "->" or "::" in the left sequence then we need to
 			// calc the object type
 			return innerGetClassName(sourceModule, statementText,
@@ -520,6 +524,11 @@ public class CodeAssistUtils {
 				.getModuleDeclaration(sourceModule, null);
 		IContext context = ASTUtils.findContext(sourceModule,
 				moduleDeclaration, offset);
+		// XXX context cannot be null
+		if (context == null) {
+			context = new BasicContext(sourceModule, moduleDeclaration);
+			Logger.log(Logger.WARNING, "Context is null!"); //$NON-NLS-1$
+		}
 
 		IEvaluatedType evaluatedType;
 		boolean usePhpDoc = (mask & USE_PHPDOC) != 0;
@@ -527,20 +536,34 @@ public class CodeAssistUtils {
 			PHPDocMethodReturnTypeGoal phpDocGoal = new PHPDocMethodReturnTypeGoal(
 					context, types, method);
 			evaluatedType = typeInferencer.evaluateTypePHPDoc(phpDocGoal);
-			if (evaluatedType instanceof MultiTypeType) {
-				List<IType> tmpList = new LinkedList<IType>();
-				List<IEvaluatedType> possibleTypes = ((MultiTypeType) evaluatedType)
-						.getTypes();
-				for (IEvaluatedType possibleType : possibleTypes) {
-					IType[] tmpArray = PHPTypeInferenceUtils.getModelElements(
-							possibleType, (ISourceModuleContext) context,
-							offset, (IModelAccessCache) null);
-					if (tmpArray != null || tmpArray.length == 0) {
-						tmpList.addAll(Arrays.asList(tmpArray));
+			List<IEvaluatedType> possibleTypes = null;
+			if (!PHPTypeInferenceUtils.isSimple(evaluatedType)) {
+				if (evaluatedType instanceof MultiTypeType) {
+					possibleTypes = ((MultiTypeType) evaluatedType).getTypes();
+				} else if (evaluatedType instanceof AmbiguousType) {
+					possibleTypes = new ArrayList<IEvaluatedType>();
+					for (IEvaluatedType pType : ((AmbiguousType) evaluatedType)
+							.getPossibleTypes()) {
+						if (pType instanceof MultiTypeType) {
+							possibleTypes.addAll(((MultiTypeType) pType)
+									.getTypes());
+						}
 					}
 				}
-				// the elements are filtered already
-				return tmpList.toArray(new IType[tmpList.size()]);
+				if (possibleTypes != null && possibleTypes.size() > 0) {
+					List<IType> tmpList = new LinkedList<IType>();
+					for (IEvaluatedType possibleType : possibleTypes) {
+						IType[] tmpArray = PHPTypeInferenceUtils
+								.getModelElements(possibleType,
+										(ISourceModuleContext) context, offset,
+										(IModelAccessCache) null);
+						if (tmpArray != null && tmpArray.length > 0) {
+							tmpList.addAll(Arrays.asList(tmpArray));
+						}
+					}
+					// the elements are filtered already
+					return tmpList.toArray(new IType[tmpList.size()]);
+				}
 			}
 
 			// modelElements = PHPTypeInferenceUtils.getModelElements(

@@ -13,12 +13,15 @@ import org.eclipse.dltk.ti.goals.ExpressionTypeGoal;
 import org.eclipse.dltk.ti.goals.GoalEvaluator;
 import org.eclipse.dltk.ti.goals.IGoal;
 import org.eclipse.dltk.ti.types.IEvaluatedType;
+import org.eclipse.php.internal.core.Logger;
 import org.eclipse.php.internal.core.compiler.ast.nodes.PHPDocBlock;
 import org.eclipse.php.internal.core.compiler.ast.nodes.PHPDocTag;
 import org.eclipse.php.internal.core.compiler.ast.nodes.PHPMethodDeclaration;
 import org.eclipse.php.internal.core.typeinference.GeneratorClassType;
+import org.eclipse.php.internal.core.typeinference.IModelAccessCache;
 import org.eclipse.php.internal.core.typeinference.PHPClassType;
 import org.eclipse.php.internal.core.typeinference.PHPModelUtils;
+import org.eclipse.php.internal.core.typeinference.context.IModelCacheContext;
 import org.eclipse.php.internal.core.typeinference.context.MethodContext;
 import org.eclipse.php.internal.core.typeinference.evaluators.phpdoc.PHPDocClassVariableEvaluator;
 import org.eclipse.php.internal.core.typeinference.goals.IteratorTypeGoal;
@@ -44,7 +47,11 @@ public class IteratorTypeGoalEvaluator extends GoalEvaluator {
 	}
 
 	public IGoal[] subGoalDone(IGoal subgoal, Object result, GoalState state) {
-
+		IModelAccessCache cache = null;
+		if (goal.getContext() instanceof IModelCacheContext) {
+			cache = (IModelAccessCache) ((IModelCacheContext) goal.getContext())
+					.getCache();
+		}
 		if (state != GoalState.RECURSIVE) {
 			if (result instanceof GeneratorClassType) {
 				MultiTypeType type = new MultiTypeType();
@@ -60,10 +67,13 @@ public class IteratorTypeGoalEvaluator extends GoalEvaluator {
 					List<IGoal> subGoals = new LinkedList<IGoal>();
 					try {
 						IType[] types = PHPModelUtils.getTypes(
-								classType.getTypeName(), sourceModule, 0, null);
+								classType.getTypeName(), sourceModule, 0,
+								cache, null);
 						for (IType type : types) {
 							IType[] superTypes = PHPModelUtils.getSuperClasses(
-									type, null);
+									type,
+									cache == null ? null : cache
+											.getSuperTypeHierarchy(type, null));
 
 							if (subgoal.getContext() instanceof MethodContext) {
 
@@ -132,9 +142,14 @@ public class IteratorTypeGoalEvaluator extends GoalEvaluator {
 			if (element instanceof IMethod) {
 				IMethod method = (IMethod) element;
 				if (method.getDeclaringType() != null) {
-					docBlocks = PHPModelUtils.getTypeHierarchyMethodDoc(
-							method.getDeclaringType(), method.getElementName(),
-							true, null);
+					docBlocks = PHPModelUtils
+							.getTypeHierarchyMethodDoc(
+									method.getDeclaringType(),
+									methodContext.getCache() != null ? methodContext
+											.getCache().getSuperTypeHierarchy(
+													method.getDeclaringType(),
+													null) : null, method
+											.getElementName(), true, null);
 				} else {
 					docBlocks = new PHPDocBlock[] { methodDeclaration
 							.getPHPDoc() };
@@ -144,10 +159,14 @@ public class IteratorTypeGoalEvaluator extends GoalEvaluator {
 			}
 
 		} catch (CoreException e) {
+			Logger.logException(e);
 		}
 
 		if (docBlocks.length > 0) {
 			for (int i = 0; i < docBlocks.length; i++) {
+				if (docBlocks[i] == null) {
+					continue;
+				}
 				PHPDocTag[] tags = docBlocks[i].getTags();
 				for (int j = 0; j < tags.length; j++) {
 					PHPDocTag tag = tags[j];

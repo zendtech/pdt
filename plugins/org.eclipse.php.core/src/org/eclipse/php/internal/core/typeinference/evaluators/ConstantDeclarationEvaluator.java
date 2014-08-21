@@ -12,6 +12,7 @@
 package org.eclipse.php.internal.core.typeinference.evaluators;
 
 import java.util.*;
+import java.util.Map.Entry;
 
 import org.eclipse.dltk.ast.ASTNode;
 import org.eclipse.dltk.ast.ASTVisitor;
@@ -108,12 +109,12 @@ public class ConstantDeclarationEvaluator extends GoalEvaluator {
 		}
 
 		List<IGoal> subGoals = new LinkedList<IGoal>();
-		Iterator<ISourceModule> sourceModuleIt = offsets.keySet().iterator();
-		while (sourceModuleIt.hasNext()) {
-			ISourceModule sourceModule = sourceModuleIt.next();
+		for (Entry<ISourceModule, SortedSet<ISourceRange>> entry : offsets
+				.entrySet()) {
+			final ISourceModule sourceModule = entry.getKey();
 			ModuleDeclaration moduleDeclaration = SourceParserUtil
 					.getModuleDeclaration(sourceModule);
-			SortedSet<ISourceRange> fileOffsets = offsets.get(sourceModule);
+			SortedSet<ISourceRange> fileOffsets = entry.getValue();
 
 			if (!fileOffsets.isEmpty()) {
 				ConstantDeclarationSearcher searcher = new ConstantDeclarationSearcher(
@@ -146,7 +147,7 @@ public class ConstantDeclarationEvaluator extends GoalEvaluator {
 		return IGoal.NO_GOALS;
 	}
 
-	class ConstantDeclarationSearcher extends ASTVisitor {
+	static class ConstantDeclarationSearcher extends ASTVisitor {
 
 		private String constantName;
 		private Iterator<ISourceRange> offsetsIt;
@@ -181,17 +182,16 @@ public class ConstantDeclarationEvaluator extends GoalEvaluator {
 					&& node.sourceEnd() >= currentEnd;
 		}
 
-		@SuppressWarnings("unchecked")
 		public boolean visit(CallExpression node) throws Exception {
 			if (!interesting(node)) {
 				return false;
 			}
 			if ("define".equalsIgnoreCase(node.getName())) { //$NON-NLS-1$
 				// report global constant:
-				List args = node.getArgs().getChilds();
+				List<ASTNode> args = node.getArgs().getChilds();
 				if (args.size() == 2) {
-					ASTNode firstArg = (ASTNode) args.get(0);
-					ASTNode secondArg = (ASTNode) args.get(0);
+					ASTNode firstArg = args.get(0);
+					ASTNode secondArg = args.get(0);
 					if (firstArg instanceof Scalar
 							&& secondArg instanceof Scalar) {
 						Scalar constantName = (Scalar) firstArg;
@@ -251,8 +251,7 @@ public class ConstantDeclarationEvaluator extends GoalEvaluator {
 		int len = name.length();
 		if (len > 1
 				&& (name.charAt(0) == '\'' && name.charAt(len - 1) == '\'' || name
-						.charAt(0) == '"'
-						&& name.charAt(len - 1) == '"')) {
+						.charAt(0) == '"' && name.charAt(len - 1) == '"')) {
 			name = name.substring(1, len - 1);
 		}
 		return name;
