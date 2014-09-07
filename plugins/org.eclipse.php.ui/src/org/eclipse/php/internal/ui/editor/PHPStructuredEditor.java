@@ -1132,7 +1132,7 @@ public class PHPStructuredEditor extends StructuredTextEditor implements
 			}
 		};
 
-		new InstanceScope().getNode(PHPCorePlugin.ID)
+		InstanceScope.INSTANCE.getNode(PHPCorePlugin.ID)
 				.addPreferenceChangeListener(fPreferencesListener);
 	}
 
@@ -1278,7 +1278,7 @@ public class PHPStructuredEditor extends StructuredTextEditor implements
 			fPhpVersionListener = null;
 		}
 		if (fPreferencesListener != null) {
-			new InstanceScope().getNode(PHPCorePlugin.ID)
+			InstanceScope.INSTANCE.getNode(PHPCorePlugin.ID)
 					.removePreferenceChangeListener(fPreferencesListener);
 		}
 
