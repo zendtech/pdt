@@ -102,7 +102,16 @@ public class PHPSelectionEngine extends ScriptSelectionEngine {
 				.getScriptProject().getProject());
 
 		// First, try to resolve using AST (if we have parsed it well):
-		IModelAccessCache cache = new PerFileModelAccessCache(sourceModule);
+		IModelAccessCache cache = new PerFileModelAccessCache(sourceModule) {
+			@Override
+			protected <T extends IModelElement> Collection<T> filterElements(
+					ISourceModule sourceModule, Collection<T> elements,
+					IProgressMonitor monitor) {
+				// override/removes filtering because
+				// https://bugs.eclipse.org/bugs/show_bug.cgi?id=442964
+				return elements;
+			}
+		};
 		try {
 			IModelElement[] elements = internalASTResolve(sourceModule, cache,
 					offset, end);
@@ -272,35 +281,8 @@ public class PHPSelectionEngine extends ScriptSelectionEngine {
 				if (realStart <= offset && realEnd >= end) {
 					// inDocBlock=true;
 					PHPDocTag[] tags = phpDocBlock.getTags();
-					if (tags != null) {
-						for (PHPDocTag phpDocTag : tags) {
-							if (phpDocTag.sourceStart() <= offset
-									&& phpDocTag.sourceEnd() >= end) {
-								SimpleReference[] references = phpDocTag
-										.getReferences();
-								if (references != null) {
-									for (SimpleReference simpleReference : references) {
-										if (simpleReference instanceof TypeReference) {
-											TypeReference typeReference = (TypeReference) simpleReference;
-											if (typeReference.sourceStart() <= offset
-													&& typeReference
-															.sourceEnd() >= end) {
-												IType[] types = filterNS(PHPModelUtils
-														.getTypes(typeReference
-																.getName(),
-																sourceModule,
-																offset, cache,
-																null));
-												return types;
-
-											}
-										}
-									}
-								}
-							}
-						}
-					}
-					return null;
+					return lookForMatchingTypes(tags, sourceModule, offset,
+							end, cache);
 				}
 			}
 		}
@@ -672,6 +654,47 @@ public class PHPSelectionEngine extends ScriptSelectionEngine {
 				 * evaluatedType.getTypeName(), sourceModule, offset, null,
 				 * null); return types; } } }
 				 */
+			}
+		}
+		return null;
+	}
+
+	private IType[] lookForMatchingTypes(PHPDocTag[] tags,
+			ISourceModule sourceModule, int offset, int end,
+			IModelAccessCache cache) throws ModelException {
+		if (tags == null) {
+			return null;
+		}
+		for (PHPDocTag phpDocTag : tags) {
+			if (phpDocTag.sourceStart() <= offset
+					&& phpDocTag.sourceEnd() >= end) {
+				SimpleReference[] references = phpDocTag.getReferences();
+				if (references != null) {
+					for (SimpleReference simpleReference : references) {
+						if (simpleReference instanceof TypeReference) {
+							TypeReference typeReference = (TypeReference) simpleReference;
+							if (typeReference.sourceStart() <= offset
+									&& typeReference.sourceEnd() >= end) {
+								String name = typeReference.getName();
+
+								// remove additional end elements like '[]'
+								if (typeReference.sourceEnd() > end) {
+									int startShift = offset
+											- typeReference.sourceStart();
+									name = typeReference.getName().substring(
+											startShift,
+											(end - offset) + startShift);
+								}
+
+								IType[] types = filterNS(PHPModelUtils
+										.getTypes(name, sourceModule, offset,
+												cache, null));
+								return types;
+
+							}
+						}
+					}
+				}
 			}
 		}
 		return null;
