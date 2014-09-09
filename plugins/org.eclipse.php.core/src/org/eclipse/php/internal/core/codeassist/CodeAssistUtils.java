@@ -92,7 +92,7 @@ public class CodeAssistUtils {
 					propertyName = DOLLAR + propertyName;
 				}
 				PHPDocClassVariableGoal phpDocGoal = new PHPDocClassVariableGoal(
-						typeContext, propertyName);
+						typeContext, propertyName, offset);
 				IEvaluatedType evaluatedType = typeInferencer
 						.evaluateTypePHPDoc(phpDocGoal, 3000);
 
