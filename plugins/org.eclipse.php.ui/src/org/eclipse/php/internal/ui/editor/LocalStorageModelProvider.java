@@ -72,7 +72,7 @@ public class LocalStorageModelProvider extends StorageDocumentProvider
 			 * reconnecting forces a call to the private catchupWithMarkers
 			 * method.
 			 */
-			if (info.fModel != null) {
+			if (info != null && info.fModel != null) {
 				info.fModel.disconnect(info.fDocument);
 			}
 
@@ -129,7 +129,7 @@ public class LocalStorageModelProvider extends StorageDocumentProvider
 			fireElementContentReplaced(element);
 			fireElementDirtyStateChanged(element, false);
 
-			if (info.fModel != null) {
+			if (info != null && info.fModel != null) {
 				info.fModel.connect(info.fDocument);
 			}
 		}
@@ -568,14 +568,13 @@ public class LocalStorageModelProvider extends StorageDocumentProvider
 		if (id == null) {
 			return null;
 		}
-		
+
 		InputStream contents = null;
 		try {
 			contents = input.getStorage().getContents();
 		} catch (CoreException noStorageExc) {
-			if (logExceptions) {
+			if (logExceptions)
 				Logger.logException(noStorageExc);
-			}
 		}
 
 		IStructuredModel model = null;
@@ -585,9 +584,8 @@ public class LocalStorageModelProvider extends StorageDocumentProvider
 					id, contents, null);
 			model.setBaseLocation(calculateBaseLocation(input));
 		} catch (IOException e) {
-			if (logExceptions) {
+			if (logExceptions)
 				Logger.logException(e);
-			}
 		} finally {
 			if (contents != null) {
 				try {
