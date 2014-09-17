@@ -48,7 +48,6 @@ import org.eclipse.ui.PlatformUI;
  */
 public class PHPWebPageLaunchDialog extends TitleAreaDialog {
 
-	private final Server server;
 	private final IScriptProject project;
 	private Text fFile;
 	private Button fileButton;
@@ -72,7 +71,6 @@ public class PHPWebPageLaunchDialog extends TitleAreaDialog {
 		this.mode = mode;
 		this.project = obj;
 		this.basePath = basePath;
-		this.server = ServersManager.getLocalServer(obj.getProject());
 	}
 
 	/**
@@ -263,7 +261,7 @@ public class PHPWebPageLaunchDialog extends TitleAreaDialog {
 	}
 
 	public Server getServer() {
-		return this.server;
+		return ServersManager.getDefaultServer(project.getProject());
 	}
 
 	public String getPhpPathString() {
@@ -331,6 +329,7 @@ public class PHPWebPageLaunchDialog extends TitleAreaDialog {
 	 * @return
 	 */
 	protected String computeURL(String fileName) {
+		Server server = ServersManager.getDefaultServer(project.getProject());
 		if (server == null) {
 			return ""; //$NON-NLS-1$
 		}
