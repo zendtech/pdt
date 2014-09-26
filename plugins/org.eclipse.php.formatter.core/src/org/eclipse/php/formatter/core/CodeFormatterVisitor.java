@@ -79,6 +79,7 @@ public class CodeFormatterVisitor extends AbstractVisitor implements
 	private static final char COMMA = ',';
 	private static final char QUESTION_MARK = '?';
 	private static final char PHPDOC_CLASS_SEPARATOR = '|';
+	private static final String ELLIPSIS = "...";
 	private String lineSeparator;
 
 	private CodeFormatterPreferences preferences;
@@ -344,6 +345,19 @@ public class CodeFormatterVisitor extends AbstractVisitor implements
 					.setAST(new AST(reader, PHPVersion.PHP5_5, false,
 							useShortTags));
 			stInScriptin = org.eclipse.php.internal.core.compiler.ast.parser.php55.CompilerAstLexer.ST_IN_SCRIPTING; // save
+			// the
+			// initial
+			// state
+			// for
+			// reset
+			// operation
+		} else if (PHPVersion.PHP5_6.equals(phpVersion)) {
+			result = new org.eclipse.php.internal.core.compiler.ast.parser.php56.CompilerAstLexer(
+					reader);
+			((org.eclipse.php.internal.core.compiler.ast.parser.php56.CompilerAstLexer) result)
+					.setAST(new AST(reader, PHPVersion.PHP5_6, false,
+							useShortTags));
+			stInScriptin = org.eclipse.php.internal.core.compiler.ast.parser.php56.CompilerAstLexer.ST_IN_SCRIPTING; // save
 			// the
 			// initial
 			// state
@@ -3394,6 +3408,12 @@ public class CodeFormatterVisitor extends AbstractVisitor implements
 			lastPosition = formalParameter.getParameterType().getEnd();
 			insertSpace();
 		}
+
+		if (formalParameter.isVariadic()
+				&& formalParameter.getParameterName() instanceof Variable) {
+			appendToBuffer(ELLIPSIS);
+		}
+
 		handleChars(lastPosition, formalParameter.getParameterName().getStart());
 
 		formalParameter.getParameterName().accept(this);
@@ -4449,12 +4469,14 @@ public class CodeFormatterVisitor extends AbstractVisitor implements
 	}
 
 	public boolean visit(PrefixExpression prefixExpression) {
-		if (this.preferences.insert_space_before_prefix_expression) {
+		if (prefixExpression.getOperator() != PrefixExpression.OP_UNPACK
+				&& this.preferences.insert_space_before_prefix_expression) {
 			insertSpace();
 		}
-		appendToBuffer(PostfixExpression.getOperator(prefixExpression
+		appendToBuffer(PrefixExpression.getOperator(prefixExpression
 				.getOperator()));
-		if (this.preferences.insert_space_after_prefix_expression) {
+		if (prefixExpression.getOperator() != PrefixExpression.OP_UNPACK
+				&& this.preferences.insert_space_after_prefix_expression) {
 			insertSpace();
 		}
 		// handle the chars between the variable to the value
@@ -5007,6 +5029,14 @@ public class CodeFormatterVisitor extends AbstractVisitor implements
 		int lastPosition = useStatement.getStart() + 3;
 		lineWidth += 3;// the word 'use'
 		insertSpace();
+
+		if (useStatement.getStatementType() == UseStatement.T_FUNCTION) {
+			lastPosition += 9; // space + 'function' keyword
+			lineWidth += 9;
+		} else if (useStatement.getStatementType() == UseStatement.T_CONST) {
+			lastPosition += 6; // space + 'const' keyword
+			lineWidth += 6;
+		}
 
 		List<UseStatementPart> parts = useStatement.parts();
 		lastPosition = handleCommaList(
