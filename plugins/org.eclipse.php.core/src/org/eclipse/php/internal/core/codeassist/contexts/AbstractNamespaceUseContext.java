@@ -1,14 +1,3 @@
-/*******************************************************************************
- * Copyright (c) 2009 IBM Corporation and others.
- * All rights reserved. This program and the accompanying materials
- * are made available under the terms of the Eclipse Public License v1.0
- * which accompanies this distribution, and is available at
- * http://www.eclipse.org/legal/epl-v10.html
- * 
- * Contributors:
- *     IBM Corporation - initial API and implementation
- *     Zend Technologies
- *******************************************************************************/
 package org.eclipse.php.internal.core.codeassist.contexts;
 
 import org.eclipse.dltk.core.*;
@@ -21,44 +10,20 @@ import org.eclipse.php.internal.core.util.text.PHPTextSequenceUtilities;
 import org.eclipse.php.internal.core.util.text.TextSequence;
 import org.eclipse.wst.sse.core.internal.provisional.text.ITextRegion;
 
-/**
- * This context represents state when staying in a namespace member completion. <br/>
- * Examples:
- * 
- * <pre>
- *  1. A\B\|
- *  2. A\fo|
- *  3. \fo|
- *  etc...
- * </pre>
- * 
- * @author michael
- */
-public class NamespaceMemberContext extends StatementContext {
+public class AbstractNamespaceUseContext extends UseStatementContext {
 
+	private static final String SPLASH = "\\"; //$NON-NLS-1$
 	private IType[] namespaces;
 	private int elementStart;
 	private boolean isGlobal;
 
-	public boolean isValid(ISourceModule sourceModule, int offset,
+	protected boolean validateNamespace(ISourceModule sourceModule, int offset,
 			CompletionRequestor requestor) {
-		if (!super.isValid(sourceModule, offset, requestor)) {
-			return false;
-		}
 		if (getPhpVersion().isLessThan(PHPVersion.PHP5_3)) {
 			return false;
 		}
 
 		TextSequence statementText = getStatementText();
-		// disable this context for use statement
-		if (statementText.length() >= 4) {
-			if ("use".equals(statementText.subSequence(0, 3).toString()) //$NON-NLS-1$
-					&& Character.isWhitespace(statementText.subSequence(3, 4)
-							.charAt(0))) {
-				return false;
-			}
-		}
-
 		int totalLength = statementText.length();
 		int endPosition = PHPTextSequenceUtilities.readBackwardSpaces(
 				statementText, totalLength); // read whitespace
@@ -74,7 +39,7 @@ public class NamespaceMemberContext extends StatementContext {
 
 		String triggerText = statementText.subSequence(elementStart - 1,
 				elementStart).toString();
-		if (!triggerText.equals("\\")) { //$NON-NLS-1$
+		if (!triggerText.equals(SPLASH)) {
 			return false;
 		}
 
@@ -90,11 +55,12 @@ public class NamespaceMemberContext extends StatementContext {
 				statementText, endNamespace, false);
 		String nsName = statementText.subSequence(nsNameStart, elementStart)
 				.toString();
-		if (nsName.equals("\\")) { //$NON-NLS-1$
-			isGlobal = true;
-			return true;
+		if (!nsName.contains(SPLASH)) {
+			return false;
 		}
-
+		if (!nsName.startsWith(SPLASH)) {
+			nsName = SPLASH + nsName;
+		}
 		try {
 			namespaces = PHPModelUtils.getNamespaceOf(nsName, sourceModule,
 					offset, null, null);
@@ -104,6 +70,7 @@ public class NamespaceMemberContext extends StatementContext {
 			}
 		}
 		return true;
+
 	}
 
 	/**
@@ -147,11 +114,13 @@ public class NamespaceMemberContext extends StatementContext {
 	public int getPrefixEnd() throws BadLocationException {
 		ITextRegion phpToken = getPHPToken();
 		if (phpToken.getType() == PHPRegionTypes.PHP_NS_SEPARATOR) {
-			IPhpScriptRegion phpScriptRegion = getPhpScriptRegion();
-			ITextRegion nextRegion = phpScriptRegion.getPhpToken(phpToken
-					.getEnd());
-			return getRegionCollection().getStartOffset()
-					+ phpScriptRegion.getStart() + nextRegion.getTextEnd();
+			if (phpToken.getLength() == phpToken.getTextLength()) {
+				IPhpScriptRegion phpScriptRegion = getPhpScriptRegion();
+				ITextRegion nextRegion = phpScriptRegion.getPhpToken(phpToken
+						.getEnd());
+				return getRegionCollection().getStartOffset()
+						+ phpScriptRegion.getStart() + nextRegion.getTextEnd();
+			}
 		}
 		return super.getPrefixEnd();
 	}

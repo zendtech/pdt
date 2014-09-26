@@ -1,22 +1,20 @@
 --TEST--
-Test use function statement
+Test use const statement
 --PREFERENCES--
 org.eclipse.php.core/contentAssistInsertCompletion=true
 --FILE--
 <?php
 namespace Bar{
-    function foo(){
-    }
+    const MAXI = 456;
 }
 namespace {
-    use function foo|
+    use const Bar\M|
 }
 --EXPECT--
 <?php
 namespace Bar{
-    function foo(){
-    }
+    const MAXI = 456;
 }
 namespace {
-    use function Bar\foo
+    use const Bar\MAXI
 }

@@ -32,6 +32,8 @@ import org.eclipse.php.internal.core.PHPCoreConstants;
 import org.eclipse.php.internal.core.PHPCorePlugin;
 import org.eclipse.php.internal.core.PHPVersion;
 import org.eclipse.php.internal.core.ast.nodes.*;
+import org.eclipse.php.internal.core.codeassist.AliasField;
+import org.eclipse.php.internal.core.codeassist.AliasMethod;
 import org.eclipse.php.internal.core.codeassist.AliasType;
 import org.eclipse.php.internal.core.codeassist.ProposalExtraInfo;
 import org.eclipse.php.internal.core.compiler.ast.nodes.NamespaceReference;
@@ -221,14 +223,16 @@ public class UseStatementInjector {
 				return offset;
 			}
 
-		} else if (modelElement instanceof AliasType) {
+		} else if (modelElement instanceof AliasType
+				|| modelElement instanceof AliasMethod
+				|| modelElement instanceof AliasField) {
 			return offset;
 		}
 		if (modelElement == null)
 			return offset;
 		if (proposal instanceof IPHPCompletionProposalExtension) {
 			IPHPCompletionProposalExtension phpCompletionProposal = (IPHPCompletionProposalExtension) proposal;
-			if (ProposalExtraInfo.isNoInsert(phpCompletionProposal
+			if (ProposalExtraInfo.isNotInsertUse(phpCompletionProposal
 					.getExtraInfo())) {
 				return offset;
 			}

@@ -93,7 +93,9 @@ public class CompletionContextResolver implements ICompletionContextResolver {
 				new UseConstNameContext(), new UseFunctionNameContext(),
 				new NamespaceMemberContext(), new NamespaceNameContext(),
 				new GotoStatementContext(), new NamespaceUseNameContext(),
-				new NamespaceDeclContext(), new IncludeStatementContext(),
+				new NamespaceUseFunctionNameContext(),
+				new NamespaceUseConstNameContext(), new NamespaceDeclContext(),
+				new IncludeStatementContext(),
 				new ExceptionClassInstantiationContext(),
 				new TypeCastingContext(), new NamespacePHPDocVarStartContext(),
 				new QuotesContext() };

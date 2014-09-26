@@ -296,11 +296,6 @@ public class AST {
 					lexer);
 			parser.setAST(this);
 			return parser;
-		} else if (PHPVersion.PHP5_6 == phpVersion) {
-			final org.eclipse.php.internal.core.ast.scanner.php56.PhpAstParser parser = new org.eclipse.php.internal.core.ast.scanner.php56.PhpAstParser(
-					lexer);
-			parser.setAST(this);
-			return parser;
 		} else {
 			throw new IllegalArgumentException(
 					CoreMessages.getString("ASTParser_1") //$NON-NLS-1$

@@ -5,19 +5,20 @@ org.eclipse.php.core/contentAssistInsertCompletion=true
 --FILE--
 <?php
 namespace Bar {
-	function foo() {
+	function foo($param) {
 	}
 }
 namespace MySpace {
-	foo|
+	use function Bar\foo as MyFunction;
+	echo MyF|
 }
 --EXPECT--
 <?php
 namespace Bar {
-	function foo() {
+	function foo($param) {
 	}
 }
 namespace MySpace {
-	use function Bar\foo;
-	foo()
+	use function Bar\foo as MyFunction;
+	echo MyFunction($param)
 }
