@@ -393,6 +393,7 @@ public class PHPSelectionEngine extends ScriptSelectionEngine {
 		}
 		// Class/Interface reference:
 		else if (node instanceof TypeReference) {
+			TypeReference typeReference = (TypeReference) node;
 			IEvaluatedType evaluatedType = PHPTypeInferenceUtils
 					.resolveExpression(sourceModule, node);
 			if (evaluatedType == null) {
@@ -426,6 +427,10 @@ public class PHPSelectionEngine extends ScriptSelectionEngine {
 				if (types == null || types.length == 0) {
 					types = PHPModelUtils.getFunctions(name, sourceModule,
 							offset, cache, null);
+				}
+				if (types == null || types.length == 0) {
+					types = PHPModelUtils.getFunctions(typeReference.getName(),
+							sourceModule, offset, cache, null);
 				}
 			}
 			return types;
@@ -1022,9 +1027,10 @@ public class PHPSelectionEngine extends ScriptSelectionEngine {
 				if (useParts.containsKey(methodName)) {
 					String fullName = useParts.get(methodName).getNamespace()
 							.getFullyQualifiedName();
-					members = PhpModelAccess.getDefault().findMethods(fullName,
-							MatchRule.EXACT, 0, 0, scope, null);
-
+					fullName = NamespaceReference.NAMESPACE_SEPARATOR
+							+ fullName;
+					members = PHPModelUtils.getFunctions(fullName,
+							sourceModule, offset, null, null);
 				}
 			}
 
