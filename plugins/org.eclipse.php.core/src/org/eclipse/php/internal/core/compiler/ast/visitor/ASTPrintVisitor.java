@@ -1013,6 +1013,10 @@ public class ASTPrintVisitor extends PHPASTVisitor {
 
 	public boolean visit(UseStatement s) throws Exception {
 		Map<String, String> parameters = createInitialParameters(s);
+		if (s.getStatementType() != UseStatement.T_NONE) {
+			parameters.put("statementType",
+					String.valueOf(s.getStatementType()));
+		}
 		xmlWriter.startTag("UseStatement", parameters); //$NON-NLS-1$
 
 		xmlWriter.startTag("Parts", new HashMap<String, String>()); //$NON-NLS-1$

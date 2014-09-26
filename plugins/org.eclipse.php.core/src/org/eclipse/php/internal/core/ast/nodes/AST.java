@@ -296,6 +296,11 @@ public class AST {
 					lexer);
 			parser.setAST(this);
 			return parser;
+		} else if (PHPVersion.PHP5_6 == phpVersion) {
+			final org.eclipse.php.internal.core.ast.scanner.php56.PhpAstParser parser = new org.eclipse.php.internal.core.ast.scanner.php56.PhpAstParser(
+					lexer);
+			parser.setAST(this);
+			return parser;
 		} else {
 			throw new IllegalArgumentException(
 					CoreMessages.getString("ASTParser_1") //$NON-NLS-1$
@@ -2825,11 +2830,14 @@ public class AST {
 	 * Creates a new {@link UseStatement}.
 	 * 
 	 * @param parts
+	 * @param statementType
 	 * @return A new UseStatement.
 	 */
-	public UseStatement newUseStatement(Collection<UseStatementPart> parts) {
+	public UseStatement newUseStatement(Collection<UseStatementPart> parts,
+			int statementType) {
 		UseStatement useStatement = new UseStatement(this);
 		useStatement.parts().addAll(parts);
+		useStatement.setStatementType(statementType);
 		return useStatement;
 	}
 

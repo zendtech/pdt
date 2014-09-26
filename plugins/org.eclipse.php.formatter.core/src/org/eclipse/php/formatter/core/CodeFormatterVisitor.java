@@ -28,6 +28,8 @@ import org.eclipse.php.internal.core.compiler.ast.nodes.PHPDocBlock;
 import org.eclipse.php.internal.core.compiler.ast.nodes.PHPDocTag;
 import org.eclipse.php.internal.core.compiler.ast.nodes.VarComment;
 import org.eclipse.php.internal.core.compiler.ast.parser.php5.CompilerAstLexer;
+import org.eclipse.php.internal.core.compiler.ast.parser.php56.CompilerParserConstants;
+import org.eclipse.php.internal.core.compiler.ast.parser.php56.PhpTokenNames;
 import org.eclipse.php.internal.core.documentModel.parser.PHPRegionContext;
 import org.eclipse.php.internal.core.documentModel.partitioner.PHPPartitionTypes;
 import org.eclipse.php.internal.core.format.ICodeFormattingProcessor;
@@ -5079,11 +5081,11 @@ public class CodeFormatterVisitor extends AbstractVisitor implements
 		insertSpace();
 
 		if (useStatement.getStatementType() == UseStatement.T_FUNCTION) {
-			lastPosition += 9; // space + 'function' keyword
-			lineWidth += 9;
+			appendToBuffer(PhpTokenNames
+					.getName(CompilerParserConstants.T_FUNCTION) + SPACE);
 		} else if (useStatement.getStatementType() == UseStatement.T_CONST) {
-			lastPosition += 6; // space + 'const' keyword
-			lineWidth += 6;
+			appendToBuffer(PhpTokenNames
+					.getName(CompilerParserConstants.T_CONST) + SPACE);
 		}
 
 		List<UseStatementPart> parts = useStatement.parts();
