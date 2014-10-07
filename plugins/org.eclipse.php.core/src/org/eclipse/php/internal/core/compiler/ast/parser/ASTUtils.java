@@ -33,6 +33,7 @@ import org.eclipse.dltk.ti.IContext;
 import org.eclipse.php.internal.core.Logger;
 import org.eclipse.php.internal.core.compiler.ast.nodes.*;
 import org.eclipse.php.internal.core.typeinference.context.ContextFinder;
+import org.eclipse.php.internal.core.typeinference.context.FileContext;
 
 public class ASTUtils {
 
@@ -61,21 +62,27 @@ public class ASTUtils {
 			int typeStart = varEnd + m.group(3).length();
 			String types = m.group(4);
 
-			int pipeIdx = types.indexOf('|');
+			int pipeIdx = types.indexOf('|'); //$NON-NLS-1$
 			while (pipeIdx >= 0) {
 				String typeName = types.substring(0, pipeIdx);
 				int typeEnd = typeStart + typeName.length();
 				if (typeName.length() > 0) {
+					if (typeName.endsWith("[]")) {
+						typeName = typeName.substring(0, typeName.length() - 2); //$NON-NLS-1$
+					}
 					typeReferences.add(new TypeReference(typeStart, typeEnd,
 							typeName));
 				}
 				types = types.substring(pipeIdx + 1);
 				typeStart += pipeIdx + 1;
-				pipeIdx = types.indexOf('|');
+				pipeIdx = types.indexOf('|'); //$NON-NLS-1$
 			}
 			String typeName = types;
 			int typeEnd = typeStart + typeName.length();
 			if (typeName.length() > 0) {
+				if (typeName.endsWith("[]")) {
+					typeName = typeName.substring(0, typeName.length() - 2); //$NON-NLS-1$
+				}
 				typeReferences.add(new TypeReference(typeStart, typeEnd,
 						typeName));
 			}
@@ -323,9 +330,14 @@ public class ASTUtils {
 						context = contextStack.peek();
 					}
 				}
+				if (node.sourceEnd() < offset || node.sourceStart() > offset) {
+					// node is before or after our search
+					return false;
+				}
 				// search inside - we are looking for minimal node
 				return true;
 			}
+
 		};
 
 		try {
@@ -333,7 +345,14 @@ public class ASTUtils {
 		} catch (Exception e) {
 			Logger.logException(e);
 		}
-
+		if (visitor.getContext() == null) {
+			/*
+			 * offset can be bigger than unit.end when sourceunit have syntax
+			 * error on end
+			 */
+			Logger.log(Logger.WARNING_DEBUG, "Context is null"); //$NON-NLS-1$
+			return new FileContext(sourceModule, unit, offset);
+		}
 		return visitor.getContext();
 	}
 
