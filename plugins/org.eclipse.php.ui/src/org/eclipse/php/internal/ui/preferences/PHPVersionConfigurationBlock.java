@@ -38,14 +38,14 @@ public class PHPVersionConfigurationBlock extends
 		PHPCoreOptionsConfigurationBlock {
 
 	public static final String[] PHP_VERSION_VALUES = {
-			PHPVersion.PHP5_3.getAlias(), PHPVersion.PHP5_4.getAlias(),
-			PHPVersion.PHP5_5.getAlias(), PHPVersion.PHP5_6.getAlias() };
+			PHPVersion.PHP5_6.getAlias(), PHPVersion.PHP5_5.getAlias(),
+			PHPVersion.PHP5_4.getAlias(), PHPVersion.PHP5_3.getAlias() };
 
 	public static final String[] PHP_VERSION_DESCRIPTIONS = {
-			PHPUIMessages.PHPCreationDataModelProvider_2,
-			PHPUIMessages.PHPCreationDataModelProvider_3,
+			PHPUIMessages.PHPCreationDataModelProvider_5,
 			PHPUIMessages.PHPCreationDataModelProvider_4,
-			PHPUIMessages.PHPCreationDataModelProvider_5 };
+			PHPUIMessages.PHPCreationDataModelProvider_3,
+			PHPUIMessages.PHPCreationDataModelProvider_2 };
 
 	private static final Key PREF_PHP_VERSION = getPHPCoreKey(Keys.PHP_VERSION);
 	private static final Key PREF_ASP_TAGS = getPHPCoreKey(Keys.EDITOR_USE_ASP_TAGS);

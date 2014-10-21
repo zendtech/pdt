@@ -71,7 +71,7 @@ public enum PHPVersion {
 	}
 
 	public static PHPVersion[] selectiveValues() {
-		return new PHPVersion[] { PHP5_3, PHP5_4, PHP5_5, PHP5_6 };
+		return new PHPVersion[] { PHP5_6, PHP5_5, PHP5_4, PHP5_3 };
 	}
 
 	/**
@@ -79,7 +79,7 @@ public enum PHPVersion {
 	 * @return
 	 */
 	public static PHPVersion getLatestVersion() {
-		return PHP5_6;
+		return PHP5_5;
 	}
 
 }
