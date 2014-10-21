@@ -475,7 +475,7 @@ public class NewPHPsComboBlock {
 	 */
 	protected void fillWithWorkspaceProfiles() {
 		fEnvironments.clear();
-		PHPVersion[] environments = PHPVersion.values();
+		PHPVersion[] environments = PHPVersion.selectiveValues();
 		for (int i = 0; i < environments.length; i++) {
 			fEnvironments.add(environments[i]);
 		}
@@ -789,7 +789,7 @@ public class NewPHPsComboBlock {
 	}
 
 	private String getDisplayName(PHPexeItem item, boolean isDefault) {
-		String name = PHPDebugUIMessages.NewPHPsComboBlock_4; 
+		String name = PHPDebugUIMessages.NewPHPsComboBlock_4;
 		if (item != null) {
 			String debugger = PHPDebugUIMessages.NewPHPsComboBlock_5;
 			if (!"org.eclipse.php.debug.core.zendDebugger".equals(item //$NON-NLS-1$
@@ -804,7 +804,8 @@ public class NewPHPsComboBlock {
 			if (project != null) {
 				defaultPrefix = PHPDebugUIMessages.NewPHPsComboBlock_14;
 			}
-			return defaultPrefix + PHPDebugUIMessages.NewPHPsComboBlock_15 + " " + name; //$NON-NLS-1$
+			return defaultPrefix + PHPDebugUIMessages.NewPHPsComboBlock_15
+					+ " " + name; //$NON-NLS-1$
 		}
 		return name;
 	}

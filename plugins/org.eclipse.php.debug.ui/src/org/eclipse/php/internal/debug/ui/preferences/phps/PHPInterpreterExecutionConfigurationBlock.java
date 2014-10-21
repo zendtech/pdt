@@ -153,7 +153,7 @@ public class PHPInterpreterExecutionConfigurationBlock {
 		fProfilesViewer
 				.setLabelProvider(new ExecutionEnvironmentsLabelProvider());
 		fProfilesViewer.setComparator(new ViewerComparator());
-		fProfilesViewer.setInput(PHPVersion.values());
+		fProfilesViewer.setInput(PHPVersion.selectiveValues());
 
 		Composite jreContainer = new Composite(container, SWT.NONE);
 		layout = new GridLayout();
@@ -197,9 +197,8 @@ public class PHPInterpreterExecutionConfigurationBlock {
 				if (event.getChecked()) {
 					Object element = event.getElement();
 					versionToDefaultItem
-							.put(
-									(PHPVersion) ((IStructuredSelection) fProfilesViewer
-											.getSelection()).getFirstElement(),
+							.put((PHPVersion) ((IStructuredSelection) fProfilesViewer
+									.getSelection()).getFirstElement(),
 									(PHPexeItem) element);
 					fJREsViewer.setCheckedElements(new Object[] { element });
 				} else {
@@ -233,8 +232,8 @@ public class PHPInterpreterExecutionConfigurationBlock {
 		for (Iterator<PHPVersion> iterator = versionToDefaultItem.keySet()
 				.iterator(); iterator.hasNext();) {
 			PHPVersion version = iterator.next();
-			phpExes.setItemDefaultForPHPVersion(versionToDefaultItem
-					.get(version), version);
+			phpExes.setItemDefaultForPHPVersion(
+					versionToDefaultItem.get(version), version);
 		}
 		phpExes.save();
 		return true;
