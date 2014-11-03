@@ -38,7 +38,8 @@ import org.eclipse.swt.widgets.Shell;
  */
 public class ZendDebuggerConfiguration extends AbstractDebuggerConfiguration {
 
-	private static final String EXTENSION_ID = "zend_debugger"; //$NON-NLS-1$
+	private static final String[] EXTENSION_IDS = new String[] {
+			"zend debugger", "zend_debugger" }; //$NON-NLS-1$ //$NON-NLS-2$
 
 	/**
 	 * Constructs a new ZendDebuggerConfiguration.
@@ -79,11 +80,13 @@ public class ZendDebuggerConfiguration extends AbstractDebuggerConfiguration {
 	}
 
 	public boolean isUseNewProtocol() {
-		return preferences.getBoolean(PHPDebugCorePreferenceNames.ZEND_NEW_PROTOCOL);
+		return preferences
+				.getBoolean(PHPDebugCorePreferenceNames.ZEND_NEW_PROTOCOL);
 	}
 
 	public void setUNewProtocol(boolean enable) {
-		preferences.setValue(PHPDebugCorePreferenceNames.ZEND_NEW_PROTOCOL, enable);
+		preferences.setValue(PHPDebugCorePreferenceNames.ZEND_NEW_PROTOCOL,
+				enable);
 	}
 
 	/*
@@ -134,13 +137,14 @@ public class ZendDebuggerConfiguration extends AbstractDebuggerConfiguration {
 	public IStatus validate(PHPexeItem item) {
 		File executable = item.getExecutable();
 		PHPexes.changePermissions(executable);
-		if (!isInstalled(item, EXTENSION_ID)) {
-			return new Status(
-					IStatus.WARNING,
-					PHPDebugPlugin.ID,
-					PHPDebugCoreMessages.ZendDebuggerConfiguration_ZendDebuggerNotInstalledError);
+		for (String extensionId : EXTENSION_IDS) {
+			if (isInstalled(item, extensionId))
+				return Status.OK_STATUS;
 		}
-		return Status.OK_STATUS;
+		return new Status(
+				IStatus.WARNING,
+				PHPDebugPlugin.ID,
+				PHPDebugCoreMessages.ZendDebuggerConfiguration_ZendDebuggerNotInstalledError);
 	}
 
 	/*
@@ -153,12 +157,14 @@ public class ZendDebuggerConfiguration extends AbstractDebuggerConfiguration {
 	public IStatus validate(Server server) {
 		Properties props = executeValidationScript(server);
 		if (props != null) {
-			if (!props.containsKey(EXTENSION_ID)) {
-				return new Status(
-						IStatus.WARNING,
-						PHPDebugPlugin.ID,
-						PHPDebugCoreMessages.ZendDebuggerConfiguration_ZendDebuggerNotInstalledError);
+			for (String extensionId : EXTENSION_IDS) {
+				if (props.containsKey(extensionId))
+					return Status.OK_STATUS;
 			}
+			return new Status(
+					IStatus.WARNING,
+					PHPDebugPlugin.ID,
+					PHPDebugCoreMessages.ZendDebuggerConfiguration_ZendDebuggerNotInstalledError);
 		}
 		return Status.OK_STATUS;
 	}

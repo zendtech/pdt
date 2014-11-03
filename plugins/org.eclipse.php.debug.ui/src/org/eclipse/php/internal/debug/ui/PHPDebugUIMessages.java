@@ -34,6 +34,7 @@ public class PHPDebugUIMessages extends NLS {
 	public static String addPHPexeDialog_pickPHPIniDialog_message;
 	public static String addPHPexeDialog_pickPHPRootDialog_message;
 	public static String addPHPexeDialog_readOnlyPHPExe;
+	public static String addPHPexeDialog_wrongSAPItype;
 	public static String Breakpoint_Group_BreakAtFirstLine;
 	public static String Breakpoint_Group_Label;
 	public static String BreakpointCreated_1;
@@ -189,6 +190,8 @@ public class PHPDebugUIMessages extends NLS {
 	public static String PHPExeCompositeFragment_3;
 
 	public static String PHPExecutableLaunchTab_2;
+
+	public static String PHPExecutableLaunchTab_argumentsWillNotBePassed;
 
 	public static String PHPExecutableLaunchTab_isNotPHPFile;
 

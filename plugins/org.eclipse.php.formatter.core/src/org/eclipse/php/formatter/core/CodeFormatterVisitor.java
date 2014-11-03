@@ -5245,7 +5245,7 @@ public class CodeFormatterVisitor extends AbstractVisitor implements
 		}
 		StringBuffer buffer = new StringBuffer(tabs);
 		for (int i = 0; i < tabs; i++) {
-			buffer.append('\t');
+			buffer.append(preferences.indentationChar);
 		}
 		return buffer.toString();
 	}
