@@ -166,9 +166,8 @@ public class ZendDebuggerConfiguration extends AbstractDebuggerConfiguration {
 	public IStatus validate(Server server) {
 		Properties props = executeValidationScript(server);
 		if (props != null) {
-			for (String extensionId : EXTENSION_IDS) {
-				if (props.containsKey(extensionId))
-					return Status.OK_STATUS;
+			if (props.containsKey(EXTENSION_MODULE_ID)) {
+				return Status.OK_STATUS;
 			}
 			return new Status(
 					IStatus.WARNING,

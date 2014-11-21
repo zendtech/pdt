@@ -183,9 +183,9 @@ public class XDebugDebuggerConfiguration extends AbstractDebuggerConfiguration {
 	public IStatus validate(Server server) {
 		Properties props = executeValidationScript(server);
 		if (props != null) {
-			if (props.containsKey(EXTENSION_ID)) {
-				String enableRemote = props.getProperty(EXTENSION_ID + '.'
-						+ REMOTE_ENABLE);
+			if (props.containsKey(EXTENSION_MODULE_ID)) {
+				String enableRemote = props.getProperty(EXTENSION_MODULE_ID
+						+ '.' + REMOTE_ENABLE);
 				if (!"1".equals(enableRemote)) { //$NON-NLS-1$
 					return new Status(
 							IStatus.WARNING,
