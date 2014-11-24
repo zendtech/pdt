@@ -36,9 +36,11 @@ import org.eclipse.swt.widgets.Shell;
  * @author Shalom Gibly
  * @since PDT 1.0
  */
+@SuppressWarnings("restriction")
 public class ZendDebuggerConfiguration extends AbstractDebuggerConfiguration {
 
 	private static final String EXTENSION_MODULE_ID = "Zend Debugger"; //$NON-NLS-1$
+	private static final String EXTENSION_PROPERTY_PREFIX = "zend_debugger"; //$NON-NLS-1$	
 
 	/**
 	 * Constructs a new ZendDebuggerConfiguration.
@@ -166,7 +168,7 @@ public class ZendDebuggerConfiguration extends AbstractDebuggerConfiguration {
 	public IStatus validate(Server server) {
 		Properties props = executeValidationScript(server);
 		if (props != null) {
-			if (props.containsKey(EXTENSION_MODULE_ID)) {
+			if (props.containsKey(EXTENSION_PROPERTY_PREFIX)) {
 				return Status.OK_STATUS;
 			}
 			return new Status(

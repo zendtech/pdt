@@ -35,10 +35,12 @@ import org.eclipse.swt.widgets.Shell;
  * @author Shalom Gibly
  * @since PDT 1.0
  */
+@SuppressWarnings("restriction")
 public class XDebugDebuggerConfiguration extends AbstractDebuggerConfiguration {
 
 	private static final String REMOTE_ENABLE = "remote_enable"; //$NON-NLS-1$
 	private static final String EXTENSION_MODULE_ID = "Xdebug"; //$NON-NLS-1$
+	private static final String EXTENSION_PROPERTY_PREFIX = "xdebug"; //$NON-NLS-1$	
 
 	/**
 	 * Constructs a new XDebugDebuggerConfiguration.
@@ -183,9 +185,10 @@ public class XDebugDebuggerConfiguration extends AbstractDebuggerConfiguration {
 	public IStatus validate(Server server) {
 		Properties props = executeValidationScript(server);
 		if (props != null) {
-			if (props.containsKey(EXTENSION_MODULE_ID)) {
-				String enableRemote = props.getProperty(EXTENSION_MODULE_ID
-						+ '.' + REMOTE_ENABLE);
+			if (props.containsKey(EXTENSION_PROPERTY_PREFIX)) {
+				String enableRemote = props
+						.getProperty(EXTENSION_PROPERTY_PREFIX + '.'
+								+ REMOTE_ENABLE);
 				if (!"1".equals(enableRemote)) { //$NON-NLS-1$
 					return new Status(
 							IStatus.WARNING,
