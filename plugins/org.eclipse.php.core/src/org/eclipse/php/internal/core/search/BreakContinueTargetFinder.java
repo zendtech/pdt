@@ -12,6 +12,7 @@
 package org.eclipse.php.internal.core.search;
 
 import org.eclipse.php.internal.core.CoreMessages;
+import org.eclipse.php.internal.core.Logger;
 import org.eclipse.php.internal.core.ast.nodes.*;
 
 public class BreakContinueTargetFinder extends AbstractOccurrencesFinder {
@@ -25,7 +26,6 @@ public class BreakContinueTargetFinder extends AbstractOccurrencesFinder {
 	private static final int[] STOPPERS = { ASTNode.PROGRAM,
 			ASTNode.FUNCTION_DECLARATION };
 
-	private FunctionDeclaration fFunctionDeclaration;
 	private Statement statement;
 	private int nestingLevel;
 
@@ -77,7 +77,11 @@ public class BreakContinueTargetFinder extends AbstractOccurrencesFinder {
 		}
 		if (expression.getType() == ASTNode.SCALAR) {
 			Scalar scalar = (Scalar) expression;
-			return Integer.parseInt(scalar.getStringValue());
+			try {
+				return Integer.parseInt(scalar.getStringValue());
+			} catch (NumberFormatException e) {
+				Logger.logException(e);
+			}
 		}
 		return 0;
 	}
@@ -118,8 +122,7 @@ public class BreakContinueTargetFinder extends AbstractOccurrencesFinder {
 			nestingStr = ' ' + Integer.toString(nestingLevel);
 		}
 		fDescription = Messages
-				.format(
-						TARGET_OF,
+				.format(TARGET_OF,
 						(statement.getType() == ASTNode.BREAK_STATEMENT) ? "break" + nestingStr : "continue" + nestingStr); //$NON-NLS-1$ //$NON-NLS-2$
 		// No need for the visitor. Just traverse up the AST tree and locate the
 		// target.
@@ -209,7 +212,7 @@ public class BreakContinueTargetFinder extends AbstractOccurrencesFinder {
 	}
 
 	public String getElementName() {
-		return fFunctionDeclaration.getFunctionName().getName();
+		return null;
 	}
 
 	public String getID() {
