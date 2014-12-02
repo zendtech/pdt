@@ -15,8 +15,10 @@ import java.io.ByteArrayOutputStream;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
+import java.net.MalformedURLException;
 import java.net.Socket;
 import java.net.SocketException;
+import java.net.URL;
 import java.util.HashMap;
 import java.util.Hashtable;
 import java.util.Iterator;
@@ -553,6 +555,10 @@ public class DebugConnectionThread implements Runnable {
 			IProcess[] processes = launch.getProcesses();
 			for (IDebugTarget element : debugTargets) {
 				if (element.isTerminated()) {
+					if (isDifferentOriginalURL(debugSessionStartedNotification,
+							launch)) {
+						return true;
+					}
 					launch.removeDebugTarget(element);
 				} else {
 					// Do not allow any other targets or processes when an
@@ -1120,6 +1126,57 @@ public class DebugConnectionThread implements Runnable {
 	protected String getURL(ILaunchConfiguration configuration)
 			throws CoreException {
 		return configuration.getAttribute(Server.BASE_URL, ""); //$NON-NLS-1$
+	}
+
+	/**
+	 * Check if specified notification for a new session is generated for the
+	 * same original URL as a terminated session with the same id.
+	 * 
+	 * @param debugSessionStartedNotification
+	 *            fresh session started notification
+	 * @param launch
+	 *            launch associated with particular session id
+	 * @return <code>true</code> if provided notification is generated for a
+	 *         different original URL; otherwise return <code>false</code>
+	 */
+	private boolean isDifferentOriginalURL(
+			DebugSessionStartedNotification debugSessionStartedNotification,
+			ILaunch launch) {
+		try {
+			URL previousUrl = new URL(
+					launch.getAttribute(IDebugParametersKeys.ORIGINAL_URL));
+			URL currentUrl = getOriginalURL(debugSessionStartedNotification
+					.getOptions());
+			if (currentUrl != null && previousUrl != null) {
+				if (!currentUrl.getHost().equals(previousUrl.getHost())
+						|| currentUrl.getPort() != previousUrl.getPort()) {
+					return true;
+				}
+			}
+		} catch (MalformedURLException e) {
+			PHPDebugPlugin.log(e);
+		}
+		return false;
+	}
+
+	/**
+	 * Parse and create URL base on a value of <code>original_url</code> option.
+	 * 
+	 * @param options
+	 * @return URL instance for original URL
+	 * @throws MalformedURLException
+	 */
+	private URL getOriginalURL(String options) throws MalformedURLException {
+		String key = AbstractDebugParametersInitializer.ORIGINAL_URL + "="; //$NON-NLS-1$
+		int index = options.lastIndexOf(key);
+		if (index < 0) {
+			return null;
+		}
+		index += key.length();
+		String originalURL = options.substring(index);
+		index = originalURL.indexOf('&');
+		originalURL = originalURL.substring(0, index);
+		return new URL(originalURL);
 	}
 
 	/**
