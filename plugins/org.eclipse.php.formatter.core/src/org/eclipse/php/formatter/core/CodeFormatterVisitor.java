@@ -30,7 +30,6 @@ import org.eclipse.php.internal.core.compiler.ast.nodes.VarComment;
 import org.eclipse.php.internal.core.compiler.ast.parser.php5.CompilerAstLexer;
 import org.eclipse.php.internal.core.compiler.ast.parser.php56.CompilerParserConstants;
 import org.eclipse.php.internal.core.compiler.ast.parser.php56.PhpTokenNames;
-import org.eclipse.php.internal.core.documentModel.parser.PHPRegionContext;
 import org.eclipse.php.internal.core.documentModel.partitioner.PHPPartitionTypes;
 import org.eclipse.php.internal.core.format.ICodeFormattingProcessor;
 import org.eclipse.text.edits.MultiTextEdit;
@@ -796,39 +795,7 @@ public class CodeFormatterVisitor extends AbstractVisitor implements
 				break;
 			}
 
-			// workaround; remove this after fixing of
-			// https://bugs.eclipse.org/bugs/show_bug.cgi?id=326384
-			int start = array[i].getStart();
-			try {
-				// a NamespaceName object can be wrapped in
-				// a FormalParameter object
-				Object obj = array[i] instanceof FormalParameter ? ((FormalParameter) array[i])
-						.getParameterType() : array[i];
-
-				// obj may be null
-				if (obj instanceof NamespaceName
-						&& ((NamespaceName) obj).isGlobal()) {
-					if (start > 0
-							&& (Character.isWhitespace(document
-									.getChar(start - 1)) || document
-									.getChar(start - 1) == '\\')) {
-						start -= 1;
-					}
-				} else if (i == 0 && array[i] instanceof UseStatementPart
-						&& ((UseStatementPart) array[i]).getName() != null
-						&& ((UseStatementPart) array[i]).getName().isGlobal()) {
-					if (start > 0
-							&& (Character.isWhitespace(document
-									.getChar(start - 1)) || document
-									.getChar(start - 1) == '\\')) {
-						start -= 1;
-					}
-				}
-			} catch (BadLocationException e) {
-				Logger.logException(e);
-			}
-			// workaround end
-			handleChars1(lastPosition, start,
+			handleChars1(lastPosition, array[i].getStart(),
 					oldIndentationLevel != indentationLevel, indentGap);
 			array[i].accept(this);
 			if (array[i] instanceof FunctionInvocation) {
@@ -2566,30 +2533,46 @@ public class CodeFormatterVisitor extends AbstractVisitor implements
 		for (int i = 0; i < statements.length; i++) {
 			boolean isHtmlStatement = statements[i].getType() == ASTNode.IN_LINE_HTML;
 			boolean isASTError = statements[i].getType() == ASTNode.AST_ERROR;
+			// fixed bug 441419
+			// in case of previous statement is an error there is no need for
+			// new lines
+			// because the lastStatementEndOffset position move to the current
+			// statement start position
+			boolean isStatementAfterError = i > 0 ? statements[i - 1].getType() == ASTNode.AST_ERROR
+					: false;
 			if (isASTError && i + 1 < statements.length) {
+				// move the lastStatementEndOffset position to the start of the
+				// next statement start position
 				lastStatementEndOffset = statements[i + 1].getStart();
 			} else {
 				if (isPhpMode && !isHtmlStatement) {
 					// PHP -> PHP
-					if (getPhpStartTag(lastStatementEndOffset) != -1) {
+					if (!isStatementAfterError
+							&& getPhpStartTag(lastStatementEndOffset) != -1) {
 						insertNewLine();
 					}
 					if (isThrowOrReturnFormatCase(statements)) {
 						// do nothing... This is a Throw/Return case
 					} else {
-						insertNewLines(statements[i]);
-						indent();
+						if (!isStatementAfterError) {
+							insertNewLines(statements[i]);
+							indent();
+						}
 					}
-					handleChars(lastStatementEndOffset,
-							statements[i].getStart());
+					if (lastStatementEndOffset <= statements[i].getStart()) {
+						handleChars(lastStatementEndOffset,
+								statements[i].getStart());
+					}
 				} else if (isPhpMode && isHtmlStatement) {
 					// PHP -> HTML
 					isPhpMode = false;
 				} else if (!isPhpMode && !isHtmlStatement) {
 					// HTML -> PHP
-					isPhpEqualTag = getPhpStartTag(lastStatementEndOffset) == PHP_OPEN_SHORT_TAG_WITH_EQUAL;
-					insertNewLines(statements[i]);
-					indent();
+					if (!isStatementAfterError) {
+						isPhpEqualTag = getPhpStartTag(lastStatementEndOffset) == PHP_OPEN_SHORT_TAG_WITH_EQUAL;
+						insertNewLines(statements[i]);
+						indent();
+					}
 					if (lastStatementEndOffset <= statements[i].getStart()) {
 						handleChars(lastStatementEndOffset,
 								statements[i].getStart());
@@ -2844,24 +2827,8 @@ public class CodeFormatterVisitor extends AbstractVisitor implements
 			insertSpace();
 		}
 		lineWidth += 5;
-		// https://bugs.eclipse.org/bugs/show_bug.cgi?id=326384
-		int start = catchClause.getClassName().getStart();
-		if (catchClause.getClassName() instanceof NamespaceName) {
-			NamespaceName namespaceName = (NamespaceName) catchClause
-					.getClassName();
-			try {
-				if (namespaceName.isGlobal()
-						&& start > 0
-						&& (Character.isWhitespace(document.getChar(start - 1)) || document
-								.getChar(start - 1) == '\\')) {
-					start -= 1;
-				}
-			} catch (BadLocationException e) {
-				Logger.logException(e);
-			}
-		}
-		// end
-		handleChars(catchClause.getStart() + 5, start);
+		handleChars(catchClause.getStart() + 5, catchClause.getClassName()
+				.getStart());
 
 		// handle the catch identifier
 		catchClause.getClassName().accept(this);
@@ -2963,26 +2930,7 @@ public class CodeFormatterVisitor extends AbstractVisitor implements
 		// handle super class
 		if (superClass != null) {
 			appendToBuffer(" extends "); //$NON-NLS-1$
-			int start = superClass.getStart();
-			// workaround
-			// remove this after fixing of
-			// https://bugs.eclipse.org/bugs/show_bug.cgi?id=326384
-			try {
-				if (superClass instanceof NamespaceName
-						&& ((NamespaceName) superClass).isGlobal()) {
-					if (start > 0
-							&& (Character.isWhitespace(document
-									.getChar(start - 1)) || document
-									.getChar(start - 1) == '\\')) {
-						start -= 1;
-					}
-				}
-			} catch (BadLocationException e) {
-				Logger.logException(e);
-			}
-			// end
-
-			handleChars(lastPosition, start);
+			handleChars(lastPosition, superClass.getStart());
 			classDeclaration.getSuperClass().accept(this);
 			lastPosition = classDeclaration.getSuperClass().getEnd();
 		}
@@ -4588,15 +4536,16 @@ public class CodeFormatterVisitor extends AbstractVisitor implements
 				lastStatementEndOffset = statements[i + 1].getStart();
 			} else {
 				if (isPhpMode && !isHtmlStatement) {
-
 					// PHP -> PHP
 					if (lastStatementEndOffset > 0) {
 						if (!isStatementAfterError
 								&& getPhpStartTag(lastStatementEndOffset) != -1) {
 							insertNewLine();
 						}
-						insertNewLines(statements[i]);
-						indent();
+						if (!isStatementAfterError) {
+							insertNewLines(statements[i]);
+							indent();
+						}
 						if (lastStatementEndOffset <= statements[i].getStart()) {
 							handleChars(lastStatementEndOffset,
 									statements[i].getStart());
@@ -4617,8 +4566,8 @@ public class CodeFormatterVisitor extends AbstractVisitor implements
 						isPhpEqualTag = getPhpStartTag(lastStatementEndOffset) == PHP_OPEN_SHORT_TAG_WITH_EQUAL;
 						indentationLevel = getPhpTagIndentationLevel(lastStatementEndOffset);
 						insertNewLines(statements[i]);
+						indent();
 					}
-					indent();
 					if (lastStatementEndOffset <= statements[i].getStart()) {
 						handleChars(lastStatementEndOffset,
 								statements[i].getStart());
@@ -5051,23 +5000,7 @@ public class CodeFormatterVisitor extends AbstractVisitor implements
 		}
 		List<Identifier> segments = namespaceName.segments();
 		if (segments.size() > 0) {
-			// workaround
-			// remove this after fixing of
-			// https://bugs.eclipse.org/bugs/show_bug.cgi?id=326384
-			int start = namespaceName.getStart();
-			try {
-				if (namespaceName.isGlobal()
-						&& start > 0
-						&& (Character.isWhitespace(document.getChar(start - 1)) || document
-								.getChar(start - 1) == '\\')) {
-					start -= 1;
-				}
-			} catch (BadLocationException e) {
-				Logger.logException(e);
-			}
-			// end
-
-			handleChars(start, segments.get(0).getStart());
+			handleChars(namespaceName.getStart(), segments.get(0).getStart());
 			Iterator<Identifier> it = segments.iterator();
 			Identifier prev = null;
 			while (it.hasNext()) {

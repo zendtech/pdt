@@ -15,7 +15,6 @@ import java.util.*;
 
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.dltk.core.*;
-import org.eclipse.dltk.internal.core.SourceRange;
 import org.eclipse.jface.text.BadLocationException;
 import org.eclipse.jface.text.IDocument;
 import org.eclipse.php.core.codeassist.ICompletionContext;
@@ -61,7 +60,7 @@ public class ClassMethodsStrategy extends ClassMembersStrategy {
 		boolean isParentCall = isParentCall(concreteContext);
 		String suffix = getSuffix(concreteContext);
 
-		SourceRange replaceRange = null;
+		ISourceRange replaceRange = null;
 		if (suffix.equals("")) { //$NON-NLS-1$
 			replaceRange = getReplacementRange(concreteContext);
 		} else {
@@ -194,10 +193,11 @@ public class ClassMethodsStrategy extends ClassMembersStrategy {
 		// look for method bracket or end of line
 		IDocument document = abstractContext.getDocument();
 		int offset = abstractContext.getOffset();
-		char ch = document.getChar(offset);
-		while (document.getLength() > offset && ch != '(') { //$NON-NLS-1$
-			ch = document.getChar(offset);
-			if (ch == '\n') { //$NON-NLS-1$
+		while (document.getLength() > offset) {
+			char ch = document.getChar(offset);
+			if (ch == '(') {
+				break;
+			} else if (ch == '\n') {
 				return "()"; //$NON-NLS-1$
 			}
 			offset++;

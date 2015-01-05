@@ -46,7 +46,7 @@ import org.eclipse.php.internal.debug.core.pathmapper.*;
 import org.eclipse.php.internal.debug.core.preferences.PHPDebugCorePreferenceNames;
 import org.eclipse.php.internal.debug.core.preferences.PHPDebuggersRegistry;
 import org.eclipse.php.internal.debug.core.preferences.PHPProjectPreferences;
-import org.eclipse.php.internal.debug.core.zend.communication.DebugConnectionThread;
+import org.eclipse.php.internal.debug.core.zend.communication.DebugConnection;
 import org.eclipse.php.internal.debug.core.zend.communication.DebuggerCommunicationDaemon;
 import org.eclipse.php.internal.debug.core.zend.communication.ResponseHandler;
 import org.eclipse.php.internal.debug.core.zend.debugger.messages.*;
@@ -95,7 +95,7 @@ public class RemoteDebugger implements IRemoteDebugger {
 	private static final String EVAL_ERROR = "[Error]"; //$NON-NLS-1$
 
 	protected boolean isDebugMode = System.getProperty("loggingDebug") != null; //$NON-NLS-1$
-	private DebugConnectionThread connection;
+	private DebugConnection connection;
 	private IDebugHandler debugHandler;
 	private Map<String, String> resolvedFiles;
 	private Map<String, List<IPath>> resolvedIncludePaths;
@@ -107,10 +107,9 @@ public class RemoteDebugger implements IRemoteDebugger {
 	/**
 	 * Creates new RemoteDebugSession
 	 */
-	public RemoteDebugger(IDebugHandler debugHandler,
-			DebugConnectionThread connectionThread) {
+	public RemoteDebugger(IDebugHandler debugHandler, DebugConnection connection) {
 		// this.kit = createCommunicationKit();
-		connection = connectionThread;
+		this.connection = connection;
 		this.debugHandler = debugHandler;
 		connection.setCommunicationAdministrator(this);
 		connection.setCommunicationClient(this);
@@ -122,12 +121,12 @@ public class RemoteDebugger implements IRemoteDebugger {
 		return debugHandler;
 	}
 
-	public DebugConnectionThread getConnectionThread() {
+	public DebugConnection getConnection() {
 		return connection;
 	}
 
 	public void closeConnection() {
-		connection.closeConnection();
+		connection.disconnect();
 	}
 
 	public void connectionEstablished() {
@@ -273,6 +272,8 @@ public class RemoteDebugger implements IRemoteDebugger {
 	public String convertToLocalFilename(String remoteFile) {
 		String currentScript = null;
 		PHPstack callStack = getCallStack();
+		if (callStack == null)
+			return null;
 		if (callStack.getSize() > 0) {
 			currentScript = callStack.getLayer(callStack.getSize() - 1)
 					.getResolvedCalledFileName();
@@ -880,6 +881,10 @@ public class RemoteDebugger implements IRemoteDebugger {
 			warnOlderDebugVersion();
 			return true;
 		}
+		// All of above failed, check if the connection is active (it could be
+		// terminated in the meantime by the user i.e.)
+		if (!isActive())
+			return true;
 		// user is using an incompatible version of debugger:
 		getDebugHandler().wrongDebugServer();
 		return false;
@@ -1061,7 +1066,7 @@ public class RemoteDebugger implements IRemoteDebugger {
 	 * Finish the debugger running.
 	 */
 	public void finish() {
-		connection.closeConnection();
+		connection.disconnect();
 	}
 
 	/**
@@ -1138,13 +1143,11 @@ public class RemoteDebugger implements IRemoteDebugger {
 		if (!this.isActive()) {
 			return null;
 		}
-
 		PHPDebugTarget debugTarget = getDebugHandler().getDebugTarget();
 		int suspendCount = debugTarget.getSuspendCount();
 		if (suspendCount == previousSuspendCount && cachedStack != null) {
 			return cachedStack;
 		}
-
 		GetCallStackRequest request = new GetCallStackRequest();
 		PHPstack remoteStack = null;
 		try {
@@ -1157,10 +1160,8 @@ public class RemoteDebugger implements IRemoteDebugger {
 			exc.printStackTrace();
 		}
 		convertToSystem(remoteStack);
-
 		previousSuspendCount = suspendCount;
 		cachedStack = remoteStack;
-
 		return remoteStack;
 	}
 
