@@ -160,13 +160,22 @@ import org.eclipse.php.internal.core.PHPVersion;
         return new Symbol(symbolNumber, leftPosition, leftPosition + getTokenLength());
     }
 
-    public int[] getParamenters(){
-    	return new int[]{zzMarkedPos, zzPushbackPos, zzCurrentPos, zzStartRead, zzEndRead, yyline};
-    }
+	public int[] getParamenters() {
+		return new int[] { zzMarkedPos, zzPushbackPos, zzCurrentPos,
+				zzStartRead, zzEndRead, yyline, zzAtBOL ? 1 : 0,
+				zzAtEOF ? 1 : 0, zzEOFDone ? 1 : 0 };
+	}
     
-	protected boolean parsePHPDoc(){	
+	/**
+	 * Parses a PHPDoc block comment. Underlying reader (zzReader) can be closed
+	 * in the process (when EOF is reached).
+	 * 
+	 * @return true when PHPDoc was parsed, false otherwise (false also implies
+	 *         that this scanner wasn't resetted)
+	 */
+	protected boolean parsePHPDoc() {
 		final IDocumentorLexer documentorLexer = getDocumentorLexer(zzReader);
-		if(documentorLexer == null){
+		if(documentorLexer == null) {
 			return false;
 		}
 		yypushback(zzMarkedPos - zzStartRead);
@@ -178,12 +187,24 @@ import org.eclipse.php.internal.core.PHPVersion;
 		return true;
 	}
 	
-	
 	protected IDocumentorLexer getDocumentorLexer(java.io.Reader  reader) {
 		return null;
 	}
 	
-	public void reset(java.io.Reader  reader, char[] buffer, int[] parameters){
+	/**
+	 * Resets the {@code PhpAstLexer} properties to previous values, but leaves
+	 * the lexical state unchanged. Be careful, method {@link #next_token()}
+	 * also caches those properties using internal variables (zzCurrentPosL,
+	 * zzMarkedPosL, zzBufferL, zzEndReadL) that should be accordingly resetted
+	 * by the lexical rules calling
+	 * {@link #reset(java.io.Reader, char[], int[])}. Also be careful that those
+	 * internal variables could change from one version of JFlex to another.
+	 * 
+	 * @param reader
+	 * @param buffer
+	 * @param parameters
+	 */
+	public void reset(java.io.Reader reader, char[] buffer, int[] parameters) {
 		this.zzReader = reader;
 		this.zzBuffer = buffer;
 		this.zzMarkedPos = parameters[0];
@@ -191,10 +212,19 @@ import org.eclipse.php.internal.core.PHPVersion;
 		this.zzCurrentPos = parameters[2];
 		this.zzStartRead = parameters[3];
 		this.zzEndRead = parameters[4];
-		this.yyline = parameters[5];  
+		this.yyline = parameters[5];
 		this.yychar = this.zzStartRead - this.zzPushbackPos;
+		// XXX: never used
+		this.yycolumn = 0;
+		this.zzAtEOF = parameters[7] != 0;
+		this.zzEOFDone = parameters[8] != 0;
+		// XXX: check if there's no side-effect to reset zzAtBOL
+		// when zzAtEOF is false and zzMarkedPos is equal to zzStartRead.
+		// One possible case would be that IDocumentorLexer#parse() matches
+		// no text at all without being at EOF (i.e. the document lexer returns
+		// a zero-length token), which of course would be totally broken...
+		this.zzAtBOL = this.zzAtEOF ? false : (parameters[6] != 0);
 	}
-
 %}
 
 LNUM=[0-9]+
@@ -202,22 +232,22 @@ DNUM=([0-9]*"."[0-9]+)|([0-9]+"."[0-9]*)
 EXPONENT_DNUM=(({LNUM}|{DNUM})[eE][+-]?{LNUM})
 HNUM="0x"[0-9a-fA-F]+
 BNUM="0b"[01]+
-LABEL=[a-zA-Z_\x7f-\xff][a-zA-Z0-9_\x7f-\xff]*
+LABEL=[a-zA-Z_\u007f-\uffff][a-zA-Z0-9_\u007f-\uffff]*
 WHITESPACE=[ \n\r\t]+
 TABS_AND_SPACES=[ \t]*
 ANY_CHAR=[^]
 NEWLINE=("\r"|"\n"|"\r\n")
-DOUBLE_QUOTES_LITERAL_DOLLAR=("$"+([^a-zA-Z_\x7f-\xff$\"\\{]|("\\"{ANY_CHAR})))
-BACKQUOTE_LITERAL_DOLLAR=("$"+([^a-zA-Z_\x7f-\xff$`\\{]|("\\"{ANY_CHAR})))
-HEREDOC_LITERAL_DOLLAR=("$"+([^a-zA-Z_\x7f-\xff$\n\r\\{]|("\\"[^\n\r])))
+DOUBLE_QUOTES_LITERAL_DOLLAR=("$"+([^a-zA-Z_\u007f-\uffff$\"\\{]|("\\"{ANY_CHAR})))
+BACKQUOTE_LITERAL_DOLLAR=("$"+([^a-zA-Z_\u007f-\uffff$`\\{]|("\\"{ANY_CHAR})))
+HEREDOC_LITERAL_DOLLAR=("$"+([^a-zA-Z_\u007f-\uffff$\n\r\\{]|("\\"[^\n\r])))
 HEREDOC_NEWLINE=((({LABEL}";"?((("{"+|"$"+)"\\"?)|"\\"))|(("{"*|"$"*)"\\"?)){NEWLINE})
 HEREDOC_CURLY_OR_ESCAPE_OR_DOLLAR=(("{"+[^$\n\r\\{])|("{"*"\\"[^\n\r])|{HEREDOC_LITERAL_DOLLAR})
-HEREDOC_NON_LABEL=([^a-zA-Z_\x7f-\xff$\n\r\\{]|{HEREDOC_CURLY_OR_ESCAPE_OR_DOLLAR})
-HEREDOC_LABEL_NO_NEWLINE=({LABEL}([^a-zA-Z0-9_\x7f-\xff;$\n\r\\{]|(";"[^$\n\r\\{])|(";"?{HEREDOC_CURLY_OR_ESCAPE_OR_DOLLAR})))
+HEREDOC_NON_LABEL=([^a-zA-Z_\u007f-\uffff$\n\r\\{]|{HEREDOC_CURLY_OR_ESCAPE_OR_DOLLAR})
+HEREDOC_LABEL_NO_NEWLINE=({LABEL}([^a-zA-Z0-9_\u007f-\uffff;$\n\r\\{]|(";"[^$\n\r\\{])|(";"?{HEREDOC_CURLY_OR_ESCAPE_OR_DOLLAR})))
 DOUBLE_QUOTES_CHARS=("{"*([^$\"\\{]|("\\"{ANY_CHAR}))|{DOUBLE_QUOTES_LITERAL_DOLLAR})
 BACKQUOTE_CHARS=("{"*([^$`\\{]|("\\"{ANY_CHAR}))|{BACKQUOTE_LITERAL_DOLLAR})
 HEREDOC_CHARS=("{"*([^$\n\r\\{]|("\\"[^\n\r]))|{HEREDOC_LITERAL_DOLLAR}|({HEREDOC_NEWLINE}+({HEREDOC_NON_LABEL}|{HEREDOC_LABEL_NO_NEWLINE})))
-NOWDOC_CHARS=([^\n\r]|{NEWLINE}+([^a-zA-Z_\x7f-\xff\n\r]|({LABEL}([^a-zA-Z0-9_\x7f-\xff;\n\r]|(";"[^\n\r])))))
+NOWDOC_CHARS=([^\n\r]|{NEWLINE}+([^a-zA-Z_\u007f-\uffff\n\r]|({LABEL}([^a-zA-Z0-9_\u007f-\uffff;\n\r]|(";"[^\n\r])))))
 
 %%
 
@@ -791,7 +821,7 @@ NOWDOC_CHARS=([^\n\r]|{NEWLINE}+([^a-zA-Z_\x7f-\xff\n\r]|({LABEL}([^a-zA-Z0-9_\x
     return createFullSymbol(ParserConstants.T_VARIABLE);
 }
 
-<ST_DOUBLE_QUOTES,ST_HEREDOC,ST_BACKQUOTE>"$"{LABEL}"->"[a-zA-Z_\x7f-\xff] {
+<ST_DOUBLE_QUOTES,ST_HEREDOC,ST_BACKQUOTE>"$"{LABEL}"->"[a-zA-Z_\u007f-\uffff] {
 	yypushback(3);
 	pushState(ST_LOOKING_FOR_PROPERTY);
 	return createFullSymbol(ParserConstants.T_VARIABLE);
@@ -897,9 +927,21 @@ NOWDOC_CHARS=([^\n\r]|{NEWLINE}+([^a-zA-Z_\x7f-\xff\n\r]|({LABEL}([^a-zA-Z0-9_\x
 }
 
 <ST_IN_SCRIPTING>"/**" {
-if (!parsePHPDoc()) {
-handleCommentStart();
-yybegin(ST_DOCBLOCK);
+if (parsePHPDoc()) {
+	// https://bugs.eclipse.org/bugs/show_bug.cgi?id=316077
+	// Reset the internal variables caching the values
+	// previously resetted by parsePHPDoc().
+	// Actually it would be enough to only reset zzEndReadL,
+	// but do it cleanly...
+	// Also be careful that those internal variables could
+	// change from one version of JFlex to another.
+	zzCurrentPosL = zzCurrentPos;
+	zzMarkedPosL = zzMarkedPos;
+	zzBufferL = zzBuffer;
+	zzEndReadL = zzEndRead;
+} else {
+	handleCommentStart();
+	yybegin(ST_DOCBLOCK);
 }
 }
 
