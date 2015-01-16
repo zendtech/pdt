@@ -17,7 +17,7 @@ package org.eclipse.php.internal.server;
  */
 public interface IHelpContextIds {
 
-	String PREFIX = "http://files.zend.com/help/Zend-Studio-11/zend-studio.htm#"; //$NON-NLS-1$
+	String PREFIX = "http://files.zend.com/help/Zend-Studio/zend-studio.htm#"; //$NON-NLS-1$
 	String SUFFIX = ".htm?zs"; //$NON-NLS-1$
 
 	String ADDING_A_SERVER_GENERIC_PHP_SERVER = PREFIX
