@@ -49,6 +49,7 @@ public class PHPWebPageLaunchConfigurationTab extends
 
 	protected void createServerSelectionControl(Composite parent) {
 		PHPDebugPlugin.createDefaultPHPServer();
+		super.createServerSelectionControl(parent);
 	}
 
 	public String[] getRequiredNatures() {

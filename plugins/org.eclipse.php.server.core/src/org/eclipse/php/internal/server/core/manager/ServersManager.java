@@ -282,7 +282,8 @@ public class ServersManager implements PropertyChangeListener, IAdaptable {
 			String projectSpecificServer = preferenceScopes[0].getNode(
 					NODE_QUALIFIER).get(DEFAULT_SERVER_PREFERENCES_KEY,
 					(String) null);
-			if (projectSpecificServer == null) {
+			if (projectSpecificServer == null
+					|| (server != null && isEmptyServer(server))) {
 				// We do not have a project specific setting for this project.
 				// Map it to the default workspace server.
 				manager.defaultServersMap.put(project,
