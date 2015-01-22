@@ -182,6 +182,13 @@ public final class ParameterGuessingProposal extends
 				PHPVersion.PHP5_3)) {
 			return false;
 		}
+		try {
+			if (!method.isConstructor()) {
+				return false;
+			}
+		} catch (ModelException e1) {
+			return false;
+		}
 		IType type = method.getDeclaringType();
 		boolean isInNamespace = PHPModelUtils.getCurrentNamespaceIfAny(
 				fSourceModule, getReplacementOffset()) != null;
