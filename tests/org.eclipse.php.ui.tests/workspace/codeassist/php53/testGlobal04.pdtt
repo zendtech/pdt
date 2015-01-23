@@ -9,4 +9,4 @@ str_w|
 <?php
 namespace Foo;
 
-str_word_count($string)
+\str_word_count($string)
