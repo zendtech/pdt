@@ -229,7 +229,8 @@ public class DefaultIndentationStrategy implements IIndentationStrategy {
 							if (nonEmptyOffset == lineInfo.getOffset()) {
 								nonEmptyOffset = IndentationUtils
 										.moveLineStartToNonBlankChar(document,
-												nonEmptyOffset, lineNumber) - 1;
+												nonEmptyOffset, lineNumber,
+												false);
 							}
 						}
 						char lineStartChar = document.getChar(nonEmptyOffset);
@@ -418,13 +419,18 @@ public class DefaultIndentationStrategy implements IIndentationStrategy {
 									region.getOffset() + region.getLength());
 							if (arrayBracket == PHPHeuristicScanner.TokenRPAREN
 									|| arrayBracket == PHPHeuristicScanner.TokenRBRACKET) {
-								if (isAssignment)
+								int prev = scanner.previousToken(offset - 1,
+										PHPHeuristicScanner.UNBOUND);
+								if ((isAssignment
+										&& arrayBracket == PHPHeuristicScanner.TokenRPAREN && prev != PHPHeuristicScanner.TokenLPAREN)
+										|| (isAssignment
+												&& arrayBracket == PHPHeuristicScanner.TokenRBRACKET && prev != PHPHeuristicScanner.TokenLBRACKET)) {
 									indent(document, newBuffer, 0,
 											indentationObject
 													.getIndentationChar(),
 											indentationObject
 													.getIndentationSize());
-								else {
+								} else {
 									indent(document,
 											newBuffer,
 											indentationObject
@@ -503,6 +509,8 @@ public class DefaultIndentationStrategy implements IIndentationStrategy {
 				if (Character.isWhitespace(c)) {
 				} else {
 					// move line start to first non blank char
+					// and do + 1 to adjust offset of
+					// PHPTextSequenceUtilities.getStatement(...)
 					lineStart += i + 1;
 					break;
 				}
