@@ -36,6 +36,7 @@ import org.eclipse.php.internal.debug.core.PHPDebugPlugin;
 import org.eclipse.php.internal.debug.core.preferences.PHPDebugCorePreferenceNames;
 import org.eclipse.php.internal.debug.core.preferences.PHPDebuggersRegistry;
 import org.eclipse.php.internal.debug.core.xdebug.communication.XDebugCommunicationDaemon;
+import org.eclipse.php.internal.debug.core.zend.debugger.ZendDebuggerConfiguration;
 import org.eclipse.php.internal.debug.ui.wizards.DebuggerCompositeFragment;
 import org.eclipse.php.internal.server.PHPServerUIMessages;
 import org.eclipse.php.internal.server.core.Server;
@@ -358,7 +359,11 @@ public class PHPServerAdvancedTab extends AbstractLaunchConfigurationTab {
 			}
 			ServersManager.save();
 			String previousDebuggerId = debuggerId;
-			debuggerId = server.getDebuggerId();
+			if (server.getDebuggerId() == null) {
+				debuggerId = ZendDebuggerConfiguration.ID;
+			} else {
+				debuggerId = server.getDebuggerId();
+			}
 			if (!debuggerId.equals(previousDebuggerId))
 				setDebugger();
 		}
@@ -373,7 +378,11 @@ public class PHPServerAdvancedTab extends AbstractLaunchConfigurationTab {
 		if (server == null) {
 			server = ServersManager.getDefaultServer(null);
 		}
-		debuggerId = server.getDebuggerId();
+		if (server.getDebuggerId() == null) {
+			debuggerId = ZendDebuggerConfiguration.ID;
+		} else {
+			debuggerId = server.getDebuggerId();
+		}
 		debuggerName.setText(PHPDebuggersRegistry.getDebuggerName(debuggerId));
 		handleDebuggerChanged();
 	}
