@@ -132,7 +132,8 @@ public class DefaultExpressionsManager implements ExpressionsManager {
 							+ expressionStaticNodes.length);
 		}
 		// Sort object members by type & name
-		if (!PHPProjectPreferences.isSortByName())
+		if (!PHPProjectPreferences.isSortByName()
+				&& expressionValue.getType() == ExpressionValue.OBJECT_TYPE)
 			VariablesUtil.sortObjectMembers(expressionValue.getOriChildren());
 		expression.setValue(expressionValue);
 	}
