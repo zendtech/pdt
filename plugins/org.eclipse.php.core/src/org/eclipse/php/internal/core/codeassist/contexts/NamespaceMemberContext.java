@@ -146,12 +146,21 @@ public class NamespaceMemberContext extends StatementContext {
 
 	public int getPrefixEnd() throws BadLocationException {
 		ITextRegion phpToken = getPHPToken();
-		if (phpToken.getType() == PHPRegionTypes.PHP_NS_SEPARATOR) {
+		if (phpToken.getType() == PHPRegionTypes.PHP_NS_SEPARATOR
+		// https://bugs.eclipse.org/bugs/show_bug.cgi?id=458794
+		// Check that there's no other (whitespace) characters
+		// after the namespace separator, otherwise there's no reason
+		// to retrieve the next region.
+				&& phpToken.getLength() == 1 /* "\\".length() */) {
 			IPhpScriptRegion phpScriptRegion = getPhpScriptRegion();
 			ITextRegion nextRegion = phpScriptRegion.getPhpToken(phpToken
 					.getEnd());
-			return getRegionCollection().getStartOffset()
-					+ phpScriptRegion.getStart() + nextRegion.getTextEnd();
+			// https://bugs.eclipse.org/bugs/show_bug.cgi?id=459368
+			// Also check that we only retrieve PHP labels.
+			if (nextRegion.getType() == PHPRegionTypes.PHP_STRING) {
+				return getRegionCollection().getStartOffset()
+						+ phpScriptRegion.getStart() + nextRegion.getTextEnd();
+			}
 		}
 		return super.getPrefixEnd();
 	}

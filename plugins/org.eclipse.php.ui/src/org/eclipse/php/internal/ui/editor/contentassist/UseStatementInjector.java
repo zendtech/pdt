@@ -100,17 +100,16 @@ public class UseStatementInjector {
 		}
 
 		try {
-			// quanlified namespace should return offset directly
-			if (offset - proposal.getReplacementLength() > 0
-					&& document.getChar(offset
-							- proposal.getReplacementLength() - 1) == NamespaceReference.NAMESPACE_SEPARATOR) {
+			// qualified namespace should return offset directly
+			if (proposal.getReplacementOffset() > 0
+					&& document.getChar(proposal.getReplacementOffset() - 1) == NamespaceReference.NAMESPACE_SEPARATOR) {
 				return offset;
 			}
 			if (modelElement.getElementType() == IModelElement.TYPE
 					&& PHPFlags.isNamespace(((IType) modelElement).getFlags())) {
-				if (offset - proposal.getReplacementLength() > 0) {
+				if (offset > 0) {
 					String prefix = document.get(
-							offset - proposal.getReplacementLength(),
+							proposal.getReplacementOffset(),
 							proposal.getReplacementLength());
 					String fullName = ((IType) modelElement).getElementName();
 					if (fullName.startsWith(prefix)
@@ -369,7 +368,9 @@ public class UseStatementInjector {
 							sourceModule, document, offset, phpVersion);
 
 					// Add alias to the replacement string:
-					if (!usePartName.equals(existingNamespacePrefix)) {
+					if (existingNamespacePrefix == null
+							|| !usePartName.toLowerCase().equals(
+									existingNamespacePrefix.toLowerCase())) {
 						replacementString = namespacePrefix + replacementString;
 					}
 					proposal.setReplacementString(replacementString);
@@ -382,12 +383,23 @@ public class UseStatementInjector {
 			} else if (!useAlias
 					&& (usePart == null || !usePartName.equals(usePart
 							.getNamespace().getFullyQualifiedName()))) {
-				// if the type name already exists, use fully
-				// qualified name to replace
-				proposal.setReplacementString(NamespaceReference.NAMESPACE_SEPARATOR
+				String namespacePrefix = NamespaceReference.NAMESPACE_SEPARATOR
 						+ namespaceName
-						+ NamespaceReference.NAMESPACE_SEPARATOR
-						+ proposal.getReplacementString());
+						+ NamespaceReference.NAMESPACE_SEPARATOR;
+				String replacementString = proposal.getReplacementString();
+
+				String existingNamespacePrefix = readNamespacePrefix(
+						sourceModule, document, offset, phpVersion);
+
+				// https://bugs.eclipse.org/bugs/show_bug.cgi?id=459306
+				// if the type name already exists, use fully
+				// qualified name to replace:
+				if (existingNamespacePrefix == null
+						|| !namespaceName.toLowerCase().equals(
+								existingNamespacePrefix.toLowerCase())) {
+					replacementString = namespacePrefix + replacementString;
+				}
+				proposal.setReplacementString(replacementString);
 			}
 
 		} catch (Exception e) {
