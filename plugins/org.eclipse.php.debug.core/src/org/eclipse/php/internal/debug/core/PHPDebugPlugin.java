@@ -128,7 +128,7 @@ public class PHPDebugPlugin extends Plugin {
 
 	// The shared instance.
 	private static PHPDebugPlugin plugin;
-	private static final String BASE_URL = "http://localhost"; //$NON-NLS-1$
+	private static final String BASE_URL = "http://<no_php_server>"; //$NON-NLS-1$
 	private static boolean fIsSupportingMultipleDebugAllPages = true;
 	private boolean fInitialAutoRemoveLaunches;
 	private static boolean fLaunchChangedAutoRemoveLaunches;
@@ -304,8 +304,12 @@ public class PHPDebugPlugin extends Plugin {
 		if (ServersManager.getServers().length == 0) {
 			Server server = null;
 			try {
-				server = ServersManager.createServer(
-						IPHPDebugConstants.Default_Server_Name, BASE_URL);
+				server = new Server(IPHPDebugConstants.Default_Server_Name,
+						"localhost", BASE_URL, ""); //$NON-NLS-1$ //$NON-NLS-2$
+				server.setAttribute(ServersManager.EMPTY_SERVER,
+						String.valueOf(true));
+				server = ServersManager.getServer(server);
+				ServersManager.addServer(server);
 			} catch (MalformedURLException e) {
 				// safe - no exception
 			}

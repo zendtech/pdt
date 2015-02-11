@@ -21,6 +21,7 @@ import org.eclipse.jface.preference.PreferencePage;
 import org.eclipse.jface.resource.JFaceResources;
 import org.eclipse.jface.viewers.*;
 import org.eclipse.jface.window.Window;
+import org.eclipse.jface.wizard.WizardDialog;
 import org.eclipse.php.internal.server.PHPServerUIMessages;
 import org.eclipse.php.internal.server.core.Server;
 import org.eclipse.php.internal.server.core.manager.ServersManager;
@@ -33,6 +34,9 @@ import org.eclipse.php.internal.ui.wizards.fields.DialogField;
 import org.eclipse.php.internal.ui.wizards.fields.IDialogFieldListener;
 import org.eclipse.php.internal.ui.wizards.fields.IListAdapter;
 import org.eclipse.php.internal.ui.wizards.fields.ListDialogField;
+import org.eclipse.php.server.ui.types.IServerType;
+import org.eclipse.php.server.ui.types.ServerTypesManager;
+import org.eclipse.php.server.ui.types.IServerType.ImageType;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.graphics.Font;
 import org.eclipse.swt.graphics.Image;
@@ -187,7 +191,8 @@ public class PHPServersConfigurationBlock implements
 		Shell shell = PlatformUI.getWorkbench().getActiveWorkbenchWindow()
 				.getShell();
 		NullProgressMonitor monitor = new NullProgressMonitor();
-		ServerEditDialog dialog = new ServerEditDialog(shell, server);
+		ServerEditWizard wizard = new ServerEditWizard(server);
+		WizardDialog dialog = new WizardDialog(shell, wizard);
 		if (dialog.open() == Window.CANCEL) {
 			monitor.setCanceled(true);
 			return;
@@ -239,7 +244,9 @@ public class PHPServersConfigurationBlock implements
 			int size = servers.length;
 			for (int i = 0; i < size; i++) {
 				Server server = servers[i];
-				serverList.add(server);
+				if (!ServersManager.isEmptyServer(server)) {
+					serverList.add(server);
+				}
 			}
 		}
 	}
@@ -269,8 +276,7 @@ public class PHPServersConfigurationBlock implements
 			List selectedElements = field.getSelectedElements();
 			field.enableButton(IDX_EDIT, hasActiveSelection(selectedElements));
 			// Do not allow the removal of the last element
-			field.enableButton(IDX_REMOVE, hasActiveSelection(selectedElements)
-					&& field.getElements().size() > 1);
+			field.enableButton(IDX_REMOVE, hasActiveSelection(selectedElements));
 
 			// handle default button enablement
 			if (selectedElements.size() == 1) {
@@ -295,7 +301,11 @@ public class PHPServersConfigurationBlock implements
 
 		public Image getColumnImage(Object element, int columnIndex) {
 			if (columnIndex == 0) {
-				return ServersPluginImages.get(ServersPluginImages.IMG_SERVER);
+				if (element instanceof Server) {
+					IServerType type = ServerTypesManager.getInstance()
+							.getType((Server) element);
+					return type.getImage(ImageType.ICON_16);
+				}
 			}
 			return null;
 		}

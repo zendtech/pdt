@@ -244,7 +244,7 @@ public class ServerCompositeFragment extends CompositeFragment {
 		if (originalValuesCache.serverName != null
 				&& originalValuesCache.serverName.length() > 0) {
 			setTitle(PHPServerUIMessages
-					.getString("ServerCompositeFragment.editServer") + " [" + originalValuesCache.serverName + ']'); //$NON-NLS-1$ //$NON-NLS-2$
+					.getString("ServerCompositeFragment.editServer")); //$NON-NLS-1$
 		} else {
 			setTitle(PHPServerUIMessages
 					.getString("ServerCompositeFragment.configureServer")); //$NON-NLS-1$
@@ -427,19 +427,18 @@ public class ServerCompositeFragment extends CompositeFragment {
 
 	private boolean checkServerUrl(String url) {
 		url = url.trim();
+		Server[] allServers = ServersManager.getServers();
+		String currentName = null;
 		if (originalValuesCache.serverName != null
 				&& originalValuesCache.serverName.trim().length() > 0) {
-			if (url.equals(originalValuesCache.url)) {
-				return true;
-			}
+			currentName = originalValuesCache.serverName;
 		}
-		Server[] allServers = ServersManager.getServers();
-
 		if (allServers != null) {
 			int size = allServers.length;
 			for (int i = 0; i < size; i++) {
 				Server server = allServers[i];
-				if (url.equals(server.getBaseURL()))
+				if (!server.getName().equals(currentName)
+						&& url.equals(server.getBaseURL()))
 					return false;
 			}
 		}

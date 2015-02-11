@@ -25,6 +25,7 @@ import org.eclipse.debug.core.ILaunchConfigurationWorkingCopy;
 import org.eclipse.debug.ui.AbstractLaunchConfigurationTab;
 import org.eclipse.jface.dialogs.Dialog;
 import org.eclipse.jface.window.Window;
+import org.eclipse.jface.wizard.WizardDialog;
 import org.eclipse.php.internal.debug.core.IPHPDebugConstants;
 import org.eclipse.php.internal.debug.core.PHPDebugPlugin;
 import org.eclipse.php.internal.debug.core.debugger.AbstractDebuggerConfiguration;
@@ -187,9 +188,7 @@ public class ServerLaunchConfigurationTab extends
 		phpServerComp.setFont(parent.getFont());
 
 		Label label = new Label(phpServerComp, SWT.WRAP);
-		GridData data = new GridData(GridData.BEGINNING);
-		data.widthHint = 100;
-		label.setLayoutData(data);
+		label.setLayoutData(new GridData(GridData.BEGINNING));
 		label.setFont(parent.getFont());
 		label.setText(PHPServerUIMessages
 				.getString("ServerLaunchConfigurationTab.0")); //$NON-NLS-1$
@@ -297,7 +296,8 @@ public class ServerLaunchConfigurationTab extends
 		Shell shell = PlatformUI.getWorkbench().getActiveWorkbenchWindow()
 				.getShell();
 		NullProgressMonitor monitor = new NullProgressMonitor();
-		ServerEditDialog dialog = new ServerEditDialog(shell, server);
+		WizardDialog dialog = new WizardDialog(shell, new ServerEditWizard(
+				server));
 		if (dialog.open() == Window.CANCEL) {
 			monitor.setCanceled(true);
 			return;

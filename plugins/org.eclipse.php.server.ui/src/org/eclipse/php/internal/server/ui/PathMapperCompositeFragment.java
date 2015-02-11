@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2009 IBM Corporation and others.
+ * Copyright (c) 2009, 2015 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -14,8 +14,8 @@ package org.eclipse.php.internal.server.ui;
 import org.eclipse.jface.dialogs.Dialog;
 import org.eclipse.jface.dialogs.IMessageProvider;
 import org.eclipse.php.internal.debug.core.pathmapper.PathMapper;
-import org.eclipse.php.internal.debug.core.pathmapper.PathMapperRegistry;
 import org.eclipse.php.internal.debug.core.pathmapper.PathMapper.Mapping;
+import org.eclipse.php.internal.debug.core.pathmapper.PathMapperRegistry;
 import org.eclipse.php.internal.debug.ui.pathmapper.PathMappingComposite;
 import org.eclipse.php.internal.server.core.Server;
 import org.eclipse.php.internal.ui.wizards.CompositeFragment;
@@ -36,14 +36,13 @@ public class PathMapperCompositeFragment extends CompositeFragment {
 			IControlHandler handler, boolean isForEditing) {
 		super(parent, handler, isForEditing);
 		controlHandler.setTitle(Messages.PathMapperCompositeFragment_0);
-		controlHandler
-				.setDescription(Messages.PathMapperCompositeFragment_1);
+		controlHandler.setDescription(Messages.PathMapperCompositeFragment_1);
 		controlHandler.setImageDescriptor(ServersPluginImages.DESC_WIZ_SERVER);
 		setDisplayName(Messages.PathMapperCompositeFragment_2);
 		setTitle(Messages.PathMapperCompositeFragment_3);
 		setDescription(Messages.PathMapperCompositeFragment_4);
 		if (isForEditing) {
-			setData(((ServerEditDialog) controlHandler).getServer());
+			setData(((ServerEditPage) controlHandler).getServer());
 		}
 		createControl(isForEditing);
 	}

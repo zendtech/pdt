@@ -12,6 +12,7 @@
  -->
 
 <plugin>
+   <extension-point id="serverTypes" name="PHP Server Types" schema="schema/serverTypes.exsd"/>
 
 	<extension point="org.eclipse.debug.ui.launchConfigurationTypeImages">
 		<launchConfigurationTypeImage
@@ -81,10 +82,10 @@
 	
 	<extension point="org.eclipse.php.ui.wizardAndCompositeFragments">
 		<wizardAndCompositeFragment
-			class="org.eclipse.php.internal.server.ui.wizard.BasicCompositeFragmentFactory"
-			fragmentsGroupID="org.eclipse.php.server.ui.serverWizardAndComposite"
-			id="org.eclipse.php.server.ui.wizard.BasicCompositeFragmentFactory"
-			name="Basic Factory" />
+        class="org.eclipse.php.internal.server.ui.wizard.BasicCompositeFragmentFactory"
+        fragmentsGroupID="org.eclipse.php.server.ui.serverWizardAndComposite"
+        id="org.eclipse.php.server.ui.wizard.BasicCompositeFragmentFactory"
+        name="Basic Factory"/>
 		<wizardAndCompositeFragment
 			class="org.eclipse.php.internal.server.ui.PathMapperFragmentFactory"
 			fragmentsGroupID="org.eclipse.php.server.ui.serverWizardAndComposite"
@@ -106,5 +107,26 @@
 			debuggerTypeName="Zend Debugger" id="org.eclipse.php.server.ui.defaultZendDebugServerTest">
 		</debugServerTest>
 	</extension>
+ <extension
+       point="org.eclipse.php.server.ui.serverTypes">
+    <type
+          description="Creates a generic PHP server instance."
+          icon16="icons/full/obj16/server.gif"
+          icon32="icons/full/obj32/server.png"
+          id="org.eclipse.php.server.ui.genericServerType"
+          name="Generic PHP Server"
+          wizardImage="icons/full/wizban/server_wiz.gif">
+       <fragment
+             id="org.eclipse.php.server.ui.wizard.BasicCompositeFragmentFactory"
+             settings="true"
+             wizard="true">
+       </fragment>
+       <fragment
+             id="org.eclipse.php.internal.server.ui.PathMapperFragmentFactory"
+             settings="true"
+             wizard="true">
+       </fragment>
+    </type>
+ </extension>
 	
 </plugin>

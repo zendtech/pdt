@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2009 IBM Corporation and others.
+ * Copyright (c) 2014 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -14,16 +14,22 @@ package org.eclipse.php.internal.server.ui;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.php.internal.server.core.Server;
-import org.eclipse.php.internal.server.core.manager.ServersManager;
 import org.eclipse.php.internal.ui.wizards.CompositeWizardFragment;
 import org.eclipse.php.internal.ui.wizards.IWizardHandle;
 import org.eclipse.php.internal.ui.wizards.WizardControlWrapper;
 import org.eclipse.php.internal.ui.wizards.WizardModel;
+import org.eclipse.php.server.ui.types.IServerType;
 import org.eclipse.swt.widgets.Composite;
 
-public class ServerWizardFragment extends CompositeWizardFragment {
+/**
+ * Wizard fragment for server type selection page.
+ * 
+ * @author Wojciech Galanciak, 2014
+ * 
+ */
+public class ServerTypeWizardFragment extends CompositeWizardFragment {
 
-	private ServerCompositeFragment comp;
+	private ServerTypeCompositeFragment comp;
 
 	/*
 	 * (non-Javadoc)
@@ -31,13 +37,17 @@ public class ServerWizardFragment extends CompositeWizardFragment {
 	 * @see org.eclipse.wst.server.ui.task.WizardFragment#createComposite()
 	 */
 	public Composite createComposite(Composite parent, IWizardHandle wizard) {
-		comp = new ServerCompositeFragment(parent, new WizardControlWrapper(
-				wizard), false);
+		comp = new ServerTypeCompositeFragment(parent,
+				new WizardControlWrapper(wizard), false);
 		return comp;
 	}
 
 	public Composite getComposite() {
 		return comp;
+	}
+
+	public IServerType getType() {
+		return comp != null ? comp.getType() : null;
 	}
 
 	/*
@@ -52,8 +62,8 @@ public class ServerWizardFragment extends CompositeWizardFragment {
 						WizardModel.SERVER);
 				if (server == null) {
 					server = new Server();
+					comp.setData(server);
 				}
-				comp.setData(server);
 			} catch (Exception e) {
 				Logger.logException(e);
 			}
@@ -70,7 +80,7 @@ public class ServerWizardFragment extends CompositeWizardFragment {
 	 */
 	public boolean isComplete() {
 		if (comp == null) {
-			return false;
+			return super.isComplete();
 		}
 		return super.isComplete() && comp.isComplete();
 	}
@@ -83,8 +93,7 @@ public class ServerWizardFragment extends CompositeWizardFragment {
 	public void exit() {
 		if (comp != null) {
 			comp.performApply();
-			WizardModel model = getWizardModel();
-			model.putObject(WizardModel.SERVER, comp.getServer());
+			getWizardModel().putObject(WizardModel.SERVER, comp.getData());
 		}
 	}
 
@@ -103,19 +112,4 @@ public class ServerWizardFragment extends CompositeWizardFragment {
 		return result;
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * 
-	 * @see
-	 * org.eclipse.php.internal.server.ui.wizard.WizardFragment#performCancel
-	 * (org.eclipse.core.runtime.IProgressMonitor)
-	 */
-	public void performCancel(IProgressMonitor monitor) throws CoreException {
-		super.performCancel(monitor);
-		// Clear any added server
-		if (getWizardModel().getObject(WizardModel.SERVER) != null) {
-			getWizardModel().putObject(WizardModel.SERVER, null);
-			ServersManager.save();
-		}
-	}
 }

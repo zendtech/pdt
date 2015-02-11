@@ -74,11 +74,12 @@ public class PHPExeWizardFragment extends CompositeWizardFragment implements
 		}
 	}
 
-	public void performFinish(IProgressMonitor monitor) throws CoreException {
-		super.performFinish(monitor);
-		if (compositeFragment != null) {
-			compositeFragment.performOk();
+	public boolean performFinish(IProgressMonitor monitor) throws CoreException {
+		boolean result = super.performFinish(monitor);
+		if (result && compositeFragment != null) {
+			result = compositeFragment.performOk();
 		}
+		return result;
 	}
 
 	public void performCancel(IProgressMonitor monitor) throws CoreException {
