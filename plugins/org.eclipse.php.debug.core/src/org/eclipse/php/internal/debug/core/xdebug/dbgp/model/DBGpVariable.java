@@ -40,11 +40,13 @@ public class DBGpVariable extends AbstractDBGpBaseVariable implements IVariable 
 	private String name;
 	// TODO - private String address;
 	private String type;
+	private boolean hasChanged = false;
 
 	public DBGpVariable(DBGpTarget target, Node property, String level,
 			Facet... facets) {
 		super(target, level, facets);
 		parseProperty(property);
+		hasChanged = target.storeValue(value, property);
 	}
 
 	private void parseProperty(Node property) {
@@ -139,7 +141,7 @@ public class DBGpVariable extends AbstractDBGpBaseVariable implements IVariable 
 		 * last suspend. If you always return false, it doesn't highlight in the
 		 * variables view. A future facility.
 		 */
-		return false;
+		return hasChanged;
 	}
 
 	/*
