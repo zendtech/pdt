@@ -46,6 +46,7 @@ public class PHPVariable extends PHPDebugElement implements IVariable {
 		this.variable = variable;
 		this.global = false;
 		this.value = new PHPValue(target, variable);
+		this.hasChanged = target.storeValue(variable);
 	}
 
 	/**
@@ -59,6 +60,7 @@ public class PHPVariable extends PHPDebugElement implements IVariable {
 		this.variable = variable;
 		this.global = global;
 		this.value = new PHPValue(target, variable, global);
+		this.hasChanged = target.storeValue(variable);
 	}
 
 	/*
@@ -67,7 +69,6 @@ public class PHPVariable extends PHPDebugElement implements IVariable {
 	 * @see org.eclipse.debug.core.model.IVariable#getValue()
 	 */
 	public IValue getValue() throws DebugException {
-		hasChanged = false;
 		return value;
 	}
 
