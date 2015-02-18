@@ -194,7 +194,9 @@ public class PHPWebPageLaunchDelegate extends LaunchConfigurationDelegate {
 					.getDebuggerConfiguration(DebuggerCommunicationDaemon.ZEND_DEBUGGER_ID);
 			IStatus status = debugger.validate(server);
 			if (status.getSeverity() != IStatus.OK) {
-				displayErrorMessage(status.getMessage());
+				displayErrorMessage(
+						PHPDebugCoreMessages.PHPWebPageLaunchDelegate_DialogErrorDebug,
+						status.getMessage());
 				monitor.setCanceled(true);
 				monitor.done();
 				return;
