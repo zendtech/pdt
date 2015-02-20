@@ -73,8 +73,8 @@ public class DefaultExpressionsManager implements ExpressionsManager {
 		ExpressionValue variableValue = expressionValueDeserializer
 				.deserializer(contextExpression, value);
 		Expression[] variables = variableValue.getOriChildren();
-		if (variables == null) {
-			variables = EMPTY_VARIABLE_ARRAY;
+		if (variables == null || variables.length == 0) {
+			return EMPTY_VARIABLE_ARRAY;
 		}
 		boolean hasThis = false;
 		List<Expression> currentVariables = new ArrayList<Expression>();
