@@ -1,0 +1,72 @@
+/*******************************************************************************
+ * Copyright (c) 2015 Zend Technologies and others.
+ * All rights reserved. This program and the accompanying materials
+ * are made available under the terms of the Eclipse Public License v1.0
+ * which accompanies this distribution, and is available at
+ * http://www.eclipse.org/legal/epl-v10.html
+ * 
+ * Contributors:
+ *     Zend Technologies - initial API and implementation
+ *******************************************************************************/
+package org.eclipse.php.internal.debug.ui.wizards;
+
+import org.eclipse.php.internal.ui.wizards.CompositeFragment;
+import org.eclipse.php.internal.ui.wizards.IControlHandler;
+import org.eclipse.php.internal.ui.wizards.WizardFragment;
+import org.eclipse.php.ui.wizards.ICompositeFragmentFactory;
+import org.eclipse.swt.widgets.Composite;
+
+/**
+ * Debugger composite fragment factory.
+ * 
+ * @author Bartlomiej Laczkowski
+ */
+@SuppressWarnings("restriction")
+public class DebuggerCompositeFragmentFactory implements
+		ICompositeFragmentFactory {
+
+	private static final String ID = "org.eclipse.php.debug.ui.DebuggerCompositeFragmentFactory"; //$NON-NLS-1$
+	
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see
+	 * org.eclipse.php.ui.wizards.ICompositeFragmentFactory#createWizardFragment
+	 * ()
+	 */
+	@Override
+	public WizardFragment createWizardFragment() {
+		return new DebuggerWizardFragment();
+	}
+
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see
+	 * org.eclipse.php.ui.wizards.ICompositeFragmentFactory#createComposite(
+	 * org.eclipse.swt.widgets.Composite,
+	 * org.eclipse.php.internal.ui.wizards.IControlHandler)
+	 */
+	@Override
+	public CompositeFragment createComposite(Composite parent,
+			IControlHandler controlHandler) {
+		return new DebuggerCompositeFragment(parent, controlHandler, true);
+	}
+
+	/* (non-Javadoc)
+	 * @see org.eclipse.php.ui.wizards.ICompositeFragmentFactory#isSupported(java.lang.Object)
+	 */
+	@Override
+	public boolean isSupported(Object element) {
+		return true;
+	}
+
+	/* (non-Javadoc)
+	 * @see org.eclipse.php.ui.wizards.ICompositeFragmentFactory#getId()
+	 */
+	@Override
+	public String getId() {
+		return ID;
+	}
+
+}

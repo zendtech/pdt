@@ -36,9 +36,9 @@ public class PathMapperCompositeFragment extends CompositeFragment {
 			IControlHandler handler, boolean isForEditing) {
 		super(parent, handler, isForEditing);
 		controlHandler.setTitle(Messages.PathMapperCompositeFragment_0);
-		controlHandler
-				.setDescription(Messages.PathMapperCompositeFragment_1);
-		controlHandler.setImageDescriptor(ServersPluginImages.DESC_WIZ_SERVER);
+		controlHandler.setDescription(Messages.PathMapperCompositeFragment_1);
+		setImageDescriptor(ServersPluginImages.DESC_WIZ_SERVER);
+		controlHandler.setImageDescriptor(getImageDescriptor());
 		setDisplayName(Messages.PathMapperCompositeFragment_2);
 		setTitle(Messages.PathMapperCompositeFragment_3);
 		setDescription(Messages.PathMapperCompositeFragment_4);
@@ -88,13 +88,6 @@ public class PathMapperCompositeFragment extends CompositeFragment {
 	public void validate() {
 		setMessage(getDescription(), IMessageProvider.NONE);
 		setComplete(true);
-
-		controlHandler.update();
-	}
-
-	protected void setMessage(String message, int type) {
-		controlHandler.setMessage(message, type);
-		setComplete(type != IMessageProvider.ERROR);
 		controlHandler.update();
 	}
 

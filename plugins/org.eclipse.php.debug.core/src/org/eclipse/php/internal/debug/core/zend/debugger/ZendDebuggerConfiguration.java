@@ -39,6 +39,8 @@ import org.eclipse.swt.widgets.Shell;
 @SuppressWarnings("restriction")
 public class ZendDebuggerConfiguration extends AbstractDebuggerConfiguration {
 
+	public static final String ID = "org.eclipse.php.debug.core.zendDebugger"; //$NON-NLS-1$
+
 	private static final String EXTENSION_MODULE_ID = "Zend Debugger"; //$NON-NLS-1$
 	private static final String EXTENSION_PROPERTY_PREFIX = "zend_debugger"; //$NON-NLS-1$	
 

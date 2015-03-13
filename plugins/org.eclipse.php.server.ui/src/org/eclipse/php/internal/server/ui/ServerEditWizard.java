@@ -25,6 +25,7 @@ public class ServerEditWizard extends Wizard {
 
 	private Server server;
 	private ServerEditPage serverPage;
+	private String tabID;
 
 	public ServerEditWizard(Server server) {
 		this.server = server;
@@ -32,10 +33,20 @@ public class ServerEditWizard extends Wizard {
 		setNeedsProgressMonitor(true);
 	}
 
+	public ServerEditWizard(Server server, String tabID) {
+		this.server = server;
+		this.tabID = tabID;
+		setWindowTitle(PHPServerUIMessages.getString("ServerEditWizard.Title")); //$NON-NLS-1$
+		setNeedsProgressMonitor(true);
+	}
+
 	@Override
 	public void addPages() {
 		super.addPages();
-		serverPage = new ServerEditPage(server);
+		if (tabID != null)
+			serverPage = new ServerEditPage(server, tabID);
+		else
+			serverPage = new ServerEditPage(server);
 		addPage(serverPage);
 	}
 
