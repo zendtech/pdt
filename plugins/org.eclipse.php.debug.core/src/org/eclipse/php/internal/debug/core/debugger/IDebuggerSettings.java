@@ -12,8 +12,6 @@ package org.eclipse.php.internal.debug.core.debugger;
 
 import java.util.Map;
 
-import org.eclipse.php.internal.core.IUniqueIdentityElement;
-
 /**
  * Common interface for implementors of debugger owner settings.
  * 
@@ -33,7 +31,7 @@ public interface IDebuggerSettings {
 	 * 
 	 * @return debugger settings owner
 	 */
-	IUniqueIdentityElement getOwner();
+	String getOwnerId();
 
 	/**
 	 * Returns settings kind (see {@link DebuggerSettingsKind} enum)

@@ -234,7 +234,8 @@ public class DefaultDebugServerConnectionTest implements
 		String port = Integer.toString(PHPDebugPlugin
 				.getDebugPort(DebuggerCommunicationDaemon.ZEND_DEBUGGER_ID));
 		// Set up custom port from server configuration
-		int customPort = ZendDebuggerSettingsUtil.getDebugPort(fServer);
+		int customPort = ZendDebuggerSettingsUtil.getDebugPort(fServer
+				.getUniqueId());
 		if (customPort != -1)
 			port = String.valueOf(customPort);
 
@@ -249,7 +250,8 @@ public class DefaultDebugServerConnectionTest implements
 	private String[] getAllLocalHostsAddresses() {
 		String hosts = PHPDebugPlugin.getDebugHosts();
 		// Set up custom hosts from server configuration
-		String customHosts = ZendDebuggerSettingsUtil.getDebugHosts(fServer);
+		String customHosts = ZendDebuggerSettingsUtil.getDebugHosts(fServer
+				.getUniqueId());
 		if (!customHosts.isEmpty())
 			hosts = customHosts;
 		StringTokenizer tokenizer = new StringTokenizer(hosts, ", "); //$NON-NLS-1$

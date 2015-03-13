@@ -12,8 +12,6 @@ package org.eclipse.php.internal.debug.core.debugger;
 
 import java.util.List;
 
-import org.eclipse.php.internal.core.IUniqueIdentityElement;
-
 /**
  * Common interface for debugger settings providers.
  * 
@@ -29,12 +27,13 @@ public interface IDebuggerSettingsProvider {
 	String getId();
 
 	/**
-	 * Returns debugger settings for given owner (e.g. PHP server or executable)
+	 * Returns debugger settings for given owner unique ID (e.g. PHP server or
+	 * executable)
 	 * 
-	 * @param owner
+	 * @param ownerId
 	 * @return debugger settings for given owner
 	 */
-	IDebuggerSettings get(IUniqueIdentityElement owner);
+	IDebuggerSettings get(String ownerId);
 
 	/**
 	 * Returns all available settings from this provider.
@@ -42,6 +41,14 @@ public interface IDebuggerSettingsProvider {
 	 * @return all available settings.
 	 */
 	List<IDebuggerSettings> getAll();
+
+	/**
+	 * CreateS and returns settings working copy
+	 * 
+	 * @param settings
+	 * @return settings working copy
+	 */
+	IDebuggerSettingsWorkingCopy createWorkingCopy(IDebuggerSettings settings);
 
 	/**
 	 * Save given settings.

@@ -219,7 +219,8 @@ public class PHPLaunchDelegateProxy implements ILaunchConfigurationDelegate2 {
 						(String) null);
 			}
 			// Set up custom port from exe configuration
-			int debugPort = ZendDebuggerSettingsUtil.getDebugPort(item);
+			int debugPort = ZendDebuggerSettingsUtil.getDebugPort(item
+					.getUniqueId());
 			if (debugPort != -1)
 				wc.setAttribute(IPHPDebugConstants.PHP_Port, debugPort);
 			configuration = wc.doSave();
@@ -233,7 +234,8 @@ public class PHPLaunchDelegateProxy implements ILaunchConfigurationDelegate2 {
 		Server server = ServersManager.getServer(configuration.getAttribute(
 				Server.NAME, "")); //$NON-NLS-1$
 		// Set up custom port from server configuration
-		int debugPort = ZendDebuggerSettingsUtil.getDebugPort(server);
+		int debugPort = ZendDebuggerSettingsUtil.getDebugPort(server
+				.getUniqueId());
 		if (debugPort != -1)
 			wc.setAttribute(IPHPDebugConstants.PHP_Port, debugPort);
 		configuration = wc.doSave();

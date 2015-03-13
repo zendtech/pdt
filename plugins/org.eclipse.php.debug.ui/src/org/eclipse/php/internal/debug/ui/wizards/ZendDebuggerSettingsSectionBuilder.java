@@ -14,7 +14,7 @@ import org.eclipse.php.internal.debug.core.debugger.IDebuggerSettingsWorkingCopy
 import org.eclipse.php.internal.ui.wizards.CompositeFragment;
 
 /**
- * 
+ * Zend debugger settings section builder.
  * 
  * @author Bartlomiej Laczkowski
  */

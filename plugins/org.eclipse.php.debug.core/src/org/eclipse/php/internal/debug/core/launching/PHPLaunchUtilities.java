@@ -899,7 +899,7 @@ public class PHPLaunchUtilities {
 			return null; // "PATH";
 		}
 		if (os.startsWith("Mac")) { //$NON-NLS-1$
-			return "DYLD_LIBRARY_PATH"; //$NON-NLS-1$
+			return "DYLD_FALLBACK_LIBRARY_PATH"; //$NON-NLS-1$
 		}
 		return "LD_LIBRARY_PATH"; //$NON-NLS-1$
 	}
@@ -1181,14 +1181,15 @@ public class PHPLaunchUtilities {
 			// Check custom port for server's Zend Debugger
 			if (ZendDebuggerConfiguration.ID.equals(debuggerID)) {
 				if (server != null) {
-					customPort = ZendDebuggerSettingsUtil.getDebugPort(server);
+					customPort = ZendDebuggerSettingsUtil.getDebugPort(server
+							.getUniqueId());
 				}
 			}
 			// Check custom port for server's XDebug
 			else if (XDebugDebuggerConfiguration.ID.equals(debuggerID)) {
 				if (server != null) {
-					customPort = XDebugDebuggerSettingsUtil
-							.getDebugPort(server);
+					customPort = XDebugDebuggerSettingsUtil.getDebugPort(server
+							.getUniqueId());
 				}
 			}
 			if (customPort != -1)

@@ -10,13 +10,13 @@
  *******************************************************************************/
 package org.eclipse.php.internal.debug.core.zend.debugger;
 
-import static org.eclipse.php.internal.debug.core.preferences.PHPDebugCorePreferenceNames.*;
-import static org.eclipse.php.internal.debug.core.zend.debugger.ZendDebuggerSettingsConstants.*;
+import static org.eclipse.php.internal.debug.core.preferences.PHPDebugCorePreferenceNames.ZEND_DEBUG_PORT;
+import static org.eclipse.php.internal.debug.core.zend.debugger.ZendDebuggerSettingsConstants.DEFAULT_CLIENT_PORT;
+import static org.eclipse.php.internal.debug.core.zend.debugger.ZendDebuggerSettingsConstants.PROP_CLIENT_PORT;
 
 import java.util.HashMap;
 import java.util.Map;
 
-import org.eclipse.php.internal.core.IUniqueIdentityElement;
 import org.eclipse.php.internal.debug.core.debugger.AbstractDebuggerSettings;
 import org.eclipse.php.internal.debug.core.debugger.DebuggerSettingsKind;
 import org.eclipse.php.internal.debug.core.preferences.PHPDebuggersRegistry;
@@ -31,16 +31,16 @@ public class ZendDebuggerExeSettings extends AbstractDebuggerSettings {
 	/**
 	 * See {@link AbstractDebuggerSettings}.
 	 */
-	public ZendDebuggerExeSettings(IUniqueIdentityElement owner) {
-		super(owner);
+	public ZendDebuggerExeSettings(String ownerId) {
+		super(ownerId);
 	}
 
 	/**
 	 * See {@link AbstractDebuggerSettings}.
 	 */
-	public ZendDebuggerExeSettings(IUniqueIdentityElement owner,
+	public ZendDebuggerExeSettings(String ownerId,
 			Map<String, String> attributes) {
-		super(owner, attributes);
+		super(ownerId, attributes);
 	}
 
 	/*

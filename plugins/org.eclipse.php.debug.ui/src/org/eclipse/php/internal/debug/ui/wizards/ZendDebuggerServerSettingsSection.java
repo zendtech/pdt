@@ -10,12 +10,15 @@
  *******************************************************************************/
 package org.eclipse.php.internal.debug.ui.wizards;
 
-import static org.eclipse.php.internal.debug.core.zend.debugger.ZendDebuggerSettingsConstants.PROP_CLIENT_IP;
-import static org.eclipse.php.internal.debug.core.zend.debugger.ZendDebuggerSettingsConstants.PROP_CLIENT_PORT;
-import static org.eclipse.php.internal.debug.core.zend.debugger.ZendDebuggerSettingsConstants.PROP_RESPONSE_TIMEOUT;
+import static org.eclipse.php.internal.debug.core.zend.debugger.ZendDebuggerSettingsConstants.*;
 
 import org.eclipse.jface.dialogs.IMessageProvider;
+import org.eclipse.php.debug.ui.DebugServerConnectionTestRegistry;
+import org.eclipse.php.debug.ui.IDebugServerConnectionTest;
 import org.eclipse.php.internal.debug.core.debugger.IDebuggerSettingsWorkingCopy;
+import org.eclipse.php.internal.debug.core.zend.debugger.ZendDebuggerConfiguration;
+import org.eclipse.php.internal.server.core.Server;
+import org.eclipse.php.internal.server.core.manager.ServersManager;
 import org.eclipse.php.internal.ui.wizards.CompositeFragment;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.ModifyEvent;
@@ -26,6 +29,7 @@ import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Group;
 import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Text;
+import org.eclipse.ui.PlatformUI;
 
 /**
  * Zend debugger settings section for PHP server.
@@ -93,6 +97,10 @@ public class ZendDebuggerServerSettingsSection implements
 	 * ()
 	 */
 	public void validate() {
+		// Reset state
+		compositeFragment.setMessage(compositeFragment.getDescription(),
+				IMessageProvider.NONE);
+		// Check errors
 		String clientIp = (String) settingsWorkingCopy
 				.getAttribute(PROP_CLIENT_IP);
 		if (clientIp == null || clientIp.isEmpty()) {
@@ -122,7 +130,37 @@ public class ZendDebuggerServerSettingsSection implements
 		}
 	}
 
-	private Composite createComposite() {
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see
+	 * org.eclipse.php.internal.debug.ui.wizards.IDebuggerSettingsSection#canTest
+	 * ()
+	 */
+	@Override
+	public boolean canTest() {
+		return true;
+	}
+
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see org.eclipse.php.internal.debug.ui.wizards.IDebuggerSettingsSection#
+	 * performTest()
+	 */
+	@Override
+	public void performTest() {
+		IDebugServerConnectionTest[] tests = DebugServerConnectionTestRegistry
+				.getTests(ZendDebuggerConfiguration.ID);
+		Server server = ServersManager.findServer(settingsWorkingCopy
+				.getOwnerId());
+		for (IDebugServerConnectionTest test : tests) {
+			test.testConnection(server, PlatformUI.getWorkbench().getDisplay()
+					.getActiveShell());
+		}
+	}
+
+	protected Composite createComposite() {
 		// Main composite
 		Composite settingsComposite = new Composite(compositeFragment, SWT.NONE);
 		GridLayout sLayout = new GridLayout();
@@ -130,7 +168,6 @@ public class ZendDebuggerServerSettingsSection implements
 		sLayout.marginWidth = 0;
 		settingsComposite.setLayout(sLayout);
 		GridData sGridData = new GridData(SWT.FILL, SWT.FILL, true, true);
-		sGridData.horizontalSpan = 2;
 		settingsComposite.setLayoutData(sGridData);
 		// Connection group
 		Group connectionGroup = new Group(settingsComposite, SWT.NONE);
@@ -154,7 +191,7 @@ public class ZendDebuggerServerSettingsSection implements
 			public void modifyText(ModifyEvent e) {
 				String clientIp = clientIpText.getText();
 				settingsWorkingCopy.setAttribute(PROP_CLIENT_IP, clientIp);
-				compositeFragment.validate();
+				validate();
 			}
 		});
 		// Client port
@@ -170,7 +207,7 @@ public class ZendDebuggerServerSettingsSection implements
 			public void modifyText(ModifyEvent e) {
 				String port = clientPortText.getText();
 				settingsWorkingCopy.setAttribute(PROP_CLIENT_PORT, port);
-				compositeFragment.validate();
+				validate();
 			}
 		});
 		// Response timeout
@@ -187,11 +224,11 @@ public class ZendDebuggerServerSettingsSection implements
 				String responseTimeout = responseTimeoutText.getText();
 				settingsWorkingCopy.setAttribute(PROP_RESPONSE_TIMEOUT,
 						responseTimeout);
-				compositeFragment.validate();
+				validate();
 			}
 		});
 		// Initial validation
-		compositeFragment.validate();
+		validate();
 		return settingsComposite;
 	}
 

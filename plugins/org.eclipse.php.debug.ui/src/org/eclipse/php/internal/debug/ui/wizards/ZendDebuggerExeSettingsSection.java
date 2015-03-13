@@ -12,8 +12,12 @@ package org.eclipse.php.internal.debug.ui.wizards;
 
 import static org.eclipse.php.internal.debug.core.zend.debugger.ZendDebuggerSettingsConstants.PROP_CLIENT_PORT;
 
+import org.eclipse.core.runtime.IStatus;
 import org.eclipse.jface.dialogs.IMessageProvider;
+import org.eclipse.php.internal.debug.core.debugger.AbstractDebuggerConfiguration;
 import org.eclipse.php.internal.debug.core.debugger.IDebuggerSettingsWorkingCopy;
+import org.eclipse.php.internal.debug.core.preferences.PHPDebuggersRegistry;
+import org.eclipse.php.internal.debug.core.preferences.PHPexeItem;
 import org.eclipse.php.internal.ui.wizards.CompositeFragment;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.ModifyEvent;
@@ -36,6 +40,7 @@ public class ZendDebuggerExeSettingsSection implements IDebuggerSettingsSection 
 	protected IDebuggerSettingsWorkingCopy settingsWorkingCopy;
 	protected CompositeFragment compositeFragment;
 	protected Composite settingsComposite;
+	protected IStatus debuggerStatus;
 
 	/**
 	 * 
@@ -90,6 +95,25 @@ public class ZendDebuggerExeSettingsSection implements IDebuggerSettingsSection 
 	 */
 	@Override
 	public void validate() {
+		// Reset state
+		compositeFragment.setMessage(compositeFragment.getDescription(),
+				IMessageProvider.NONE);
+		if (debuggerStatus == null) {
+			PHPexeItem phpExe = (PHPexeItem) compositeFragment.getData();
+			AbstractDebuggerConfiguration[] debuggers = PHPDebuggersRegistry
+					.getDebuggersConfigurations();
+			for (AbstractDebuggerConfiguration debugger : debuggers) {
+				if (phpExe.getDebuggerID().equals(debugger.getDebuggerId())) {
+					debuggerStatus = debugger.validate(phpExe);
+				}
+			}
+		}
+		// Check errors
+		if (debuggerStatus.getSeverity() == IStatus.ERROR) {
+			compositeFragment.setMessage(debuggerStatus.getMessage(),
+					IMessageProvider.ERROR);
+			return;
+		}
 		String clientPort = (String) settingsWorkingCopy
 				.getAttribute(PROP_CLIENT_PORT);
 		if (clientPort == null || clientPort.isEmpty()) {
@@ -99,9 +123,39 @@ public class ZendDebuggerExeSettingsSection implements IDebuggerSettingsSection 
 							IMessageProvider.ERROR);
 			return;
 		}
+		// Check warnings
+		if (debuggerStatus.getSeverity() == IStatus.WARNING) {
+			compositeFragment.setMessage(debuggerStatus.getMessage(),
+					IMessageProvider.WARNING);
+			return;
+		}
 	}
 
-	private Composite createComposite() {
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see
+	 * org.eclipse.php.internal.debug.ui.wizards.IDebuggerSettingsSection#canTest
+	 * ()
+	 */
+	@Override
+	public boolean canTest() {
+		// Maybe in the future...
+		return false;
+	}
+
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see org.eclipse.php.internal.debug.ui.wizards.IDebuggerSettingsSection#
+	 * performTest()
+	 */
+	@Override
+	public void performTest() {
+		// Nothing to perform yet
+	}
+
+	protected Composite createComposite() {
 		// Main composite
 		Composite settingsComposite = new Composite(compositeFragment, SWT.NONE);
 		GridLayout sLayout = new GridLayout();
@@ -134,11 +188,9 @@ public class ZendDebuggerExeSettingsSection implements IDebuggerSettingsSection 
 			public void modifyText(ModifyEvent e) {
 				String port = clientPortText.getText();
 				settingsWorkingCopy.setAttribute(PROP_CLIENT_PORT, port);
-				compositeFragment.validate();
+				validate();
 			}
 		});
-		// Initial validate
-		compositeFragment.validate();
 		return settingsComposite;
 	}
 

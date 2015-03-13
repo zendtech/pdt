@@ -7,6 +7,7 @@ public class Messages extends NLS {
 	public static String DebuggerCompositeFragment_Configure_server_debugger_settings;
 	public static String DebuggerCompositeFragment_Debugger;
 	public static String DebuggerCompositeFragment_Edit_debugger_settings;
+	public static String DebuggerCompositeFragment_Test_button;
 	public static String PHPExeEditDialog_1;
 	public static String PHPExeWizard_0;
 	public static String XDebugDebuggerExeSettingsSection_Accept_jit_session;

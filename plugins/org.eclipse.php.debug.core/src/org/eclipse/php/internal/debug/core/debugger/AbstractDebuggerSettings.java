@@ -27,16 +27,16 @@ import org.eclipse.php.internal.core.IUniqueIdentityElement;
  */
 public abstract class AbstractDebuggerSettings implements IDebuggerSettings {
 
-	private IUniqueIdentityElement owner;
-	private Map<String, String> attributes;
+	protected String ownerId;
+	protected Map<String, String> attributes;
 
 	/**
 	 * Creates new debugger settings for given settings owner.
 	 * 
-	 * @param owner
+	 * @param ownerId
 	 */
-	public AbstractDebuggerSettings(IUniqueIdentityElement owner) {
-		this.owner = owner;
+	public AbstractDebuggerSettings(String ownerId) {
+		this.ownerId = ownerId;
 		this.attributes = Collections.unmodifiableMap(createAttributes());
 	}
 
@@ -47,21 +47,22 @@ public abstract class AbstractDebuggerSettings implements IDebuggerSettings {
 	 * @param owner
 	 * @param attributes
 	 */
-	public AbstractDebuggerSettings(IUniqueIdentityElement owner,
+	public AbstractDebuggerSettings(String ownerId,
 			Map<String, String> attributes) {
-		this.owner = owner;
-		this.attributes = Collections.unmodifiableMap(attributes);
+		this.ownerId = ownerId;
+		this.attributes = attributes;
 	}
 
 	/*
 	 * (non-Javadoc)
 	 * 
 	 * @see
-	 * org.eclipse.php.internal.debug.core.debugger.IDebuggerSettings#getOwner()
+	 * org.eclipse.php.internal.debug.core.debugger.IDebuggerSettings#getOwnerId
+	 * ()
 	 */
 	@Override
-	public IUniqueIdentityElement getOwner() {
-		return owner;
+	public String getOwnerId() {
+		return ownerId;
 	}
 
 	/*

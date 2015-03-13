@@ -21,7 +21,6 @@ import org.eclipse.core.runtime.ListenerList;
 import org.eclipse.core.runtime.Status;
 import org.eclipse.core.runtime.jobs.Job;
 import org.eclipse.jface.util.PropertyChangeEvent;
-import org.eclipse.php.internal.core.IUniqueIdentityElement;
 import org.eclipse.php.internal.debug.core.preferences.IPHPExesListener;
 import org.eclipse.php.internal.debug.core.preferences.PHPDebuggersRegistry;
 import org.eclipse.php.internal.debug.core.preferences.PHPExesEvent;
@@ -116,8 +115,8 @@ public enum DebuggerSettingsManager {
 		@Override
 		public void phpExeAdded(PHPExesEvent event) {
 			for (String debuggerId : PHPDebuggersRegistry.getDebuggersIds()) {
-				IDebuggerSettings settings = findSettings(
-						event.getPHPExeItem(), debuggerId);
+				IDebuggerSettings settings = findSettings(event.getPHPExeItem()
+						.getUniqueId(), debuggerId);
 				save(settings);
 			}
 		}
@@ -125,8 +124,8 @@ public enum DebuggerSettingsManager {
 		@Override
 		public void phpExeRemoved(PHPExesEvent event) {
 			for (String debuggerId : PHPDebuggersRegistry.getDebuggersIds()) {
-				IDebuggerSettings settings = findSettings(
-						event.getPHPExeItem(), debuggerId);
+				IDebuggerSettings settings = findSettings(event.getPHPExeItem()
+						.getUniqueId(), debuggerId);
 				delete(settings);
 			}
 		}
@@ -134,8 +133,8 @@ public enum DebuggerSettingsManager {
 		@Override
 		public void serverAdded(ServerManagerEvent event) {
 			for (String debuggerId : PHPDebuggersRegistry.getDebuggersIds()) {
-				IDebuggerSettings settings = findSettings(event.getServer(),
-						debuggerId);
+				IDebuggerSettings settings = findSettings(event.getServer()
+						.getUniqueId(), debuggerId);
 				save(settings);
 			}
 		}
@@ -143,8 +142,8 @@ public enum DebuggerSettingsManager {
 		@Override
 		public void serverRemoved(ServerManagerEvent event) {
 			for (String debuggerId : PHPDebuggersRegistry.getDebuggersIds()) {
-				IDebuggerSettings settings = findSettings(event.getServer(),
-						debuggerId);
+				IDebuggerSettings settings = findSettings(event.getServer()
+						.getUniqueId(), debuggerId);
 				delete(settings);
 			}
 		}
@@ -159,54 +158,49 @@ public enum DebuggerSettingsManager {
 	private final OwnersListener ownersListener = new OwnersListener();
 	private final ListenerList listeners = new ListenerList();
 	private final Map<String, IDebuggerSettingsProvider> settingsCache = new HashMap<String, IDebuggerSettingsProvider>();
-	private boolean active = false;
+	private final Map<IDebuggerSettings, IDebuggerSettingsWorkingCopy> settingsCopies = new HashMap<IDebuggerSettings, IDebuggerSettingsWorkingCopy>();
 
 	/**
 	 * Creates default manager instance.
 	 */
 	private DebuggerSettingsManager() {
-		startup();
+		for (String debuggerId : PHPDebuggersRegistry.getDebuggersIds()) {
+			settingsCache.put(debuggerId,
+					DebuggerSettingsProviderRegistry.getProvider(debuggerId));
+		}
 	}
 
 	/**
 	 * Starts up debugger settings manager.
 	 */
 	public synchronized void startup() {
-		if (!active) {
-			// Initialize cache
-			for (String debuggerId : PHPDebuggersRegistry.getDebuggersIds()) {
-				settingsCache.put(debuggerId, DebuggerSettingsProviderRegistry
-						.getProvider(debuggerId));
-			}
-			ServersManager.addManagerListener(ownersListener);
-			PHPexes.getInstance().addPHPExesListener(ownersListener);
-			active = true;
-		}
+		ServersManager.addManagerListener(ownersListener);
+		PHPexes.getInstance().addPHPExesListener(ownersListener);
 	}
 
 	/**
 	 * Shuts down debugger settings manager.
 	 */
 	public synchronized void shutdown() {
-		if (active) {
-			ServersManager.removeManagerListener(ownersListener);
-			PHPexes.getInstance().removePHPExesListener(ownersListener);
-			settingsCache.clear();
-			active = false;
-		}
+		ServersManager.removeManagerListener(ownersListener);
+		PHPexes.getInstance().removePHPExesListener(ownersListener);
 	}
 
 	/**
 	 * Finds and returns debugger settings for given debugger type and owner.
 	 * 
-	 * @param owner
+	 * @param ownerId
 	 * @param debuggerId
 	 * @return debugger settings
 	 */
-	public IDebuggerSettings findSettings(IUniqueIdentityElement owner,
-			String debuggerId) {
+	public IDebuggerSettings findSettings(String ownerId, String debuggerId) {
 		IDebuggerSettingsProvider provider = settingsCache.get(debuggerId);
-		return provider.get(owner);
+		IDebuggerSettings settings = provider.get(ownerId);
+		// Check if there is any pending working copy
+		IDebuggerSettingsWorkingCopy pendingCopy = findWorkingCopy(settings);
+		if (pendingCopy != null)
+			return pendingCopy;
+		return settings;
 	}
 
 	/**
@@ -220,14 +214,38 @@ public enum DebuggerSettingsManager {
 	}
 
 	/**
-	 * Creates and returns editable working copy for provided settings.
+	 * Creates and returns editable working copy for provided settings. Callers
+	 * of this method should always use
+	 * {@link DebuggerSettingsManager#dropWorkingCopy(IDebuggerSettingsWorkingCopy)}
+	 * every time when corresponding working copy is no longer used.
 	 * 
 	 * @param settings
 	 * @return settings working copy
 	 */
-	public IDebuggerSettingsWorkingCopy createWorkingCopy(
+	public IDebuggerSettingsWorkingCopy fetchWorkingCopy(
 			IDebuggerSettings settings) {
-		return new DebuggerSettingsWorkingCopy(settings);
+		IDebuggerSettingsWorkingCopy workingCopy = settingsCopies.get(settings);
+		if (workingCopy == null) {
+			IDebuggerSettingsProvider provider = settingsCache.get(settings
+					.getDebuggerId());
+			workingCopy = provider.createWorkingCopy(settings);
+			settingsCopies.put(settings, workingCopy);
+		}
+		return workingCopy;
+	}
+
+	/**
+	 * Drops working copy by removing it from copies cache.
+	 * 
+	 * @param settingsWorkingCopy
+	 */
+	public void dropWorkingCopy(IDebuggerSettingsWorkingCopy settingsWorkingCopy) {
+		for (IDebuggerSettings key : settingsCopies.keySet()) {
+			if (settingsCopies.get(key) == settingsWorkingCopy) {
+				settingsCopies.remove(key);
+				break;
+			}
+		}
 	}
 
 	/**
@@ -312,6 +330,21 @@ public enum DebuggerSettingsManager {
 		DebuggerSettingsProviderRegistry.getProvider(debuggerId).delete(
 				settings);
 		(new EventNotifier()).fireRemoved(settings);
+	}
+
+	/**
+	 * Finds and returns settings working copy if there is any
+	 * 
+	 * @param settings
+	 * @return settings working copy or <code>null</code>
+	 */
+	private IDebuggerSettingsWorkingCopy findWorkingCopy(
+			IDebuggerSettings settings) {
+		for (IDebuggerSettings key : settingsCopies.keySet()) {
+			if (key == settings)
+				return settingsCopies.get(key);
+		}
+		return null;
 	}
 
 }

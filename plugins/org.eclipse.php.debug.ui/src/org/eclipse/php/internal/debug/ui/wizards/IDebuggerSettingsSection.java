@@ -48,4 +48,18 @@ public interface IDebuggerSettingsSection {
 	 */
 	void validate();
 
+	/**
+	 * Returns info if this settings section can perform any kind of debugger
+	 * tests (e.g. connection test).
+	 * 
+	 * @return <code>true</code> if can perform any tests, <code>false</code>
+	 *         otherwise
+	 */
+	boolean canTest();
+
+	/**
+	 * Performs tests (e.g. connection test) if there are any.
+	 */
+	void performTest();
+
 }

@@ -18,7 +18,9 @@ import java.net.URL;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Set;
 
+import org.eclipse.core.runtime.Assert;
 import org.eclipse.core.runtime.IAdaptable;
 import org.eclipse.php.internal.core.IUniqueIdentityElement;
 import org.eclipse.php.internal.core.UniqueIdentityElementUtil;
@@ -43,11 +45,9 @@ public class Server implements IXMLPreferencesStorable, IAdaptable,
 	public static final String FILE_NAME = "file_name"; //$NON-NLS-1$
 	public static final String DEBUGGER = "debuggerId"; //$NON-NLS-1$
 
-	private static final int DEFAULT_HTTP_PORT = 80;
-
 	public static final String LOCALSERVER = "localserver"; //$NON-NLS-1$
-
 	public static final String ID_PREFIX = "php-server"; //$NON-NLS-1$
+	private static final int DEFAULT_HTTP_PORT = 80;
 
 	private ServerHelper helper;
 
@@ -346,4 +346,33 @@ public class Server implements IXMLPreferencesStorable, IAdaptable,
 	public Object getAdapter(@SuppressWarnings("rawtypes") Class adapter) {
 		return null;
 	}
+
+	/**
+	 * Creates and returns working copy of this server.
+	 * 
+	 * @return working copy of this server
+	 */
+	public Server makeCopy() {
+		Server copy = new Server();
+		copy.helper.map = new HashMap<String, String>(helper.map);
+		return copy;
+	}
+
+	/**
+	 * Updates original server with given working copy data.
+	 * 
+	 * @param copy
+	 */
+	public void update(Server copy) {
+		// Copy unique ID must be the same as the original
+		Assert.isTrue(getUniqueId().equals(copy.getUniqueId()));
+		Set<String> keys = copy.helper.map.keySet();
+		// Update all attributes of original server
+		for (String key : keys) {
+			if (key.equals(UNIQUE_ID))
+				continue;
+			helper.setAttribute(key, copy.helper.map.get(key));
+		}
+	}
+
 }

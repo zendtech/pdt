@@ -24,11 +24,11 @@ public interface IDebuggerSettingsSectionBuilder {
 	/**
 	 * Builds and returns debugger settings section composite.
 	 * 
-	 * @param parent
+	 * @param compositeFragment
 	 * @param settingsWorkingCopy
 	 * @return debugger settings section composite
 	 */
-	public IDebuggerSettingsSection build(CompositeFragment parent,
+	public IDebuggerSettingsSection build(CompositeFragment compositeFragment,
 			IDebuggerSettingsWorkingCopy settingsWorkingCopy);
 
 }

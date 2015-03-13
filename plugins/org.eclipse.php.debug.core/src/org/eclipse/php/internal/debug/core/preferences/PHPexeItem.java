@@ -435,9 +435,31 @@ public class PHPexeItem implements IUniqueIdentityElement, Cloneable {
 		return status;
 	}
 
-	@Override
-	public PHPexeItem clone() throws CloneNotSupportedException {
-		return (PHPexeItem) super.clone();
+	/**
+	 * Creates editable working copy of this item.
+	 * 
+	 * @return working copy of this item
+	 */
+	public PHPexeItem makeCopy() {
+		PHPexeItem copy = new PHPexeItem();
+		// Unique ID should always be the same for copy
+		copy.uniqueId = uniqueId;
+		copy.sapiType = sapiType;
+		copy.name = name;
+		if (config != null)
+			copy.config = new File(config.toURI());
+		if (detectedConfig != null)
+			copy.detectedConfig = new File(detectedConfig.toURI());
+		if (executable != null)
+			copy.executable = new File(executable.toURI());
+		copy.version = version;
+		copy.editable = editable;
+		copy.loadDefaultINI = loadDefaultINI;
+		copy.debuggerID = debuggerID;
+		copy.isDefault = isDefault;
+		copy.defaultForPHPVersionList = new ArrayList<PHPVersion>(
+				defaultForPHPVersionList);
+		return copy;
 	}
 
 }

@@ -18,7 +18,7 @@ import org.eclipse.php.internal.ui.wizards.CompositeFragment;
  * 
  * @author Bartlomiej Laczkowski
  */
-@SuppressWarnings("all")
+@SuppressWarnings("restriction")
 public class XDebugDebuggerSettingsSectionBuilder implements
 		IDebuggerSettingsSectionBuilder {
 

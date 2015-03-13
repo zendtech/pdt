@@ -28,16 +28,14 @@ public class ServerEditWizard extends Wizard {
 	private String tabID;
 
 	public ServerEditWizard(Server server) {
-		this.server = server;
+		this.server = server.makeCopy();
 		setWindowTitle(PHPServerUIMessages.getString("ServerEditWizard.Title")); //$NON-NLS-1$
 		setNeedsProgressMonitor(true);
 	}
 
 	public ServerEditWizard(Server server, String tabID) {
-		this.server = server;
+		this(server);
 		this.tabID = tabID;
-		setWindowTitle(PHPServerUIMessages.getString("ServerEditWizard.Title")); //$NON-NLS-1$
-		setNeedsProgressMonitor(true);
 	}
 
 	@Override

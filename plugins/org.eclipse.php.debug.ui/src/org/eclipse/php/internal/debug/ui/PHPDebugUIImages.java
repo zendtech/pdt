@@ -44,6 +44,7 @@ public class PHPDebugUIImages {
 	public static final String IMG_WIZBAN_PHPEXE = "IMG_WIZBAN_PHPEXE"; //$NON-NLS-1$
 	public static final String IMG_WIZBAN_DEBUG_SERVER = "IMG_WIZBAN_DEBUG_SERVER"; //$NON-NLS-1$
 
+	public static final String IMG_OBJ_PHP_EXE = "IMG_OBJ_PHP_EXE"; //$NON-NLS-1$
 	public static final String IMG_OBJ_PATH_MAPPING = "IMG_OBJ_PATH_MAPPING"; //$NON-NLS-1$
 	public static final String IMG_OBJ_MEMBER_PUBLIC_ACCESS = "IMG_OBJ_MEMBER_PUBLIC_ACCESS"; //$NON-NLS-1$
 	public static final String IMG_OBJ_MEMBER_PROTECTED_ACCESS = "IMG_OBJ_MEMBER_PROTECTED_ACCESS"; //$NON-NLS-1$
@@ -101,6 +102,7 @@ public class PHPDebugUIImages {
 		declareRegistryImage(IMG_WIZBAN_PHPEXE, T_WIZBAN + "phpexe_wiz.gif"); //$NON-NLS-1$
 		declareRegistryImage(IMG_WIZBAN_DEBUG_SERVER, T_WIZBAN
 				+ "server_debug_wiz.gif"); //$NON-NLS-1$
+		declareRegistryImage(IMG_OBJ_PHP_EXE, T_OBJ + "php_exe.gif"); //$NON-NLS-1$
 		declareRegistryImage(IMG_OBJ_PATH_MAPPING, T_OBJ + "path_mapping.gif"); //$NON-NLS-1$
 		declareRegistryImage(IMG_OBJ_MEMBER_LOCAL, T_OBJ + "member_local.gif"); //$NON-NLS-1$
 		declareRegistryImage(IMG_OBJ_MEMBER_SUPER_GLOBAL, T_OBJ

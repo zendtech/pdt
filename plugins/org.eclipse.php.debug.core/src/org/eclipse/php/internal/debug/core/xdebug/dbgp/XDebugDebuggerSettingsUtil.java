@@ -12,87 +12,57 @@ package org.eclipse.php.internal.debug.core.xdebug.dbgp;
 
 import org.eclipse.php.internal.debug.core.debugger.DebuggerSettingsManager;
 import org.eclipse.php.internal.debug.core.debugger.IDebuggerSettings;
-import org.eclipse.php.internal.debug.core.preferences.PHPexeItem;
-import org.eclipse.php.internal.server.core.Server;
 
 /**
  * XDebug debugger owner settings utility class.
  * 
  * @author Bartlomiej Laczkowski
  */
-@SuppressWarnings("restriction")
 public class XDebugDebuggerSettingsUtil {
 
 	private XDebugDebuggerSettingsUtil() {
 		// Private constructor - utility class
 	}
 
-	// TODO - will be supported soon
-
-	// public static boolean getProxyEnabled(Server phpServer) {
-	// IDebuggerSettings debuggerSettings = DebuggerSettingsManager.INSTANCE
-	// .findSettings(phpServer, XDebugDebuggerConfiguration.ID);
-	// String proxyEnabled = null;
-	// if (debuggerSettings instanceof XDebugDebuggerServerSettings) {
-	// proxyEnabled = debuggerSettings
-	// .getAttribute(XDebugDebuggerSettingsConstants.PROP_PROXY_ENABLE);
-	// }
-	// boolean debugProxyEnabled = false;
-	// try {
-	// debugProxyEnabled = Boolean.valueOf(proxyEnabled);
-	// } catch (Exception e) {
-	// // ignore
-	// }
-	// return debugProxyEnabled;
-	// }
-	//
-	// public static String getProxyIdeKey(Server phpServer) {
-	// IDebuggerSettings debuggerSettings = DebuggerSettingsManager.INSTANCE
-	// .findSettings(phpServer, XDebugDebuggerConfiguration.ID);
-	//		String proxyIdeKey = ""; //$NON-NLS-1$
-	// if (debuggerSettings instanceof XDebugDebuggerServerSettings) {
-	// proxyIdeKey = debuggerSettings
-	// .getAttribute(XDebugDebuggerSettingsConstants.PROP_PROXY_IDE_KEY);
-	// }
-	// return proxyIdeKey;
-	// }
-	//
-	// public static String getProxyAddress(Server phpServer) {
-	// IDebuggerSettings debuggerSettings = DebuggerSettingsManager.INSTANCE
-	// .findSettings(phpServer, XDebugDebuggerConfiguration.ID);
-	//		String proxyAddress = ""; //$NON-NLS-1$
-	// if (debuggerSettings instanceof XDebugDebuggerServerSettings) {
-	// proxyAddress = debuggerSettings
-	// .getAttribute(XDebugDebuggerSettingsConstants.PROP_PROXY_ADDRESS);
-	// }
-	// return proxyAddress;
-	// }
-
-	public static int getDebugPort(Server phpServer) {
+	public static boolean getProxyEnabled(String phpServerOrExeId) {
 		IDebuggerSettings debuggerSettings = DebuggerSettingsManager.INSTANCE
-				.findSettings(phpServer, XDebugDebuggerConfiguration.ID);
-		String debugClientPort = null;
-		if (debuggerSettings instanceof XDebugDebuggerServerSettings) {
-			debugClientPort = debuggerSettings
-					.getAttribute(XDebugDebuggerSettingsConstants.PROP_CLIENT_PORT);
-		}
-		int debugPort = -1;
+				.findSettings(phpServerOrExeId, XDebugDebuggerConfiguration.ID);
+		String proxyEnabled = null;
+		proxyEnabled = debuggerSettings
+				.getAttribute(XDebugDebuggerSettingsConstants.PROP_PROXY_ENABLE);
+		boolean debugProxyEnabled = false;
 		try {
-			debugPort = Integer.valueOf(debugClientPort);
+			debugProxyEnabled = Boolean.valueOf(proxyEnabled);
 		} catch (Exception e) {
 			// ignore
 		}
-		return debugPort;
+		return debugProxyEnabled;
 	}
 
-	public static int getDebugPort(PHPexeItem phpExe) {
+	public static String getProxyIdeKey(String phpServerOrExeId) {
 		IDebuggerSettings debuggerSettings = DebuggerSettingsManager.INSTANCE
-				.findSettings(phpExe, XDebugDebuggerConfiguration.ID);
+				.findSettings(phpServerOrExeId, XDebugDebuggerConfiguration.ID);
+		String proxyIdeKey = ""; //$NON-NLS-1$
+		proxyIdeKey = debuggerSettings
+				.getAttribute(XDebugDebuggerSettingsConstants.PROP_PROXY_IDE_KEY);
+		return proxyIdeKey;
+	}
+
+	public static String getProxyAddress(String phpServerOrExeId) {
+		IDebuggerSettings debuggerSettings = DebuggerSettingsManager.INSTANCE
+				.findSettings(phpServerOrExeId, XDebugDebuggerConfiguration.ID);
+		String proxyAddress = ""; //$NON-NLS-1$
+		proxyAddress = debuggerSettings
+				.getAttribute(XDebugDebuggerSettingsConstants.PROP_PROXY_ADDRESS);
+		return proxyAddress;
+	}
+
+	public static int getDebugPort(String phpServerOrExeId) {
+		IDebuggerSettings debuggerSettings = DebuggerSettingsManager.INSTANCE
+				.findSettings(phpServerOrExeId, XDebugDebuggerConfiguration.ID);
 		String debugClientPort = null;
-		if (debuggerSettings instanceof XDebugDebuggerExeSettings) {
-			debugClientPort = debuggerSettings
-					.getAttribute(XDebugDebuggerSettingsConstants.PROP_CLIENT_PORT);
-		}
+		debugClientPort = debuggerSettings
+				.getAttribute(XDebugDebuggerSettingsConstants.PROP_CLIENT_PORT);
 		int debugPort = -1;
 		try {
 			debugPort = Integer.valueOf(debugClientPort);

@@ -61,8 +61,8 @@ public class ServerEditDialog extends TitleAreaDialog implements
 	public ServerEditDialog(Shell parentShell, Server server) {
 		super(parentShell);
 		setShellStyle(getShellStyle() | SWT.RESIZE);
-
-		this.server = server;
+		// Work on a simple working copy
+		this.server = server.makeCopy();
 		runtimeComposites = new ArrayList(3);
 	}
 
@@ -122,11 +122,9 @@ public class ServerEditDialog extends TitleAreaDialog implements
 				CTabItem item = tabs.getItem(tabIdx);
 				CompositeFragment fragment = (CompositeFragment) item
 						.getControl();
-				/*
-				 * Re-initialize fragment data whenever a tab with given
-				 * fragment is changed (other tabs might change object data)
-				 */
-				// fragment.setData(getServer());
+				setTitle(fragment.getTitle());
+				setDescription(fragment.getDescription());
+				fragment.validate();
 			}
 		});
 		getShell().setText(
@@ -182,6 +180,17 @@ public class ServerEditDialog extends TitleAreaDialog implements
 			((CompositeFragment) composites.next()).performCancel();
 		}
 		super.cancelPressed();
+	}
+
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see org.eclipse.jface.dialogs.TrayDialog#handleShellCloseEvent()
+	 */
+	@Override
+	protected void handleShellCloseEvent() {
+		cancelPressed();
+		super.handleShellCloseEvent();
 	}
 
 	/*

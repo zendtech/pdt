@@ -34,13 +34,12 @@ import org.eclipse.swt.widgets.*;
 /**
  * Wizard page to set the server install directory.
  */
+@SuppressWarnings("restriction")
 public class ServerCompositeFragment extends CompositeFragment {
 
 	protected Text name;
 	protected Text url;
 	protected Combo combo;
-	private ValuesCache originalValuesCache = new ValuesCache();
-	private ValuesCache modifiedValuesCache;
 	private Text webroot;
 
 	/**
@@ -106,8 +105,7 @@ public class ServerCompositeFragment extends CompositeFragment {
 		name.setLayoutData(data);
 		name.addModifyListener(new ModifyListener() {
 			public void modifyText(ModifyEvent e) {
-				if (getServer() != null)
-					modifiedValuesCache.serverName = name.getText();
+				getServer().setName(name.getText());
 				validate();
 			}
 		});
@@ -122,23 +120,17 @@ public class ServerCompositeFragment extends CompositeFragment {
 		Server server = getServer();
 		if (name == null || server == null)
 			return;
-		originalValuesCache.url = server.getBaseURL();
-		originalValuesCache.serverName = server.getName();
-		originalValuesCache.host = server.getHost();
-		originalValuesCache.webroot = server.getDocumentRoot();
-		// Clone the cache
-		modifiedValuesCache = new ValuesCache(originalValuesCache);
-		if (originalValuesCache.serverName != null) {
+		if (getServer().getName() != null) {
 			boolean nameSet = false;
-			String serverName = originalValuesCache.serverName;
+			String serverName = getServer().getName();
 			String orgName = serverName;
 			if (!isForEditing()) {
 				for (int i = 0; i < 10; i++) {
 					boolean ok = checkServerName(serverName);
 					if (ok) {
 						name.setText(serverName);
-						// workingCopy.setName(serverName);
-						modifiedValuesCache.serverName = serverName;
+						getServer().setName(serverName);
+						;
 						nameSet = true;
 						break;
 					}
@@ -146,8 +138,7 @@ public class ServerCompositeFragment extends CompositeFragment {
 				}
 				if (!nameSet) {
 					name.setText(""); //$NON-NLS-1$
-					// workingCopy.setName("");
-					modifiedValuesCache.serverName = ""; //$NON-NLS-1$
+					getServer().setName(""); //$NON-NLS-1$
 				}
 			} else {
 				name.setText(serverName);
@@ -155,17 +146,16 @@ public class ServerCompositeFragment extends CompositeFragment {
 		} else {
 			name.setText(""); //$NON-NLS-1$
 		}
-		if (originalValuesCache.webroot != null) {
-			webroot.setText(originalValuesCache.webroot);
+		if (getServer().getDocumentRoot() != null) {
+			webroot.setText(getServer().getDocumentRoot());
 		}
-		String baseURL = originalValuesCache.url;
+		String baseURL = getServer().getBaseURL();
 		if (!baseURL.equals("")) { //$NON-NLS-1$
 			url.setText(baseURL);
 			try {
 				URL originalURL = new URL(baseURL);
 				int port = originalURL.getPort();
-				originalValuesCache.port = port;
-				modifiedValuesCache.port = port;
+				getServer().setPort(String.valueOf(port));
 			} catch (Exception e) {
 				setMessage(
 						PHPServerUIMessages
@@ -174,21 +164,20 @@ public class ServerCompositeFragment extends CompositeFragment {
 		} else {
 			baseURL = "http://" + server.getHost(); //$NON-NLS-1$
 			url.setText(baseURL);
-			modifiedValuesCache.url = baseURL;
 			try {
+				getServer().setBaseURL(baseURL);
 				URL createdURL = new URL(baseURL);
 				int port = createdURL.getPort();
-				modifiedValuesCache.port = port;
+				getServer().setPort(String.valueOf(port));
 			} catch (Exception e) {
 				setMessage(
 						PHPServerUIMessages
 								.getString("ServerCompositeFragment.enterValidURL"), IMessageProvider.ERROR); //$NON-NLS-1$
 			}
 		}
-		if (originalValuesCache.serverName != null
-				&& originalValuesCache.serverName.length() > 0) {
+		if (getServer().getName() != null && getServer().getName().length() > 0) {
 			setTitle(PHPServerUIMessages
-					.getString("ServerCompositeFragment.editServer")); //$NON-NLS-1$
+					.getString("ServerCompositeFragment.editServer") + " [" + getServer().getName() + ']'); //$NON-NLS-1$ //$NON-NLS-2$
 		} else {
 			setTitle(PHPServerUIMessages
 					.getString("ServerCompositeFragment.configureServer")); //$NON-NLS-1$
@@ -201,9 +190,7 @@ public class ServerCompositeFragment extends CompositeFragment {
 			setMessage("", IMessageProvider.ERROR); //$NON-NLS-1$
 			return;
 		}
-
 		setMessage(getDescription(), IMessageProvider.NONE);
-
 		String urlStr = url.getText();
 		if (urlStr != null && !urlStr.trim().equals("")) { //$NON-NLS-1$
 			boolean ok = checkServerUrl(urlStr);
@@ -211,10 +198,8 @@ public class ServerCompositeFragment extends CompositeFragment {
 				setMessage(
 						PHPServerUIMessages
 								.getString("ServerCompositeFragment.duplicateServerUrl"), IMessageProvider.ERROR); //$NON-NLS-1$
-				return;
 			}
 		}
-
 		try {
 			URL url = new URL(urlStr);
 			if (url.getPath() != null && url.getPath().length() != 0) {
@@ -224,14 +209,12 @@ public class ServerCompositeFragment extends CompositeFragment {
 			// in case of Malformed URL - reset
 			urlStr = null;
 		}
-
 		if (urlStr == null || urlStr.equals("")) { //$NON-NLS-1$
 			setMessage(
 					PHPServerUIMessages
 							.getString("ServerCompositeFragment.enterValidURL"), IMessageProvider.ERROR); //$NON-NLS-1$
 			return;
 		}
-
 		try {
 			URL baseURL = new URL(urlStr);
 			String host = baseURL.getHost();
@@ -239,34 +222,28 @@ public class ServerCompositeFragment extends CompositeFragment {
 				setMessage(
 						PHPServerUIMessages
 								.getString("ServerCompositeFragment.serverURLEmpty"), IMessageProvider.ERROR); //$NON-NLS-1$
-				return;
 			}
 			int port = baseURL.getPort();
 
-			// workingCopy.setHost(host);
-			// server.setPort(String.valueOf(port));
-			modifiedValuesCache.host = host;
-			modifiedValuesCache.port = port;
+			getServer().setHost(host);
+			getServer().setPort(String.valueOf(port));
 		} catch (Exception e) {
 			setMessage(
 					PHPServerUIMessages
 							.getString("ServerCompositeFragment.enterValidURL"), IMessageProvider.ERROR); //$NON-NLS-1$
 			return;
 		}
-
-		String serverName = modifiedValuesCache.serverName;
+		String serverName = getServer().getName();
 		if (serverName == null || serverName.trim().equals("")) { //$NON-NLS-1$
 			setMessage(
 					PHPServerUIMessages
 							.getString("ServerCompositeFragment.missingServerName"), IMessageProvider.ERROR); //$NON-NLS-1$
-			return;
 		} else {
 			boolean ok = checkServerName(serverName);
 			if (!ok) {
 				setMessage(
 						PHPServerUIMessages
 								.getString("ServerCompositeFragment.duplicateServerName"), IMessageProvider.ERROR); //$NON-NLS-1$
-				return;
 			}
 		}
 		String webrootStr = webroot.getText().trim();
@@ -274,32 +251,11 @@ public class ServerCompositeFragment extends CompositeFragment {
 			setMessage(
 					PHPServerUIMessages
 							.getString("ServerCompositeFragment.webrootNotExists"), IMessageProvider.ERROR); //$NON-NLS-1$
-			return;
 		}
-
-		Server server = getServer();
-		if (server != null) {
-			try {
-				server.setPort(String.valueOf(modifiedValuesCache.port));
-				server.setHost(modifiedValuesCache.host);
-				server.setDocumentRoot(modifiedValuesCache.webroot);
-				server.setBaseURL(modifiedValuesCache.url);
-				// AbstractDebuggerConfiguration debugger = PHPDebuggersRegistry
-				// .getDebuggerConfiguration(modifiedValuesCache.debuggerId);
-				// IStatus status = debugger.validate(server);
-				// if (status.getSeverity() != IStatus.OK) {
-				// setMessage(status.getMessage(), status.getSeverity());
-				// }
-			} catch (MalformedURLException e) {
-				// continue validation
-			}
-		}
-
 		controlHandler.update();
 	}
 
 	protected void createURLGroup(Composite parent) {
-
 		Group group = new Group(parent, SWT.NONE);
 		group.setFont(parent.getFont());
 		GridLayout layout = new GridLayout(3, false);
@@ -308,50 +264,44 @@ public class ServerCompositeFragment extends CompositeFragment {
 		group.setLayoutData(data);
 		group.setText(PHPServerUIMessages
 				.getString("ServerCompositeFragment.serverProperties")); //$NON-NLS-1$
-
 		Label urlLabel = new Label(group, SWT.None);
 		urlLabel.setText(PHPServerUIMessages
 				.getString("ServerCompositeFragment.baseURL")); //$NON-NLS-1$
-
 		url = new Text(group, SWT.BORDER);
 		GridData layoutData = new GridData(GridData.FILL_HORIZONTAL);
 		layoutData.horizontalSpan = 2;
 		url.setLayoutData(layoutData);
-
 		url.addModifyListener(new ModifyListener() {
 			public void modifyText(ModifyEvent e) {
 				if (getServer() != null) {
 					String urlStr = url.getText();
-					// server.setBaseURL(urlStr);
-					modifiedValuesCache.url = urlStr;
+					try {
+						getServer().setBaseURL(urlStr);
+					} catch (MalformedURLException e1) {
+						// ignore
+					}
 				}
 				validate();
 			}
 		});
-
 		Label labelRoot = new Label(group, SWT.None);
 		labelRoot.setText(PHPServerUIMessages
 				.getString("ServerCompositeFragment.localWebRoot")); //$NON-NLS-1$
 		labelRoot.setLayoutData(new GridData());
-
 		webroot = new Text(group, SWT.BORDER);
 		webroot.setLayoutData(new GridData(GridData.FILL_HORIZONTAL));
-
 		webroot.addModifyListener(new ModifyListener() {
 			public void modifyText(ModifyEvent e) {
 				if (getServer() != null) {
 					String webrootStr = webroot.getText();
-					// server.setBaseURL(urlStr);
-					modifiedValuesCache.webroot = webrootStr;
+					getServer().setDocumentRoot(webrootStr);
 				}
 				validate();
 			}
 		});
-
 		Button browseButton = new Button(group, SWT.PUSH);
 		browseButton.setText(PHPServerUIMessages
 				.getString("ServerCompositeFragment.browse")); //$NON-NLS-1$
-
 		browseButton.addSelectionListener(new SelectionAdapter() {
 			public void widgetSelected(SelectionEvent e) {
 				DirectoryDialog dialog = new DirectoryDialog(getShell());
@@ -363,23 +313,20 @@ public class ServerCompositeFragment extends CompositeFragment {
 				if (result != null)
 					webroot.setText(result.toString());
 			}
-
 		});
 
 	}
 
 	private boolean checkServerName(String name) {
 		name = name.trim();
-		if (name.equals(originalValuesCache.serverName)) {
-			return true;
-		}
 		Server[] allServers = ServersManager.getServers();
-
 		if (allServers != null) {
 			int size = allServers.length;
 			for (int i = 0; i < size; i++) {
 				Server server = allServers[i];
-				if (name.equals(server.getName()))
+				if (name.equals(server.getName())
+						&& !getServer().getUniqueId().equals(
+								server.getUniqueId()))
 					return false;
 			}
 		}
@@ -388,24 +335,14 @@ public class ServerCompositeFragment extends CompositeFragment {
 
 	private boolean checkServerUrl(String url) {
 		url = url.trim();
-		// if (originalValuesCache.serverName != null
-		// && originalValuesCache.serverName.trim().length() > 0) {
-		// if (url.equals(originalValuesCache.url)) {
-		// return true;
-		// }
-		// }
 		Server[] allServers = ServersManager.getServers();
-		String currentName = null;
-		if (originalValuesCache.serverName != null
-				&& originalValuesCache.serverName.trim().length() > 0) {
-			currentName = originalValuesCache.serverName;
-		}
 		if (allServers != null) {
 			int size = allServers.length;
 			for (int i = 0; i < size; i++) {
 				Server server = allServers[i];
-				if (!server.getName().equals(currentName)
-						&& url.equals(server.getBaseURL()))
+				if (url.equals(server.getBaseURL())
+						&& !getServer().getUniqueId().equals(
+								server.getUniqueId()))
 					return false;
 			}
 		}
@@ -417,33 +354,11 @@ public class ServerCompositeFragment extends CompositeFragment {
 	 */
 	public boolean performOk() {
 		try {
-			Server defaultServer = ServersManager.getDefaultServer(null);
-			boolean isDefault = false;
-			isDefault = defaultServer != null
-					&& defaultServer.getName().equals(
-							originalValuesCache.serverName);
-
 			Server server = getServer();
-			// Save any modification logged into the modified value cache
-			// object.
-			if (server != null) {
-				server.setPort(String.valueOf(modifiedValuesCache.port));
-				server.setBaseURL(modifiedValuesCache.url);
-			}
-			server.setHost(modifiedValuesCache.host);
-			server.setName(modifiedValuesCache.serverName);
-			server.setDocumentRoot(modifiedValuesCache.webroot);
-			if (originalValuesCache.serverName != null
-					&& !originalValuesCache.serverName.equals("") && //$NON-NLS-1$
-					!originalValuesCache.serverName
-							.equals(modifiedValuesCache.serverName)) {
-				// Update the ServerManager with the new server name
-
-				ServersManager.removeServer(originalValuesCache.serverName);
-				ServersManager.addServer(server);
-				if (isDefault) {
-					ServersManager.setDefaultServer(null, server);
-				}
+			Server originalServer = ServersManager.findServer(server
+					.getUniqueId());
+			if (originalServer != null) {
+				originalServer.update(server);
 			}
 		} catch (Throwable e) {
 			Logger.logException("Error while saving the server settings", e); //$NON-NLS-1$
@@ -452,47 +367,10 @@ public class ServerCompositeFragment extends CompositeFragment {
 		return true;
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * 
-	 * @see org.eclipse.php.internal.server.ui.CompositeFragment#performCancel()
-	 */
-	public boolean performCancel() {
-		// Since the performOk might be triggered if this composite is inside a
-		// wizard fragment, we have to
-		// implement the perform cancel to revert any changes made.
-		try {
-			Server server = getServer();
-			if (server != null) {
-				server.setPort(String.valueOf(originalValuesCache.port));
-				server.setBaseURL(originalValuesCache.url);
-			}
-			server.setHost(originalValuesCache.host);
-			server.setName(originalValuesCache.serverName);
-		} catch (Throwable e) {
-			Logger.logException("Error while reverting the server settings", e); //$NON-NLS-1$
-			return false;
-		}
-		return super.performCancel();
+	@Override
+	public void performApply() {
+		// TODO Auto-generated method stub
+		super.performApply();
 	}
 
-	// A class used as a local original IServerWorkingCopy values cache.
-	private class ValuesCache {
-		String webroot;
-		String serverName;
-		String url;
-		String host;
-		int port;
-
-		public ValuesCache() {
-		}
-
-		public ValuesCache(ValuesCache cache) {
-			this.serverName = cache.serverName;
-			this.url = cache.url;
-			this.port = cache.port;
-			this.host = cache.host;
-			this.webroot = cache.webroot;
-		}
-	}
 }

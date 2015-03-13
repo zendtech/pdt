@@ -58,7 +58,7 @@ public class DebuggerSettingsProviderRegistry {
 			+ ".phpDebuggerSettingsProviders"; //$NON-NLS-1$
 
 	/**
-	 * The default instance for reading preferences
+	 * The default instance for reading registry.
 	 */
 	private static DebuggerSettingsProviderRegistry instance;
 

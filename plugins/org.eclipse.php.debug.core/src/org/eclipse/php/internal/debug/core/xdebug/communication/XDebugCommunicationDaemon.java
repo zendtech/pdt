@@ -377,10 +377,11 @@ public class XDebugCommunicationDaemon implements ICommunicationDaemon {
 
 	@Override
 	public boolean isListening() {
+		boolean allListening = true;
 		for (ICommunicationDaemon daemon : daemons)
 			if (!daemon.isListening())
-				return false;
-		return true;
+				allListening = false;
+		return allListening;
 	}
 
 	@Override
@@ -393,14 +394,16 @@ public class XDebugCommunicationDaemon implements ICommunicationDaemon {
 	public void stopListen() {
 		unregisterListeners();
 		for (ICommunicationDaemon daemon : daemons)
-			daemon.startListen();
+			daemon.stopListen();
 	}
 
 	@Override
 	public boolean resetSocket() {
+		boolean allReset = true;
 		for (ICommunicationDaemon daemon : daemons)
-			daemon.resetSocket();
-		return false;
+			if (!daemon.resetSocket())
+				allReset = false;
+		return allReset;
 	}
 
 	@Override

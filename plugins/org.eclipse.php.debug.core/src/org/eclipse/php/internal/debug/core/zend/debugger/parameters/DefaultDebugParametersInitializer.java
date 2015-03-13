@@ -74,7 +74,7 @@ public class DefaultDebugParametersInitializer extends
 							.getServer(launchConfiguration.getAttribute(
 									Server.NAME, "")); //$NON-NLS-1$
 					String customHosts = ZendDebuggerSettingsUtil
-							.getDebugHosts(server);
+							.getDebugHosts(server.getUniqueId());
 					if (!customHosts.isEmpty())
 						debugHosts = customHosts;
 				} catch (CoreException ce) {

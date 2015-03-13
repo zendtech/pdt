@@ -56,7 +56,7 @@ public abstract class AbstractDebuggerSettingsProvider implements
 		public Map<String, Object> storeToMap() {
 			Map<String, Object> settingsMap = new HashMap<String, Object>();
 			Map<String, String> attributes = new HashMap<String, String>();
-			attributes.put(TAG_OWNER, settings.getOwner().getUniqueId());
+			attributes.put(TAG_OWNER, settings.getOwnerId());
 			for (String key : settings.getAttributes().keySet()) {
 				attributes.put(key, settings.getAttribute(key));
 			}
@@ -72,6 +72,7 @@ public abstract class AbstractDebuggerSettingsProvider implements
 	}
 
 	private final Map<String, IDebuggerSettings> settingsCache = new HashMap<String, IDebuggerSettings>();
+	private final Map<String, IDebuggerSettings> defaultSettingsCache = new HashMap<String, IDebuggerSettings>();
 	private String id;
 
 	/**
@@ -104,10 +105,14 @@ public abstract class AbstractDebuggerSettingsProvider implements
 	 * #get(org.eclipse.php.internal.core.IUniqueIdentityElement)
 	 */
 	@Override
-	public IDebuggerSettings get(IUniqueIdentityElement owner) {
-		IDebuggerSettings settings = settingsCache.get(owner.getUniqueId());
+	public IDebuggerSettings get(String ownerId) {
+		IDebuggerSettings settings = settingsCache.get(ownerId);
 		if (settings == null) {
-			settings = createSettings(getKind(owner), owner);
+			settings = defaultSettingsCache.get(ownerId);
+			if (settings == null) {
+				settings = createSettings(getKind(ownerId), ownerId);
+				defaultSettingsCache.put(ownerId, settings);
+			}
 		}
 		return settings;
 	}
@@ -133,7 +138,7 @@ public abstract class AbstractDebuggerSettingsProvider implements
 	 */
 	@Override
 	public void save(IDebuggerSettings settings) {
-		settingsCache.put(settings.getOwner().getUniqueId(), settings);
+		settingsCache.put(settings.getOwnerId(), settings);
 		save();
 	}
 
@@ -146,7 +151,7 @@ public abstract class AbstractDebuggerSettingsProvider implements
 	 */
 	@Override
 	public void delete(IDebuggerSettings settings) {
-		settingsCache.remove(settings.getOwner().getUniqueId());
+		settingsCache.remove(settings.getOwnerId());
 		save();
 	}
 
@@ -155,11 +160,11 @@ public abstract class AbstractDebuggerSettingsProvider implements
 	 * into account the provided setting kind and debugger settings owner.
 	 * 
 	 * @param kind
-	 * @param owner
+	 * @param ownerId
 	 * @return new settings
 	 */
 	protected abstract IDebuggerSettings createSettings(
-			DebuggerSettingsKind kind, IUniqueIdentityElement owner);
+			DebuggerSettingsKind kind, String ownerId);
 
 	/**
 	 * Implementors should create and return the appropriate settings taking
@@ -167,12 +172,12 @@ public abstract class AbstractDebuggerSettingsProvider implements
 	 * attributes map loaded from persistent storage.
 	 * 
 	 * @param kind
-	 * @param owner
+	 * @param ownerId
 	 * @param attributes
 	 * @return recreated settings
 	 */
 	protected abstract IDebuggerSettings createSettings(
-			DebuggerSettingsKind kind, IUniqueIdentityElement owner,
+			DebuggerSettingsKind kind, String ownerId,
 			Map<String, String> attributes);
 
 	/**
@@ -180,25 +185,26 @@ public abstract class AbstractDebuggerSettingsProvider implements
 	 */
 	private IDebuggerSettings restoreSettings(String ownerId,
 			Map<String, String> attributes) {
-		IUniqueIdentityElement owner = ServersManager.findServer(ownerId);
-		if (owner == null)
-			owner = PHPexes.getInstance().findItem(ownerId);
-		if (owner == null)
-			// Does not exist anymore?
-			return null;
-		return createSettings(getKind(owner), owner, attributes);
+		return createSettings(getKind(ownerId), ownerId, attributes);
 	}
 
 	/**
 	 * Obtains and returns kind of debugger settings owner.
 	 */
-	private DebuggerSettingsKind getKind(IUniqueIdentityElement owner) {
-		if (owner instanceof Server) {
+	private DebuggerSettingsKind getKind(String ownerId) {
+		IUniqueIdentityElement owner = ServersManager.findServer(ownerId);
+		if (owner != null)
 			return DebuggerSettingsKind.PHP_SERVER;
-		}
-		if (owner instanceof PHPexeItem) {
+		owner = PHPexes.getInstance().findItem(ownerId);
+		if (owner != null)
 			return DebuggerSettingsKind.PHP_EXE;
+		if (owner == null) {
+			if (ownerId.startsWith(Server.ID_PREFIX))
+				return DebuggerSettingsKind.PHP_SERVER;
+			if (ownerId.startsWith(PHPexeItem.ID_PREFIX))
+				return DebuggerSettingsKind.PHP_EXE;
 		}
+		// Does not exist?
 		return DebuggerSettingsKind.UNKNOWN;
 	}
 
@@ -210,16 +216,13 @@ public abstract class AbstractDebuggerSettingsProvider implements
 		// Hook existing PHP executables
 		for (PHPexeItem owner : PHPexes.getInstance().getAllItems()) {
 			IDebuggerSettings settings = createSettings(
-					DebuggerSettingsKind.PHP_EXE, owner);
+					DebuggerSettingsKind.PHP_EXE, owner.getUniqueId());
 			save(settings);
 		}
 		// Hook existing PHP servers
 		for (Server owner : ServersManager.getServers()) {
-			// Skip empty server
-			if (ServersManager.isEmptyServer(owner))
-				continue;
 			IDebuggerSettings settings = createSettings(
-					DebuggerSettingsKind.PHP_SERVER, owner);
+					DebuggerSettingsKind.PHP_SERVER, owner.getUniqueId());
 			save(settings);
 		}
 	}

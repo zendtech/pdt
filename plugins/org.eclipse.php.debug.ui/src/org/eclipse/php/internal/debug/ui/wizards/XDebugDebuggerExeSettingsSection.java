@@ -10,10 +10,15 @@
  *******************************************************************************/
 package org.eclipse.php.internal.debug.ui.wizards;
 
-import static org.eclipse.php.internal.debug.core.xdebug.dbgp.XDebugDebuggerSettingsConstants.PROP_CLIENT_PORT;
+import static org.eclipse.php.internal.debug.core.xdebug.dbgp.XDebugDebuggerSettingsConstants.*;
 
+import org.eclipse.core.runtime.IStatus;
 import org.eclipse.jface.dialogs.IMessageProvider;
+import org.eclipse.php.internal.debug.core.debugger.AbstractDebuggerConfiguration;
 import org.eclipse.php.internal.debug.core.debugger.IDebuggerSettingsWorkingCopy;
+import org.eclipse.php.internal.debug.core.preferences.PHPDebuggersRegistry;
+import org.eclipse.php.internal.debug.core.preferences.PHPexeItem;
+import org.eclipse.php.internal.debug.core.xdebug.dbgp.DBGpProxyHandlersManager;
 import org.eclipse.php.internal.ui.wizards.CompositeFragment;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.ModifyEvent;
@@ -36,9 +41,10 @@ public class XDebugDebuggerExeSettingsSection implements
 	protected IDebuggerSettingsWorkingCopy settingsWorkingCopy;
 	protected CompositeFragment compositeFragment;
 	protected Composite settingsComposite;
+	protected IStatus debuggerStatus;
 
 	/**
-	 * 
+	 * Creates new section.
 	 */
 	public XDebugDebuggerExeSettingsSection(
 			CompositeFragment compositeFragment,
@@ -68,6 +74,8 @@ public class XDebugDebuggerExeSettingsSection implements
 	 */
 	@Override
 	public boolean performOK() {
+		DBGpProxyHandlersManager.INSTANCE.registerHandler(settingsWorkingCopy
+				.getOwnerId());
 		return true;
 	}
 
@@ -90,6 +98,20 @@ public class XDebugDebuggerExeSettingsSection implements
 	 * ()
 	 */
 	public void validate() {
+		// Reset state
+		compositeFragment.setMessage(compositeFragment.getDescription(),
+				IMessageProvider.NONE);
+		if (debuggerStatus == null) {
+			PHPexeItem phpExe = (PHPexeItem) compositeFragment.getData();
+			AbstractDebuggerConfiguration[] debuggers = PHPDebuggersRegistry
+					.getDebuggersConfigurations();
+			for (AbstractDebuggerConfiguration debugger : debuggers) {
+				if (phpExe.getDebuggerID().equals(debugger.getDebuggerId())) {
+					debuggerStatus = debugger.validate(phpExe);
+				}
+			}
+		}
+		// Check errors
 		String clientPort = (String) settingsWorkingCopy
 				.getAttribute(PROP_CLIENT_PORT);
 		if (clientPort == null || clientPort.isEmpty()) {
@@ -99,34 +121,66 @@ public class XDebugDebuggerExeSettingsSection implements
 							IMessageProvider.ERROR);
 			return;
 		}
-
-		// TODO - will be supported soon
-
-		// boolean isProxyEnabled = Boolean.valueOf(settingsWorkingCopy
-		// .getAttribute(PROP_PROXY_ENABLE));
-		// if (isProxyEnabled) {
-		// String proxyIdeKey = settingsWorkingCopy
-		// .getAttribute(PROP_PROXY_IDE_KEY);
-		// if (proxyIdeKey == null || proxyIdeKey.isEmpty()) {
-		// compositeFragment
-		// .setMessage(
-		// Messages.XDebugDebuggerServerSettingsSection_IDE_key_is_missing,
-		// IMessageProvider.ERROR);
-		// return;
-		// }
-		// String proxyAddress = settingsWorkingCopy
-		// .getAttribute(PROP_PROXY_ADDRESS);
-		// if (proxyAddress == null || proxyAddress.isEmpty()) {
-		// compositeFragment
-		// .setMessage(
-		// Messages.XDebugDebuggerServerSettingsSection_Proxy_address_is_missing,
-		// IMessageProvider.ERROR);
-		// return;
-		// }
-		// }
+		if (debuggerStatus.getSeverity() == IStatus.ERROR) {
+			compositeFragment.setMessage(debuggerStatus.getMessage(),
+					IMessageProvider.ERROR);
+			return;
+		}
+		// Check warnings
+		if (debuggerStatus.getSeverity() == IStatus.WARNING) {
+			compositeFragment.setMessage(debuggerStatus.getMessage(),
+					IMessageProvider.WARNING);
+			return;
+		}
+		boolean isProxyEnabled = Boolean.valueOf(settingsWorkingCopy
+				.getAttribute(PROP_PROXY_ENABLE));
+		if (isProxyEnabled) {
+			String proxyIdeKey = settingsWorkingCopy
+					.getAttribute(PROP_PROXY_IDE_KEY);
+			if (proxyIdeKey == null || proxyIdeKey.isEmpty()) {
+				compositeFragment
+						.setMessage(
+								Messages.XDebugDebuggerServerSettingsSection_IDE_key_is_missing,
+								IMessageProvider.ERROR);
+				return;
+			}
+			String proxyAddress = settingsWorkingCopy
+					.getAttribute(PROP_PROXY_ADDRESS);
+			if (proxyAddress == null || proxyAddress.isEmpty()) {
+				compositeFragment
+						.setMessage(
+								Messages.XDebugDebuggerServerSettingsSection_Proxy_address_is_missing,
+								IMessageProvider.ERROR);
+				return;
+			}
+		}
 	}
 
-	private Composite createComposite() {
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see
+	 * org.eclipse.php.internal.debug.ui.wizards.IDebuggerSettingsSection#canTest
+	 * ()
+	 */
+	@Override
+	public boolean canTest() {
+		// Maybe in the future...
+		return false;
+	}
+
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see org.eclipse.php.internal.debug.ui.wizards.IDebuggerSettingsSection#
+	 * performTest()
+	 */
+	@Override
+	public void performTest() {
+		// Nothing to perform yet
+	}
+
+	protected Composite createComposite() {
 		// Main composite
 		Composite settingsComposite = new Composite(compositeFragment, SWT.NONE);
 		GridLayout scLayout = new GridLayout();
@@ -158,7 +212,7 @@ public class XDebugDebuggerExeSettingsSection implements
 			public void modifyText(ModifyEvent e) {
 				String port = clientPortText.getText();
 				settingsWorkingCopy.setAttribute(PROP_CLIENT_PORT, port);
-				compositeFragment.validate();
+				validate();
 			}
 		});
 		// Advanced sub-group
@@ -183,13 +237,13 @@ public class XDebugDebuggerExeSettingsSection implements
 		final Text proxyIdeKeyText = new Text(advancedSubGroup, SWT.BORDER);
 		GridData pikLayoutData = new GridData(GridData.FILL_HORIZONTAL);
 		proxyIdeKeyText.setLayoutData(pikLayoutData);
-		// proxyIdeKeyText.setText(settingsWorkingCopy
-		// .getAttribute(PROP_PROXY_IDE_KEY));
+		proxyIdeKeyText.setText(settingsWorkingCopy
+				.getAttribute(PROP_PROXY_IDE_KEY));
 		proxyIdeKeyText.addModifyListener(new ModifyListener() {
 			public void modifyText(ModifyEvent e) {
-				// String ideKey = proxyIdeKeyText.getText();
-				// settingsWorkingCopy.setAttribute(PROP_PROXY_IDE_KEY, ideKey);
-				compositeFragment.validate();
+				String ideKey = proxyIdeKeyText.getText();
+				settingsWorkingCopy.setAttribute(PROP_PROXY_IDE_KEY, ideKey);
+				validate();
 			}
 		});
 		// Proxy address
@@ -199,14 +253,14 @@ public class XDebugDebuggerExeSettingsSection implements
 		final Text proxyAddressText = new Text(advancedSubGroup, SWT.BORDER);
 		GridData patLayoutData = new GridData(GridData.FILL_HORIZONTAL);
 		proxyAddressText.setLayoutData(patLayoutData);
-		// proxyAddressText.setText(settingsWorkingCopy
-		// .getAttribute(PROP_PROXY_ADDRESS));
+		proxyAddressText.setText(settingsWorkingCopy
+				.getAttribute(PROP_PROXY_ADDRESS));
 		proxyAddressText.addModifyListener(new ModifyListener() {
 			public void modifyText(ModifyEvent e) {
-				// String proxyAddress = proxyAddressText.getText();
-				// settingsWorkingCopy.setAttribute(PROP_PROXY_ADDRESS,
-				// proxyAddress);
-				compositeFragment.validate();
+				String proxyAddress = proxyAddressText.getText();
+				settingsWorkingCopy.setAttribute(PROP_PROXY_ADDRESS,
+						proxyAddress);
+				validate();
 			}
 		});
 		// Set up enabled/disabled for proxy
@@ -220,28 +274,17 @@ public class XDebugDebuggerExeSettingsSection implements
 			public void widgetDefaultSelected(SelectionEvent e) {
 				proxyIdeKeyText.setEnabled(enableProxy.getSelection());
 				proxyAddressText.setEnabled(enableProxy.getSelection());
-				// settingsWorkingCopy.setAttribute(PROP_PROXY_ENABLE,
-				// String.valueOf(enableProxy.getSelection()));
-				compositeFragment.validate();
+				settingsWorkingCopy.setAttribute(PROP_PROXY_ENABLE,
+						String.valueOf(enableProxy.getSelection()));
+				validate();
 			}
 		});
-		// boolean isProxyEnabled = Boolean.valueOf(settingsWorkingCopy
-		// .getAttribute(PROP_PROXY_ENABLE));
-		// enableProxy.setSelection(isProxyEnabled);
-		// proxyIdeKeyText.setEnabled(isProxyEnabled);
-		// proxyAddressText.setEnabled(isProxyEnabled);
-
-		// TODO - will be supported soon
-		advancedSubGroup.setEnabled(false);
-		enableProxy.setEnabled(false);
-		proxyAddressLabel.setEnabled(false);
-		proxyAddressText.setEnabled(false);
-		proxyIdeKeyLabel.setEnabled(false);
-		proxyIdeKeyText.setEnabled(false);
-
-		compositeFragment.validate();
+		boolean isProxyEnabled = Boolean.valueOf(settingsWorkingCopy
+				.getAttribute(PROP_PROXY_ENABLE));
+		enableProxy.setSelection(isProxyEnabled);
+		proxyIdeKeyText.setEnabled(isProxyEnabled);
+		proxyAddressText.setEnabled(isProxyEnabled);
 		return settingsComposite;
-
 	}
 
 }

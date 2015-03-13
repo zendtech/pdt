@@ -15,10 +15,8 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
-import org.eclipse.core.runtime.IStatus;
-import org.eclipse.core.runtime.Status;
+import org.eclipse.debug.internal.ui.SWTFactory;
 import org.eclipse.jface.dialogs.Dialog;
-import org.eclipse.jface.dialogs.IMessageProvider;
 import org.eclipse.php.internal.core.IUniqueIdentityElement;
 import org.eclipse.php.internal.debug.core.PHPDebugPlugin;
 import org.eclipse.php.internal.debug.core.PHPExeUtil;
@@ -33,14 +31,17 @@ import org.eclipse.php.internal.ui.wizards.IControlHandler;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.ModifyEvent;
 import org.eclipse.swt.events.ModifyListener;
+import org.eclipse.swt.events.SelectionEvent;
+import org.eclipse.swt.events.SelectionListener;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
+import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Combo;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Label;
 
 /**
- * Debugger composite fragment.
+ * Debugger settings composite fragment.
  * 
  * @author Bartlomiej Laczkowski
  */
@@ -63,13 +64,13 @@ public class DebuggerCompositeFragment extends CompositeFragment {
 
 	private List<String> debuggersIds;
 	private Combo debuggerCombo;
+	private Button debuggerTest;
 	private ValuesCache originalValuesCache = new ValuesCache();
 	private ValuesCache modifiedValuesCache;
 	private IDebuggerSettingsSection debuggerSettingsSection;
 	private IDebuggerSettingsWorkingCopy debuggerSettingsWC;
 	private Map<String, IDebuggerSettingsWorkingCopy> settingsWCBuffer = new HashMap<String, IDebuggerSettingsWorkingCopy>();
 	private String detectedDebuggerId = null;
-	private Map<String, IStatus> debuggersStatus = new HashMap<String, IStatus>();
 
 	/**
 	 * Creates new debugger composite fragment.
@@ -111,8 +112,13 @@ public class DebuggerCompositeFragment extends CompositeFragment {
 			if (!isOK)
 				return isOK;
 		}
-		if (debuggerSettingsWC != null && debuggerSettingsWC.isDirty())
-			DebuggerSettingsManager.INSTANCE.save(debuggerSettingsWC);
+		if (debuggerSettingsWC != null) {
+			if (debuggerSettingsWC.isDirty()) {
+				DebuggerSettingsManager.INSTANCE.save(debuggerSettingsWC);
+			}
+			DebuggerSettingsManager.INSTANCE
+					.dropWorkingCopy(debuggerSettingsWC);
+		}
 		return true;
 	}
 
@@ -126,6 +132,10 @@ public class DebuggerCompositeFragment extends CompositeFragment {
 	public boolean performCancel() {
 		if (debuggerSettingsSection != null)
 			debuggerSettingsSection.performCancel();
+		if (debuggerSettingsWC != null) {
+			DebuggerSettingsManager.INSTANCE
+					.dropWorkingCopy(debuggerSettingsWC);
+		}
 		return super.performCancel();
 	}
 
@@ -136,36 +146,7 @@ public class DebuggerCompositeFragment extends CompositeFragment {
 	 */
 	@Override
 	public void validate() {
-		setMessage(getDescription(), IMessageProvider.NONE);
-		// Validation is being done in settings composite
-		IUniqueIdentityElement data = (IUniqueIdentityElement) getData();
-		if (data instanceof PHPexeItem) {
-			PHPexeItem exeItem = (PHPexeItem) data;
-			IStatus debuggerStatus = Status.OK_STATUS;
-			AbstractDebuggerConfiguration[] debuggers = PHPDebuggersRegistry
-					.getDebuggersConfigurations();
-			for (AbstractDebuggerConfiguration debugger : debuggers) {
-				String debuggerId = exeItem.getDebuggerID();
-				if (debuggerId.equals(debugger.getDebuggerId())) {
-					debuggerStatus = debuggersStatus.get(debuggerId);
-					if (debuggerStatus == null) {
-						debuggerStatus = debugger.validate(exeItem);
-						debuggersStatus.put(debuggerId, debuggerStatus);
-					}
-				}
-			}
-			if (debuggerStatus.getSeverity() != IStatus.OK) {
-				if (debuggerStatus.getSeverity() == IStatus.ERROR) {
-					setMessage(debuggerStatus.getMessage(),
-							IMessageProvider.ERROR);
-					// set complete ?
-					return;
-				} else {
-					setMessage(debuggerStatus.getMessage(),
-							IMessageProvider.WARNING);
-				}
-			}
-		}
+		// Delegate validation to settings composite
 		if (debuggerSettingsSection != null)
 			debuggerSettingsSection.validate();
 	}
@@ -196,7 +177,7 @@ public class DebuggerCompositeFragment extends CompositeFragment {
 		if (debuggerOwner == null || debuggerId == null)
 			return;
 		IDebuggerSettings settings = DebuggerSettingsManager.INSTANCE
-				.findSettings(debuggerOwner, debuggerId);
+				.findSettings(debuggerOwner.getUniqueId(), debuggerId);
 		if (settings == null)
 			return;
 		if (debuggerSettingsSection != null) {
@@ -209,6 +190,12 @@ public class DebuggerCompositeFragment extends CompositeFragment {
 				.getBuilder(provider.getId());
 		debuggerSettingsSection = sectionBuilder
 				.build(this, debuggerSettingsWC);
+		if (!debuggerSettingsSection.canTest())
+			// ((GridData) debuggerTest.getLayoutData()).exclude = true;
+			debuggerTest.setVisible(false);
+		else
+			// ((GridData) debuggerTest.getLayoutData()).exclude = false;
+			debuggerTest.setVisible(true);
 		this.getParent().layout(true, true);
 	}
 
@@ -218,7 +205,7 @@ public class DebuggerCompositeFragment extends CompositeFragment {
 				.get(debuggerId);
 		if (debuggerSettingsWC == null) {
 			debuggerSettingsWC = DebuggerSettingsManager.INSTANCE
-					.createWorkingCopy(settings);
+					.fetchWorkingCopy(settings);
 			settingsWCBuffer.put(debuggerId, debuggerSettingsWC);
 		}
 		return debuggerSettingsWC;
@@ -230,14 +217,15 @@ public class DebuggerCompositeFragment extends CompositeFragment {
 		setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true));
 		Composite debuggerChoice = new Composite(this, SWT.NONE);
 		GridLayout dcLayout = new GridLayout();
-		dcLayout.numColumns = 2;
+		dcLayout.numColumns = 3;
 		debuggerChoice.setLayout(dcLayout);
-		debuggerChoice.setLayoutData(new GridData(GridData.FILL_HORIZONTAL));
+		debuggerChoice.setLayoutData(new GridData(SWT.LEFT, SWT.FILL, false,
+				false));
 		Label debuggerLabel = new Label(debuggerChoice, SWT.NONE);
 		debuggerLabel.setText("Debugger:"); //$NON-NLS-1$
 		debuggerLabel.setLayoutData(new GridData());
 		debuggerCombo = new Combo(debuggerChoice, SWT.DROP_DOWN | SWT.READ_ONLY);
-		GridData dcData = new GridData(SWT.LEFT, SWT.FILL, true, false);
+		GridData dcData = new GridData(SWT.LEFT, SWT.FILL, false, false);
 		debuggerCombo.setLayoutData(dcData);
 		debuggerCombo.addModifyListener(new ModifyListener() {
 			public void modifyText(ModifyEvent e) {
@@ -247,8 +235,23 @@ public class DebuggerCompositeFragment extends CompositeFragment {
 					updateItem();
 					// create settings panel
 					createSettings(modifiedValuesCache.debuggerId);
-					// Validate owner debugger data
+					// Validate debugger data
 					validate();
+				}
+			}
+		});
+		debuggerTest = SWTFactory.createPushButton(debuggerChoice,
+				Messages.DebuggerCompositeFragment_Test_button, null);
+		debuggerTest.addSelectionListener(new SelectionListener() {
+			@Override
+			public void widgetSelected(SelectionEvent e) {
+				widgetDefaultSelected(e);
+			}
+
+			@Override
+			public void widgetDefaultSelected(SelectionEvent e) {
+				if (debuggerSettingsSection != null) {
+					debuggerSettingsSection.performTest();
 				}
 			}
 		});

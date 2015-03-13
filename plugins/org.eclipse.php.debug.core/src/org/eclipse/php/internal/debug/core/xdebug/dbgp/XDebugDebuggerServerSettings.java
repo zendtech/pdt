@@ -10,13 +10,13 @@
  *******************************************************************************/
 package org.eclipse.php.internal.debug.core.xdebug.dbgp;
 
-import static org.eclipse.php.internal.debug.core.xdebug.XDebugPreferenceMgr.*;
+import static org.eclipse.php.internal.debug.core.xdebug.XDebugPreferenceMgr.XDEBUG_PREF_IDEKEY;
+import static org.eclipse.php.internal.debug.core.xdebug.XDebugPreferenceMgr.XDEBUG_PREF_PROXY;
 import static org.eclipse.php.internal.debug.core.xdebug.dbgp.XDebugDebuggerSettingsConstants.*;
 
 import java.util.HashMap;
 import java.util.Map;
 
-import org.eclipse.php.internal.core.IUniqueIdentityElement;
 import org.eclipse.php.internal.debug.core.debugger.AbstractDebuggerSettings;
 import org.eclipse.php.internal.debug.core.debugger.DebuggerSettingsKind;
 import org.eclipse.php.internal.debug.core.preferences.PHPDebuggersRegistry;
@@ -32,16 +32,16 @@ public class XDebugDebuggerServerSettings extends AbstractDebuggerSettings {
 	/**
 	 * See {@link AbstractDebuggerSettings}.
 	 */
-	public XDebugDebuggerServerSettings(IUniqueIdentityElement owner) {
-		super(owner);
+	public XDebugDebuggerServerSettings(String ownerId) {
+		super(ownerId);
 	}
 
 	/**
 	 * See {@link AbstractDebuggerSettings}.
 	 */
-	public XDebugDebuggerServerSettings(IUniqueIdentityElement owner,
+	public XDebugDebuggerServerSettings(String ownerId,
 			Map<String, String> attributes) {
-		super(owner, attributes);
+		super(ownerId, attributes);
 	}
 
 	/*

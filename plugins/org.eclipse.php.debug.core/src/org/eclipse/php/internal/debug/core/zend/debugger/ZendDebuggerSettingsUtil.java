@@ -15,7 +15,6 @@ import java.net.URL;
 
 import org.eclipse.php.internal.debug.core.debugger.DebuggerSettingsManager;
 import org.eclipse.php.internal.debug.core.debugger.IDebuggerSettings;
-import org.eclipse.php.internal.debug.core.preferences.PHPexeItem;
 import org.eclipse.php.internal.debug.core.zend.debugger.messages.DebugSessionStartedNotification;
 import org.eclipse.php.internal.server.core.Server;
 import org.eclipse.php.internal.server.core.manager.ServersManager;
@@ -28,16 +27,13 @@ import org.eclipse.php.internal.server.core.manager.ServersManager;
 @SuppressWarnings("restriction")
 public class ZendDebuggerSettingsUtil {
 
-	/**
-	 * 
-	 */
 	private ZendDebuggerSettingsUtil() {
 		// Private constructor - utility class
 	}
 
-	public static String getDebugHosts(Server phpServer) {
+	public static String getDebugHosts(String phpServerId) {
 		IDebuggerSettings debuggerSettings = DebuggerSettingsManager.INSTANCE
-				.findSettings(phpServer, ZendDebuggerConfiguration.ID);
+				.findSettings(phpServerId, ZendDebuggerConfiguration.ID);
 		String debugHosts = ""; //$NON-NLS-1$
 		if (debuggerSettings instanceof ZendDebuggerServerSettings) {
 			debugHosts = debuggerSettings
@@ -60,10 +56,11 @@ public class ZendDebuggerSettingsUtil {
 		int responseTimeout = -1;
 		try {
 			URL url = new URL(originalURL);
-			Server server = ServersManager.findServer(url);
+			Server server = ServersManager.findServer(url, false);
 			if (server != null) {
 				IDebuggerSettings debuggerSettings = DebuggerSettingsManager.INSTANCE
-						.findSettings(server, ZendDebuggerConfiguration.ID);
+						.findSettings(server.getUniqueId(),
+								ZendDebuggerConfiguration.ID);
 				String debugClientPort = null;
 				if (debuggerSettings instanceof ZendDebuggerServerSettings) {
 					debugClientPort = debuggerSettings
@@ -81,31 +78,12 @@ public class ZendDebuggerSettingsUtil {
 		return responseTimeout;
 	}
 
-	public static int getDebugPort(Server phpServer) {
+	public static int getDebugPort(String phpServerOrExeId) {
 		IDebuggerSettings debuggerSettings = DebuggerSettingsManager.INSTANCE
-				.findSettings(phpServer, ZendDebuggerConfiguration.ID);
+				.findSettings(phpServerOrExeId, ZendDebuggerConfiguration.ID);
 		String debugClientPort = null;
-		if (debuggerSettings instanceof ZendDebuggerServerSettings) {
-			debugClientPort = debuggerSettings
-					.getAttribute(ZendDebuggerSettingsConstants.PROP_CLIENT_PORT);
-		}
-		int debugPort = -1;
-		try {
-			debugPort = Integer.valueOf(debugClientPort);
-		} catch (Exception e) {
-			// ignore
-		}
-		return debugPort;
-	}
-
-	public static int getDebugPort(PHPexeItem phpExe) {
-		IDebuggerSettings debuggerSettings = DebuggerSettingsManager.INSTANCE
-				.findSettings(phpExe, ZendDebuggerConfiguration.ID);
-		String debugClientPort = null;
-		if (debuggerSettings instanceof ZendDebuggerExeSettings) {
-			debugClientPort = debuggerSettings
-					.getAttribute(ZendDebuggerSettingsConstants.PROP_CLIENT_PORT);
-		}
+		debugClientPort = debuggerSettings
+				.getAttribute(ZendDebuggerSettingsConstants.PROP_CLIENT_PORT);
 		int debugPort = -1;
 		try {
 			debugPort = Integer.valueOf(debugClientPort);
