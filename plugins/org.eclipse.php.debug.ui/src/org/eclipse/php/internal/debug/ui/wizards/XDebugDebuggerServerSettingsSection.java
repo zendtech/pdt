@@ -124,8 +124,6 @@ public class XDebugDebuggerServerSettingsSection implements
 		// return;
 		// }
 		// }
-		compositeFragment.setMessage(compositeFragment.getDescription(),
-				IMessageProvider.NONE);
 	}
 
 	private Composite createComposite() {

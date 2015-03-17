@@ -14,26 +14,18 @@ import static org.eclipse.php.internal.debug.core.zend.debugger.ZendDebuggerSett
 import static org.eclipse.php.internal.debug.core.zend.debugger.ZendDebuggerSettingsConstants.PROP_CLIENT_PORT;
 import static org.eclipse.php.internal.debug.core.zend.debugger.ZendDebuggerSettingsConstants.PROP_RESPONSE_TIMEOUT;
 
-import java.util.ArrayList;
-import java.util.Iterator;
-import java.util.List;
-
 import org.eclipse.jface.dialogs.IMessageProvider;
-import org.eclipse.jface.window.Window;
-import org.eclipse.php.internal.core.util.NetworkUtil;
-import org.eclipse.php.internal.core.util.NetworkUtil.NetworkAddress;
 import org.eclipse.php.internal.debug.core.debugger.IDebuggerSettingsWorkingCopy;
 import org.eclipse.php.internal.ui.wizards.CompositeFragment;
 import org.eclipse.swt.SWT;
-import org.eclipse.swt.custom.BusyIndicator;
 import org.eclipse.swt.events.ModifyEvent;
 import org.eclipse.swt.events.ModifyListener;
-import org.eclipse.swt.events.SelectionEvent;
-import org.eclipse.swt.events.SelectionListener;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
-import org.eclipse.swt.widgets.*;
-import org.eclipse.ui.PlatformUI;
+import org.eclipse.swt.widgets.Composite;
+import org.eclipse.swt.widgets.Group;
+import org.eclipse.swt.widgets.Label;
+import org.eclipse.swt.widgets.Text;
 
 /**
  * Zend debugger settings section for PHP server.
@@ -145,7 +137,7 @@ public class ZendDebuggerServerSettingsSection implements
 		// Connection group
 		Group connectionGroup = new Group(settingsComposite, SWT.NONE);
 		connectionGroup.setFont(compositeFragment.getFont());
-		GridLayout cgLayout = new GridLayout(3, false);
+		GridLayout cgLayout = new GridLayout(2, false);
 		cgLayout.marginTop = 5;
 		connectionGroup.setLayout(cgLayout);
 		GridData cgGridData = new GridData(GridData.FILL_HORIZONTAL);
@@ -167,29 +159,12 @@ public class ZendDebuggerServerSettingsSection implements
 				validate();
 			}
 		});
-		Button configureIPs = new Button(connectionGroup, SWT.FLAT);
-		configureIPs
-				.setText(Messages.ZendDebuggerServerSettingsSection_Configure_button);
-		configureIPs.addSelectionListener(new SelectionListener() {
-			@Override
-			public void widgetSelected(SelectionEvent e) {
-				widgetDefaultSelected(e);
-			}
-
-			@Override
-			public void widgetDefaultSelected(SelectionEvent e) {
-				String clientIPs = getClientIPs();
-				if (!clientIPs.isEmpty())
-					clientIpText.setText(clientIPs);
-			}
-		});
 		// Client port
 		Label clientPortLabel = new Label(connectionGroup, SWT.None);
 		clientPortLabel
 				.setText(Messages.ZendDebuggerServerSettingsSection_Client_port);
 		final Text clientPortText = new Text(connectionGroup, SWT.BORDER);
 		GridData cptLayoutData = new GridData(GridData.FILL_HORIZONTAL);
-		cptLayoutData.horizontalSpan = 2;
 		clientPortText.setLayoutData(cptLayoutData);
 		clientPortText.setText(settingsWorkingCopy
 				.getAttribute(PROP_CLIENT_PORT));
@@ -206,7 +181,6 @@ public class ZendDebuggerServerSettingsSection implements
 				.setText(Messages.ZendDebuggerServerSettingsSection_Response_timeout);
 		final Text responseTimeoutText = new Text(connectionGroup, SWT.BORDER);
 		GridData rttLayoutData = new GridData(GridData.FILL_HORIZONTAL);
-		rttLayoutData.horizontalSpan = 2;
 		responseTimeoutText.setLayoutData(rttLayoutData);
 		responseTimeoutText.setText(settingsWorkingCopy
 				.getAttribute(PROP_RESPONSE_TIMEOUT));
@@ -221,30 +195,6 @@ public class ZendDebuggerServerSettingsSection implements
 		// Initial validation
 		validate();
 		return settingsComposite;
-	}
-
-	private String getClientIPs() {
-		final List<NetworkAddress> clientIPs = new ArrayList<NetworkAddress>();
-		BusyIndicator.showWhile(PlatformUI.getWorkbench().getDisplay(),
-				new Runnable() {
-					@Override
-					public void run() {
-						clientIPs.addAll(NetworkUtil.getAllAddresses());
-					}
-				});
-		ConfigureHostsDialog configureIPs = new ConfigureHostsDialog(clientIPs);
-		int choice = configureIPs.open();
-		if (choice != Window.OK)
-			return ""; //$NON-NLS-1$
-		List<NetworkAddress> selectdIPs = configureIPs.getSelectedIPs();
-		StringBuffer stringBuffer = new StringBuffer();
-		Iterator<NetworkAddress> ipsIterator = selectdIPs.iterator();
-		if (ipsIterator.hasNext())
-			stringBuffer.append(ipsIterator.next().getIP());
-		while (ipsIterator.hasNext()) {
-			stringBuffer.append(", " + ipsIterator.next().getIP()); //$NON-NLS-1$
-		}
-		return stringBuffer.toString();
 	}
 
 }

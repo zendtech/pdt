@@ -173,12 +173,13 @@ public enum DebuggerSettingsManager {
 	 */
 	public synchronized void startup() {
 		if (!active) {
-			ServersManager.addManagerListener(ownersListener);
-			PHPexes.getInstance().addPHPExesListener(ownersListener);
+			// Initialize cache
 			for (String debuggerId : PHPDebuggersRegistry.getDebuggersIds()) {
 				settingsCache.put(debuggerId, DebuggerSettingsProviderRegistry
 						.getProvider(debuggerId));
 			}
+			ServersManager.addManagerListener(ownersListener);
+			PHPexes.getInstance().addPHPExesListener(ownersListener);
 			active = true;
 		}
 	}

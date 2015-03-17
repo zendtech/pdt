@@ -99,8 +99,6 @@ public class ZendDebuggerExeSettingsSection implements IDebuggerSettingsSection 
 							IMessageProvider.ERROR);
 			return;
 		}
-		compositeFragment.setMessage(compositeFragment.getDescription(),
-				IMessageProvider.NONE);
 	}
 
 	private Composite createComposite() {

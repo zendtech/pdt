@@ -4,14 +4,6 @@ import org.eclipse.osgi.util.NLS;
 
 public class Messages extends NLS {
 	private static final String BUNDLE_NAME = "org.eclipse.php.internal.debug.ui.wizards.messages"; //$NON-NLS-1$
-	public static String ConfigureIPsDialog_Address_column;
-	public static String ConfigureIPsDialog_Cancel_button;
-	public static String ConfigureIPsDialog_Configure_client_IPs;
-	public static String ConfigureIPsDialog_Deselect_all_button;
-	public static String ConfigureIPsDialog_OK_button;
-	public static String ConfigureIPsDialog_Select_all_button;
-	public static String ConfigureIPsDialog_The_following_IPs_have_been_detected;
-	public static String ConfigureIPsDialog_Type_column;
 	public static String DebuggerCompositeFragment_Configure_server_debugger_settings;
 	public static String DebuggerCompositeFragment_Debugger;
 	public static String DebuggerCompositeFragment_Edit_debugger_settings;

@@ -135,6 +135,7 @@ public class DebuggerCompositeFragment extends CompositeFragment {
 	 */
 	@Override
 	public void validate() {
+		setMessage(getDescription(), IMessageProvider.NONE);
 		// Validation is being done in settings composite
 		IUniqueIdentityElement data = (IUniqueIdentityElement) getData();
 		if (data instanceof PHPexeItem) {
@@ -157,8 +158,6 @@ public class DebuggerCompositeFragment extends CompositeFragment {
 					setMessage(debuggerStatus.getMessage(),
 							IMessageProvider.WARNING);
 				}
-			} else {
-				setMessage(getDescription(), IMessageProvider.NONE);
 			}
 		}
 		if (debuggerSettingsSection != null)
@@ -202,7 +201,8 @@ public class DebuggerCompositeFragment extends CompositeFragment {
 				.getProvider(debuggerId);
 		IDebuggerSettingsSectionBuilder sectionBuilder = DebuggerSettingsSectionBuildersRegistry
 				.getBuilder(provider.getId());
-		debuggerSettingsSection = sectionBuilder.build(this, debuggerSettingsWC);
+		debuggerSettingsSection = sectionBuilder
+				.build(this, debuggerSettingsWC);
 		this.getParent().layout(true, true);
 	}
 
