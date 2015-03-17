@@ -69,6 +69,7 @@ public class DebuggerCompositeFragment extends CompositeFragment {
 	private IDebuggerSettingsWorkingCopy debuggerSettingsWC;
 	private Map<String, IDebuggerSettingsWorkingCopy> settingsWCBuffer = new HashMap<String, IDebuggerSettingsWorkingCopy>();
 	private String detectedDebuggerId = null;
+	private Map<String, IStatus> debuggersStatus = new HashMap<String, IStatus>();
 
 	/**
 	 * Creates new debugger composite fragment.
@@ -144,8 +145,13 @@ public class DebuggerCompositeFragment extends CompositeFragment {
 			AbstractDebuggerConfiguration[] debuggers = PHPDebuggersRegistry
 					.getDebuggersConfigurations();
 			for (AbstractDebuggerConfiguration debugger : debuggers) {
-				if (exeItem.getDebuggerID().equals(debugger.getDebuggerId())) {
-					debuggerStatus = debugger.validate(exeItem);
+				String debuggerId = exeItem.getDebuggerID();
+				if (debuggerId.equals(debugger.getDebuggerId())) {
+					debuggerStatus = debuggersStatus.get(debuggerId);
+					if (debuggerStatus == null) {
+						debuggerStatus = debugger.validate(exeItem);
+						debuggersStatus.put(debuggerId, debuggerStatus);
+					}
 				}
 			}
 			if (debuggerStatus.getSeverity() != IStatus.OK) {

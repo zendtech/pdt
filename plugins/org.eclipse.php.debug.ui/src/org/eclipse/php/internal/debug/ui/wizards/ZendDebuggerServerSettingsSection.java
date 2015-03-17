@@ -120,8 +120,6 @@ public class ZendDebuggerServerSettingsSection implements
 							IMessageProvider.ERROR);
 			return;
 		}
-		compositeFragment.setMessage(compositeFragment.getDescription(),
-				IMessageProvider.NONE);
 	}
 
 	private Composite createComposite() {
@@ -156,7 +154,7 @@ public class ZendDebuggerServerSettingsSection implements
 			public void modifyText(ModifyEvent e) {
 				String clientIp = clientIpText.getText();
 				settingsWorkingCopy.setAttribute(PROP_CLIENT_IP, clientIp);
-				validate();
+				compositeFragment.validate();
 			}
 		});
 		// Client port
@@ -172,7 +170,7 @@ public class ZendDebuggerServerSettingsSection implements
 			public void modifyText(ModifyEvent e) {
 				String port = clientPortText.getText();
 				settingsWorkingCopy.setAttribute(PROP_CLIENT_PORT, port);
-				validate();
+				compositeFragment.validate();
 			}
 		});
 		// Response timeout
@@ -189,11 +187,11 @@ public class ZendDebuggerServerSettingsSection implements
 				String responseTimeout = responseTimeoutText.getText();
 				settingsWorkingCopy.setAttribute(PROP_RESPONSE_TIMEOUT,
 						responseTimeout);
-				validate();
+				compositeFragment.validate();
 			}
 		});
 		// Initial validation
-		validate();
+		compositeFragment.validate();
 		return settingsComposite;
 	}
 

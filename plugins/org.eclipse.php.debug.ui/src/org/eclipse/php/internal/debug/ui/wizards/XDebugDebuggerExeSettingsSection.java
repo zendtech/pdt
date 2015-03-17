@@ -158,7 +158,7 @@ public class XDebugDebuggerExeSettingsSection implements
 			public void modifyText(ModifyEvent e) {
 				String port = clientPortText.getText();
 				settingsWorkingCopy.setAttribute(PROP_CLIENT_PORT, port);
-				validate();
+				compositeFragment.validate();
 			}
 		});
 		// Advanced sub-group
@@ -189,7 +189,7 @@ public class XDebugDebuggerExeSettingsSection implements
 			public void modifyText(ModifyEvent e) {
 				// String ideKey = proxyIdeKeyText.getText();
 				// settingsWorkingCopy.setAttribute(PROP_PROXY_IDE_KEY, ideKey);
-				validate();
+				compositeFragment.validate();
 			}
 		});
 		// Proxy address
@@ -206,7 +206,7 @@ public class XDebugDebuggerExeSettingsSection implements
 				// String proxyAddress = proxyAddressText.getText();
 				// settingsWorkingCopy.setAttribute(PROP_PROXY_ADDRESS,
 				// proxyAddress);
-				validate();
+				compositeFragment.validate();
 			}
 		});
 		// Set up enabled/disabled for proxy
@@ -222,7 +222,7 @@ public class XDebugDebuggerExeSettingsSection implements
 				proxyAddressText.setEnabled(enableProxy.getSelection());
 				// settingsWorkingCopy.setAttribute(PROP_PROXY_ENABLE,
 				// String.valueOf(enableProxy.getSelection()));
-				validate();
+				compositeFragment.validate();
 			}
 		});
 		// boolean isProxyEnabled = Boolean.valueOf(settingsWorkingCopy
@@ -239,7 +239,7 @@ public class XDebugDebuggerExeSettingsSection implements
 		proxyIdeKeyLabel.setEnabled(false);
 		proxyIdeKeyText.setEnabled(false);
 
-		validate();
+		compositeFragment.validate();
 		return settingsComposite;
 
 	}

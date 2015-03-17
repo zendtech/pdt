@@ -134,11 +134,11 @@ public class ZendDebuggerExeSettingsSection implements IDebuggerSettingsSection 
 			public void modifyText(ModifyEvent e) {
 				String port = clientPortText.getText();
 				settingsWorkingCopy.setAttribute(PROP_CLIENT_PORT, port);
-				validate();
+				compositeFragment.validate();
 			}
 		});
 		// Initial validate
-		validate();
+		compositeFragment.validate();
 		return settingsComposite;
 	}
 
