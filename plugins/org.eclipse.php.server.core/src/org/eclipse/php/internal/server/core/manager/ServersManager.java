@@ -399,12 +399,11 @@ public class ServersManager implements PropertyChangeListener, IAdaptable {
 		// from the preferences (XML).
 		if (server == null) {
 			String serverName = null;
-			IEclipsePreferences preferences = InstanceScope.INSTANCE
-					.getNode(Activator.PLUGIN_ID);
 			if (project == null) {
 				// Get the default workspace server.
-				serverName = preferences.get(DEFAULT_SERVER_PREFERENCES_KEY,
-						(String) null);
+				Preferences prefs = Activator.getDefault()
+						.getPluginPreferences();
+				serverName = prefs.getString(DEFAULT_SERVER_PREFERENCES_KEY);
 			} else {
 				// Get the projects' default server
 				IScopeContext[] preferenceScopes = createPreferenceScopes(project);
@@ -413,8 +412,10 @@ public class ServersManager implements PropertyChangeListener, IAdaptable {
 				if (serverName == null) {
 					// Take the workspace Server and make it the project's
 					// default server
-					serverName = preferences.get(
-							DEFAULT_SERVER_PREFERENCES_KEY, (String) null);
+					Preferences prefs = Activator.getDefault()
+							.getPluginPreferences();
+					serverName = prefs
+							.getString(DEFAULT_SERVER_PREFERENCES_KEY);
 				}
 			}
 			if (serverName != null && !"".equals(serverName)) { //$NON-NLS-1$
@@ -589,18 +590,13 @@ public class ServersManager implements PropertyChangeListener, IAdaptable {
 	}
 
 	private void innerSaveDefaultServer(IProject project, Server server) {
-		IEclipsePreferences preferences = InstanceScope.INSTANCE
-				.getNode(Activator.PLUGIN_ID);
+		Preferences prefs = Activator.getDefault().getPluginPreferences();
 		if (project == null && server != null) {
-			preferences.put(DEFAULT_SERVER_PREFERENCES_KEY, server.getName());
-			try {
-				preferences.flush();
-			} catch (BackingStoreException e) {
-				Logger.logException(e);
-			}
+			prefs.setValue(DEFAULT_SERVER_PREFERENCES_KEY, server.getName());
+			Activator.getDefault().savePluginPreferences();
 		} else if (project != null) {
-			String defaultWorkspaceServer = preferences.get(
-					DEFAULT_SERVER_PREFERENCES_KEY, (String) null);
+			String defaultWorkspaceServer = prefs
+					.getString(DEFAULT_SERVER_PREFERENCES_KEY);
 			IScopeContext[] scopeContexts = createPreferenceScopes(project);
 			IEclipsePreferences prefsNode = scopeContexts[0]
 					.getNode(NODE_QUALIFIER);
