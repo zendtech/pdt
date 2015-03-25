@@ -85,7 +85,7 @@ public class DebuggerCompositeFragment extends CompositeFragment {
 		setDisplayName(Messages.DebuggerCompositeFragment_Debugger);
 		setTitle(Messages.DebuggerCompositeFragment_Edit_debugger_settings);
 		controlHandler.setTitle(getTitle());
-		setDescription(Messages.DebuggerCompositeFragment_Configure_server_debugger_settings);
+		setDescription(Messages.DebuggerCompositeFragment_Configure_debugger_settings);
 		controlHandler.setDescription(getDescription());
 		setImageDescriptor(PHPDebugUIImages
 				.getImageDescriptor(PHPDebugUIImages.IMG_WIZBAN_DEBUG_SERVER));
@@ -178,23 +178,24 @@ public class DebuggerCompositeFragment extends CompositeFragment {
 			return;
 		IDebuggerSettings settings = DebuggerSettingsManager.INSTANCE
 				.findSettings(debuggerOwner.getUniqueId(), debuggerId);
-		if (settings == null)
-			return;
 		if (debuggerSettingsSection != null) {
 			debuggerSettingsSection.getComposite().dispose();
 		}
-		debuggerSettingsWC = getSettingsWC(debuggerId, settings);
-		IDebuggerSettingsProvider provider = DebuggerSettingsProviderRegistry
-				.getProvider(debuggerId);
-		IDebuggerSettingsSectionBuilder sectionBuilder = DebuggerSettingsSectionBuildersRegistry
-				.getBuilder(provider.getId());
-		debuggerSettingsSection = sectionBuilder
-				.build(this, debuggerSettingsWC);
+		if (settings == null) {
+			debuggerSettingsSection = new DebuggerUnsupportedSettingsSection(
+					this);
+		} else {
+			debuggerSettingsWC = getSettingsWC(debuggerId, settings);
+			IDebuggerSettingsProvider provider = DebuggerSettingsProviderRegistry
+					.getProvider(debuggerId);
+			IDebuggerSettingsSectionBuilder sectionBuilder = DebuggerSettingsSectionBuildersRegistry
+					.getBuilder(provider.getId());
+			debuggerSettingsSection = sectionBuilder.build(this,
+					debuggerSettingsWC);
+		}
 		if (!debuggerSettingsSection.canTest())
-			// ((GridData) debuggerTest.getLayoutData()).exclude = true;
 			debuggerTest.setVisible(false);
 		else
-			// ((GridData) debuggerTest.getLayoutData()).exclude = false;
 			debuggerTest.setVisible(true);
 		this.getParent().layout(true, true);
 	}

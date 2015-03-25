@@ -456,12 +456,7 @@ public class InstalledPHPsBlock {
 			return;
 		}
 		// Update original item
-		phpExe.setName(phpExeToEdit.getName());
-		phpExe.setExecutable(phpExeToEdit.getExecutable());
-		phpExe.setINILocation(phpExeToEdit.getINILocation());
-		phpExe.setDebuggerID(phpExeToEdit.getDebuggerID());
-		phpExe.setSapiType(phpExeToEdit.getSapiType());
-		phpExe.setLoadDefaultINI(phpExeToEdit.isLoadDefaultINI());
+		PHPexes.getInstance().updateItem(phpExe, phpExeToEdit);
 		fPHPExeList.refresh();
 		commitChanges();
 	}

@@ -81,6 +81,13 @@ public class PHPsSearchResultDialog extends MessageDialog {
 		this.results = results;
 	}
 
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see
+	 * org.eclipse.jface.dialogs.MessageDialog#createCustomArea(org.eclipse.
+	 * swt.widgets.Composite)
+	 */
 	@Override
 	protected Control createCustomArea(Composite parent) {
 		return createResultTable(parent);
@@ -156,6 +163,11 @@ public class PHPsSearchResultDialog extends MessageDialog {
 		return composite;
 	}
 
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see org.eclipse.jface.dialogs.MessageDialog#buttonPressed(int)
+	 */
 	@Override
 	protected void buttonPressed(int buttonId) {
 		// OK pressed
@@ -182,11 +194,11 @@ public class PHPsSearchResultDialog extends MessageDialog {
 		return phpExecs;
 	}
 
-	// @Override
-	// protected Point getInitialSize() {
-	// return new Point(720, 440);
-	// }
-
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see org.eclipse.jface.dialogs.Dialog#isResizable()
+	 */
 	@Override
 	protected boolean isResizable() {
 		return true;

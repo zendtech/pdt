@@ -9,14 +9,10 @@
  *     IBM Corporation - initial API and implementation
  *     Zend Technologies
  *******************************************************************************/
-/**
- * 
- */
 package org.eclipse.php.internal.debug.core.xdebug.communication;
 
 import java.net.Socket;
 import java.util.ArrayList;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
@@ -32,13 +28,13 @@ import org.eclipse.php.debug.daemon.communication.ICommunicationDaemon;
 import org.eclipse.php.internal.debug.core.IPHPDebugConstants;
 import org.eclipse.php.internal.debug.core.PHPDebugCoreMessages;
 import org.eclipse.php.internal.debug.core.PHPDebugPlugin;
+import org.eclipse.php.internal.debug.core.PHPDebugUtil;
 import org.eclipse.php.internal.debug.core.daemon.AbstractDebuggerCommunicationDaemon;
 import org.eclipse.php.internal.debug.core.debugger.DebuggerSettingsManager;
 import org.eclipse.php.internal.debug.core.debugger.IDebuggerSettings;
 import org.eclipse.php.internal.debug.core.debugger.IDebuggerSettingsListener;
 import org.eclipse.php.internal.debug.core.pathmapper.PathMapper;
 import org.eclipse.php.internal.debug.core.pathmapper.PathMapperRegistry;
-import org.eclipse.php.internal.debug.core.preferences.PHPDebugCorePreferenceNames;
 import org.eclipse.php.internal.debug.core.preferences.PHPProjectPreferences;
 import org.eclipse.php.internal.debug.core.sourcelookup.PHPSourceLookupDirector;
 import org.eclipse.php.internal.debug.core.xdebug.IDELayerFactory;
@@ -333,8 +329,7 @@ public class XDebugCommunicationDaemon implements ICommunicationDaemon {
 	private class DefaultPortListener implements IPreferenceChangeListener {
 		@Override
 		public void preferenceChange(PreferenceChangeEvent event) {
-			if (event.getKey().equals(
-					PHPDebugCorePreferenceNames.ZEND_DEBUG_PORT)) {
+			if (event.getKey().equals(XDebugPreferenceMgr.XDEBUG_PREF_PORT)) {
 				reset();
 			}
 		}
@@ -434,26 +429,6 @@ public class XDebugCommunicationDaemon implements ICommunicationDaemon {
 		return true;
 	}
 
-	private Set<Integer> getPorts() {
-		Set<Integer> ports = new HashSet<Integer>();
-		// Get default port from preferences first
-		Integer defaultPort = PHPDebugPlugin.getDebugPort(getDebuggerID());
-		ports.add(defaultPort);
-		// Get ports from all of debugger dedicated settings
-		for (IDebuggerSettings settings : DebuggerSettingsManager.INSTANCE
-				.findSettings(getDebuggerID())) {
-			String clientPort = settings
-					.getAttribute(XDebugDebuggerSettingsConstants.PROP_CLIENT_PORT);
-			try {
-				Integer dedicatedPort = Integer.valueOf(clientPort);
-				ports.add(dedicatedPort);
-			} catch (Exception e) {
-				// ignore
-			}
-		}
-		return ports;
-	}
-
 	private void registerListeners() {
 		if (defaultPortListener == null) {
 			defaultPortListener = new DefaultPortListener();
@@ -479,7 +454,7 @@ public class XDebugCommunicationDaemon implements ICommunicationDaemon {
 	}
 
 	private synchronized void reset() {
-		Set<Integer> ports = getPorts();
+		Set<Integer> ports = PHPDebugUtil.getDebugPorts(getDebuggerID());
 		List<AbstractDebuggerCommunicationDaemon> daemonsToSet = new ArrayList<AbstractDebuggerCommunicationDaemon>();
 		// Shutdown daemons that should not listen anymore
 		for (AbstractDebuggerCommunicationDaemon daemon : daemons) {

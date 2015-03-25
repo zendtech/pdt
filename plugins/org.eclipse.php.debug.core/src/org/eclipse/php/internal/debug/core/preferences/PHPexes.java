@@ -148,6 +148,48 @@ public class PHPexes {
 	}
 
 	/**
+	 * Updates original item with the data from working copy.
+	 * 
+	 * @param original
+	 * @param copy
+	 */
+	public void updateItem(PHPexeItem original, PHPexeItem copy) {
+		// Remove binding from debuggers ID map
+		String debuggerID = original.getDebuggerID();
+		HashMap<String, PHPexeItem> exes = items.get(debuggerID);
+		PHPexeItem removedItem = null;
+		if (exes != null) {
+			removedItem = exes.remove(original.getName());
+		}
+		if (!original.getDebuggerID().equals(copy.getDebuggerID())
+				&& removedItem != null && removedItem.isDefault()) {
+			defaultItems.remove(debuggerID);
+			Iterator<PHPexeItem> iterator = exes.values().iterator();
+			if (iterator.hasNext()) {
+				setDefaultItem(iterator.next());
+			}
+		}
+		// Update original item
+		original.setName(copy.getName());
+		original.setExecutable(copy.getExecutable());
+		original.setINILocation(copy.getINILocation());
+		original.setDebuggerID(copy.getDebuggerID());
+		original.setSapiType(copy.getSapiType());
+		original.setLoadDefaultINI(copy.isLoadDefaultINI());
+		// Add new binding after update
+		debuggerID = original.getDebuggerID();
+		exes = items.get(debuggerID);
+		if (exes == null) {
+			exes = new HashMap<String, PHPexeItem>();
+			items.put(debuggerID, exes);
+		}
+		if (exes.isEmpty()) {
+			setDefaultItem(original);
+		}
+		exes.put(original.getName(), original);
+	}
+
+	/**
 	 * Returns the default item for the specified debugger.
 	 * 
 	 * @return The default PHPexeItem for the given debugger, or null if no such

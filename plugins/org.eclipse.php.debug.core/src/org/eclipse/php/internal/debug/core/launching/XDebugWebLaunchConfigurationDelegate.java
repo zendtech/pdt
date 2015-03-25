@@ -130,7 +130,7 @@ public class XDebugWebLaunchConfigurationDelegate extends
 			String ideKey = null;
 			DBGpProxyHandler proxyHandler = DBGpProxyHandlersManager.INSTANCE
 					.getHandler(server.getUniqueId());
-			if (proxyHandler.useProxy()) {
+			if (proxyHandler != null && proxyHandler.useProxy()) {
 				ideKey = proxyHandler.getCurrentIdeKey();
 				if (proxyHandler.registerWithProxy() == false) {
 					displayErrorMessage(PHPDebugCoreMessages.XDebug_WebLaunchConfigurationDelegate_2

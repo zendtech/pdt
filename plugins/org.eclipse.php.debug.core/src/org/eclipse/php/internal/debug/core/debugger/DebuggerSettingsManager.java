@@ -117,7 +117,8 @@ public enum DebuggerSettingsManager {
 			for (String debuggerId : PHPDebuggersRegistry.getDebuggersIds()) {
 				IDebuggerSettings settings = findSettings(event.getPHPExeItem()
 						.getUniqueId(), debuggerId);
-				save(settings);
+				if (settings != null)
+					save(settings);
 			}
 		}
 
@@ -126,7 +127,8 @@ public enum DebuggerSettingsManager {
 			for (String debuggerId : PHPDebuggersRegistry.getDebuggersIds()) {
 				IDebuggerSettings settings = findSettings(event.getPHPExeItem()
 						.getUniqueId(), debuggerId);
-				delete(settings);
+				if (settings != null)
+					delete(settings);
 			}
 		}
 
@@ -135,7 +137,8 @@ public enum DebuggerSettingsManager {
 			for (String debuggerId : PHPDebuggersRegistry.getDebuggersIds()) {
 				IDebuggerSettings settings = findSettings(event.getServer()
 						.getUniqueId(), debuggerId);
-				save(settings);
+				if (settings != null)
+					save(settings);
 			}
 		}
 
@@ -144,7 +147,8 @@ public enum DebuggerSettingsManager {
 			for (String debuggerId : PHPDebuggersRegistry.getDebuggersIds()) {
 				IDebuggerSettings settings = findSettings(event.getServer()
 						.getUniqueId(), debuggerId);
-				delete(settings);
+				if (settings != null)
+					delete(settings);
 			}
 		}
 
@@ -184,10 +188,17 @@ public enum DebuggerSettingsManager {
 	public synchronized void shutdown() {
 		ServersManager.removeManagerListener(ownersListener);
 		PHPexes.getInstance().removePHPExesListener(ownersListener);
+		for (IDebuggerSettingsProvider provider : settingsCache.values()) {
+			if (provider instanceof AbstractDebuggerSettingsProvider) {
+				((AbstractDebuggerSettingsProvider) provider).cleanup();
+			}
+		}
 	}
 
 	/**
 	 * Finds and returns debugger settings for given debugger type and owner.
+	 * May return <code>null</code> if there is no settings provider for
+	 * particular debugger type.
 	 * 
 	 * @param ownerId
 	 * @param debuggerId
@@ -195,6 +206,9 @@ public enum DebuggerSettingsManager {
 	 */
 	public IDebuggerSettings findSettings(String ownerId, String debuggerId) {
 		IDebuggerSettingsProvider provider = settingsCache.get(debuggerId);
+		if (provider == null)
+			// There is no provider registered
+			return null;
 		IDebuggerSettings settings = provider.get(ownerId);
 		// Check if there is any pending working copy
 		IDebuggerSettingsWorkingCopy pendingCopy = findWorkingCopy(settings);
@@ -210,7 +224,11 @@ public enum DebuggerSettingsManager {
 	 * @return list of debugger settings
 	 */
 	public List<IDebuggerSettings> findSettings(String debuggerId) {
-		return settingsCache.get(debuggerId).getAll();
+		IDebuggerSettingsProvider provider = settingsCache.get(debuggerId);
+		if (provider == null)
+			// There is no provider registered
+			return new ArrayList<IDebuggerSettings>();
+		return provider.getAll();
 	}
 
 	/**

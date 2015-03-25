@@ -19,19 +19,25 @@ import org.eclipse.php.internal.server.core.Server;
 import org.eclipse.php.internal.server.core.manager.ServersManager;
 
 /**
- * 
+ * DBGp proxy handlers manager.
  * 
  * @author Bartlomiej Laczkowski
  */
 @SuppressWarnings("restriction")
 public enum DBGpProxyHandlersManager {
 
+	/**
+	 * Default instance.
+	 */
 	INSTANCE;
 
 	private final Map<String, DBGpProxyHandler> handlers = new HashMap<String, DBGpProxyHandler>();
 
+	/**
+	 * Starts up this manager.
+	 */
 	public synchronized void startup() {
-		// Cache all possible proxy handlers
+		// Cache all possible proxy handlers (XDebug only)
 		for (PHPexeItem owner : PHPexes.getInstance().getAllItems()) {
 			if (XDebugDebuggerConfiguration.ID.equals(owner.getDebuggerID())) {
 				registerHandler(owner.getUniqueId());
@@ -44,6 +50,9 @@ public enum DBGpProxyHandlersManager {
 		}
 	}
 
+	/**
+	 * Shuts down this manager.
+	 */
 	public synchronized void shutdown() {
 		for (DBGpProxyHandler handler : handlers.values()) {
 			handler.unregister();
@@ -51,10 +60,23 @@ public enum DBGpProxyHandlersManager {
 		}
 	}
 
+	/**
+	 * Finds and returns DBGp proxy handler for given owner.
+	 * 
+	 * @param ownerId
+	 * @return DBGp proxy handler
+	 */
 	public DBGpProxyHandler getHandler(String ownerId) {
 		return handlers.get(ownerId);
 	}
 
+	/**
+	 * Registers new DBGp proxy handler for given owner.
+	 * 
+	 * @param ownerId
+	 * @return <code>true</code> if was already registered, <code>false</code>
+	 *         otherwise
+	 */
 	public boolean registerHandler(String ownerId) {
 		DBGpProxyHandler handler = handlers.get(ownerId);
 		if (handler == null) {

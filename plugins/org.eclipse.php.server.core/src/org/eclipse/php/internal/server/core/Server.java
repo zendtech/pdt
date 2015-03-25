@@ -34,7 +34,6 @@ public class Server implements IXMLPreferencesStorable, IAdaptable,
 
 	// Used as a root element name when saving and loading the preferences.
 	public static final String SERVER_ELEMENT = "server"; //$NON-NLS-1$
-
 	// Server properties.
 	public static final String UNIQUE_ID = "id"; //$NON-NLS-1$
 	public static final String NAME = "name"; //$NON-NLS-1$

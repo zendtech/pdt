@@ -72,18 +72,9 @@ public abstract class AbstractDebuggerSettingsProvider implements
 	}
 
 	private final Map<String, IDebuggerSettings> settingsCache = new HashMap<String, IDebuggerSettings>();
-	private final Map<String, IDebuggerSettings> defaultSettingsCache = new HashMap<String, IDebuggerSettings>();
+	private final Map<String, IDebuggerSettings> defaultsCache = new HashMap<String, IDebuggerSettings>();
+	private boolean cleanup = false;
 	private String id;
-
-	/**
-	 * Sets this provider ID. Should only be used by
-	 * {@link DebuggerSettingsProviderRegistry} class.
-	 * 
-	 * @param id
-	 */
-	void setId(String id) {
-		this.id = id;
-	}
 
 	/*
 	 * (non-Javadoc)
@@ -108,10 +99,10 @@ public abstract class AbstractDebuggerSettingsProvider implements
 	public IDebuggerSettings get(String ownerId) {
 		IDebuggerSettings settings = settingsCache.get(ownerId);
 		if (settings == null) {
-			settings = defaultSettingsCache.get(ownerId);
+			settings = defaultsCache.get(ownerId);
 			if (settings == null) {
 				settings = createSettings(getKind(ownerId), ownerId);
-				defaultSettingsCache.put(ownerId, settings);
+				defaultsCache.put(ownerId, settings);
 			}
 		}
 		return settings;
@@ -157,7 +148,7 @@ public abstract class AbstractDebuggerSettingsProvider implements
 
 	/**
 	 * Implementors should create and return the appropriate settings taking
-	 * into account the provided setting kind and debugger settings owner.
+	 * into account the provided settings kind and debugger owner unique ID.
 	 * 
 	 * @param kind
 	 * @param ownerId
@@ -198,18 +189,19 @@ public abstract class AbstractDebuggerSettingsProvider implements
 		owner = PHPexes.getInstance().findItem(ownerId);
 		if (owner != null)
 			return DebuggerSettingsKind.PHP_EXE;
+		// Owner is being created
 		if (owner == null) {
 			if (ownerId.startsWith(Server.ID_PREFIX))
 				return DebuggerSettingsKind.PHP_SERVER;
 			if (ownerId.startsWith(PHPexeItem.ID_PREFIX))
 				return DebuggerSettingsKind.PHP_EXE;
 		}
-		// Does not exist?
+		// Should not happen
 		return DebuggerSettingsKind.UNKNOWN;
 	}
 
 	/**
-	 * Creates and hooks settings during provider startup, if those don't exist
+	 * Creates and hooks settings during provider startup if those don't exist
 	 * yet for persistent PHP servers and executable configurations.
 	 */
 	private void hookSettings() {
@@ -225,6 +217,39 @@ public abstract class AbstractDebuggerSettingsProvider implements
 					DebuggerSettingsKind.PHP_SERVER, owner.getUniqueId());
 			save(settings);
 		}
+	}
+
+	/**
+	 * Checks if given owner exists.
+	 * 
+	 * @param ownerId
+	 * @return <code>true</code> if given owner exists, <code>false</code>
+	 *         otherwise
+	 */
+	private boolean exists(String ownerId) {
+		// Check if owner with given ID exists
+		if (PHPexes.getInstance().findItem(ownerId) == null
+				&& ServersManager.findServer(ownerId) == null)
+			return false;
+		return true;
+	}
+
+	/**
+	 * Sets this provider ID. Should only be used by
+	 * {@link DebuggerSettingsProviderRegistry} class.
+	 * 
+	 * @param id
+	 */
+	void setId(String id) {
+		this.id = id;
+	}
+
+	/**
+	 * Rewrite settings if there is a need.
+	 */
+	void cleanup() {
+		if (cleanup)
+			save();
 	}
 
 	/**
@@ -263,6 +288,14 @@ public abstract class AbstractDebuggerSettingsProvider implements
 					String value = (String) settings.get(key);
 					attributes.put(key, value);
 				}
+			}
+			/*
+			 * Do not restore settings if somehow the related owner doesn't
+			 * exist anymore. Set cleanup flag to remove trashes on shutdown.
+			 */
+			if (!exists(ownerId)) {
+				cleanup = true;
+				continue;
 			}
 			IDebuggerSettings restoredSettings = restoreSettings(ownerId,
 					attributes);

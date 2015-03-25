@@ -357,6 +357,7 @@ public class ServerCompositeFragment extends CompositeFragment {
 			Server server = getServer();
 			Server originalServer = ServersManager.findServer(server
 					.getUniqueId());
+			// Server exists, update it
 			if (originalServer != null) {
 				originalServer.update(server);
 			}
@@ -365,12 +366,6 @@ public class ServerCompositeFragment extends CompositeFragment {
 			return false;
 		}
 		return true;
-	}
-
-	@Override
-	public void performApply() {
-		// TODO Auto-generated method stub
-		super.performApply();
 	}
 
 }

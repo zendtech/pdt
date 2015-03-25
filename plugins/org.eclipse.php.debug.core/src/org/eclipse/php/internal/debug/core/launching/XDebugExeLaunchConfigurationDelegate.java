@@ -177,7 +177,7 @@ public class XDebugExeLaunchConfigurationDelegate extends
 			if (phpExeItem != null) {
 				DBGpProxyHandler proxyHandler = DBGpProxyHandlersManager.INSTANCE
 						.getHandler(phpExeItem.getUniqueId());
-				if (proxyHandler.useProxy()) {
+				if (proxyHandler != null && proxyHandler.useProxy()) {
 					ideKey = proxyHandler.getCurrentIdeKey();
 					if (proxyHandler.registerWithProxy() == false) {
 						displayErrorMessage(PHPDebugCoreMessages.XDebug_ExeLaunchConfigurationDelegate_2
@@ -186,9 +186,9 @@ public class XDebugExeLaunchConfigurationDelegate extends
 								.removeLaunch(launch);
 						return;
 					}
+				} else {
+					ideKey = DBGpSessionHandler.getInstance().getIDEKey();
 				}
-			} else {
-				ideKey = DBGpSessionHandler.getInstance().getIDEKey();
 			}
 			target = new DBGpTarget(launch, phpFile.lastSegment(), ideKey,
 					sessionID, stopAtFirstLine);

@@ -231,6 +231,14 @@ public class DefaultDebugServerConnectionTest implements
 		StringBuilder queryBuilder = new StringBuilder();
 		queryBuilder.append(fURL);
 		queryBuilder.append("/dummy.php?start_debug=1&debug_port="); //$NON-NLS-1$
+		queryBuilder.append(getPort());
+		queryBuilder.append("&debug_fastfile=1&debug_host="); //$NON-NLS-1$
+		queryBuilder.append(host + "&testConnection=true"); //$NON-NLS-1$
+		urlToDebug = queryBuilder.toString();
+		return urlToDebug;
+	}
+
+	private String getPort() {
 		String port = Integer.toString(PHPDebugPlugin
 				.getDebugPort(DebuggerCommunicationDaemon.ZEND_DEBUGGER_ID));
 		// Set up custom port from server configuration
@@ -238,13 +246,7 @@ public class DefaultDebugServerConnectionTest implements
 				.getUniqueId());
 		if (customPort != -1)
 			port = String.valueOf(customPort);
-
-		queryBuilder.append(port);
-		queryBuilder.append("&debug_fastfile=1&debug_host="); //$NON-NLS-1$
-
-		queryBuilder.append(host + "&testConnection=true"); //$NON-NLS-1$
-		urlToDebug = queryBuilder.toString();
-		return urlToDebug;
+		return port;
 	}
 
 	private String[] getAllLocalHostsAddresses() {

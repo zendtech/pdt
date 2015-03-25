@@ -13,7 +13,6 @@ package org.eclipse.php.internal.debug.core.zend.communication;
 
 import java.net.Socket;
 import java.util.ArrayList;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
@@ -23,6 +22,7 @@ import org.eclipse.core.runtime.preferences.InstanceScope;
 import org.eclipse.jface.util.PropertyChangeEvent;
 import org.eclipse.php.debug.daemon.communication.ICommunicationDaemon;
 import org.eclipse.php.internal.debug.core.PHPDebugPlugin;
+import org.eclipse.php.internal.debug.core.PHPDebugUtil;
 import org.eclipse.php.internal.debug.core.daemon.AbstractDebuggerCommunicationDaemon;
 import org.eclipse.php.internal.debug.core.debugger.DebuggerSettingsManager;
 import org.eclipse.php.internal.debug.core.debugger.IDebuggerSettings;
@@ -43,7 +43,7 @@ public class DebuggerCommunicationDaemon implements ICommunicationDaemon {
 
 	public static final String ZEND_DEBUGGER_ID = "org.eclipse.php.debug.core.zendDebugger"; //$NON-NLS-1$
 
-	private class CommunicationDaemon extends
+	private static class CommunicationDaemon extends
 			AbstractDebuggerCommunicationDaemon {
 
 		private int port;
@@ -140,6 +140,19 @@ public class DebuggerCommunicationDaemon implements ICommunicationDaemon {
 
 	}
 
+	/**
+	 * Creates and returns communication daemon that listens on given port. This
+	 * method is dedicated to be used if there is a need to create a temporary
+	 * daemon e.g. for communication test purposes. Clients should remember to
+	 * call #stopListen() on daemon after it is not longer used.
+	 * 
+	 * @param port
+	 * @return new communication daemon
+	 */
+	public static AbstractDebuggerCommunicationDaemon createDaemon(int port) {
+		return new CommunicationDaemon(port);
+	}
+
 	@Override
 	public void init() {
 		registerListeners();
@@ -205,27 +218,6 @@ public class DebuggerCommunicationDaemon implements ICommunicationDaemon {
 		return true;
 	}
 
-	private Set<Integer> getPorts() {
-		Set<Integer> ports = new HashSet<Integer>();
-		// Get default port from preferences first
-		Integer defaultPort = PHPDebugPlugin.getDebugPort(ZEND_DEBUGGER_ID);
-		ports.add(defaultPort);
-		// Get ports from dedicated settings
-		List<IDebuggerSettings> allSettings = DebuggerSettingsManager.INSTANCE
-				.findSettings(getDebuggerID());
-		for (IDebuggerSettings settings : allSettings) {
-			String clientPort = settings
-					.getAttribute(ZendDebuggerSettingsConstants.PROP_CLIENT_PORT);
-			try {
-				Integer dedicatedPort = Integer.valueOf(clientPort);
-				ports.add(dedicatedPort);
-			} catch (Exception e) {
-				// ignore
-			}
-		}
-		return ports;
-	}
-
 	private void registerListeners() {
 		if (defaultPortListener == null) {
 			defaultPortListener = new DefaultPortListener();
@@ -251,7 +243,7 @@ public class DebuggerCommunicationDaemon implements ICommunicationDaemon {
 	}
 
 	private synchronized void reset() {
-		Set<Integer> ports = getPorts();
+		Set<Integer> ports = PHPDebugUtil.getDebugPorts(getDebuggerID());
 		List<AbstractDebuggerCommunicationDaemon> daemonsToRemove = new ArrayList<AbstractDebuggerCommunicationDaemon>();
 		// Shutdown daemons that should not listen anymore
 		for (AbstractDebuggerCommunicationDaemon daemon : daemons) {

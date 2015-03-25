@@ -97,13 +97,25 @@ public class PHPDebugCoreMessages extends NLS {
 
 	public static String ZendDebuggerConfigurationDialog_client_host_ip;
 
+	public static String ZendDebuggerConfigurationDialog_Connection_settings_group;
+
 	public static String ZendDebuggerConfigurationDialog_debug_response_timeout;
+
+	public static String ZendDebuggerConfigurationDialog_Dialog_description;
+
+	public static String ZendDebuggerConfigurationDialog_Dialog_title;
+
+	public static String ZendDebuggerConfigurationDialog_General_settings_group;
 
 	public static String ZendDebuggerConfigurationDialog_invalid_response_time;
 
 	public static String ZendDebuggerConfigurationDialog_invalid_response_time_exc;
 
 	public static String ZendDebuggerConfigurationDialog_ManualMode;
+
+	public static String ZendDebuggerConfigurationDialog_Note_label;
+
+	public static String ZendDebuggerConfigurationDialog_Note_text;
 
 	public static String ZendDebuggerConfigurationDialog_runWithDebugInfo;
 
@@ -139,11 +151,23 @@ public class PHPDebugCoreMessages extends NLS {
 	public static String XDebugConfigurationDialog_capture_copy;
 	public static String XDebugConfigurationDialog_capture_redirect;
 
+	public static String XDebugConfigurationDialog_Connection_settings_group;
+
+	public static String XDebugConfigurationDialog_Dialog_description;
+
+	public static String XDebugConfigurationDialog_Dialog_title;
+
+	public static String XDebugConfigurationDialog_General_settings_group;
+
 	// proxy
 	public static String XDebugConfigurationDialog_useProxy;
 	public static String XDebugConfigurationDialog_idekey;
 
 	public static String XDebugConfigurationDialog_MaxData;
+
+	public static String XDebugConfigurationDialog_Note_label;
+
+	public static String XDebugConfigurationDialog_Note_text;
 	public static String XDebugConfigurationDialog_proxy;
 
 	// General XDebug messages

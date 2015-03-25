@@ -10,15 +10,22 @@
  *******************************************************************************/
 package org.eclipse.php.internal.debug.ui.wizards;
 
-import static org.eclipse.php.internal.debug.core.zend.debugger.ZendDebuggerSettingsConstants.*;
+import static org.eclipse.php.internal.debug.core.zend.debugger.ZendDebuggerSettingsConstants.PROP_CLIENT_IP;
+import static org.eclipse.php.internal.debug.core.zend.debugger.ZendDebuggerSettingsConstants.PROP_CLIENT_PORT;
+import static org.eclipse.php.internal.debug.core.zend.debugger.ZendDebuggerSettingsConstants.PROP_RESPONSE_TIMEOUT;
+
+import java.util.Set;
 
 import org.eclipse.jface.dialogs.IMessageProvider;
 import org.eclipse.php.debug.ui.DebugServerConnectionTestRegistry;
 import org.eclipse.php.debug.ui.IDebugServerConnectionTest;
+import org.eclipse.php.internal.debug.core.PHPDebugUtil;
+import org.eclipse.php.internal.debug.core.daemon.AbstractDebuggerCommunicationDaemon;
 import org.eclipse.php.internal.debug.core.debugger.IDebuggerSettingsWorkingCopy;
+import org.eclipse.php.internal.debug.core.zend.communication.DebuggerCommunicationDaemon;
 import org.eclipse.php.internal.debug.core.zend.debugger.ZendDebuggerConfiguration;
+import org.eclipse.php.internal.debug.core.zend.debugger.ZendDebuggerSettingsUtil;
 import org.eclipse.php.internal.server.core.Server;
-import org.eclipse.php.internal.server.core.manager.ServersManager;
 import org.eclipse.php.internal.ui.wizards.CompositeFragment;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.ModifyEvent;
@@ -152,11 +159,20 @@ public class ZendDebuggerServerSettingsSection implements
 	public void performTest() {
 		IDebugServerConnectionTest[] tests = DebugServerConnectionTestRegistry
 				.getTests(ZendDebuggerConfiguration.ID);
-		Server server = ServersManager.findServer(settingsWorkingCopy
+		Server server = (Server) compositeFragment.getData();
+		int port = ZendDebuggerSettingsUtil.getDebugPort(settingsWorkingCopy
 				.getOwnerId());
+		Set<Integer> allDebugPorts = PHPDebugUtil
+				.getDebugPorts(ZendDebuggerConfiguration.ID);
+		AbstractDebuggerCommunicationDaemon tmpDaemon = null;
+		if (!allDebugPorts.contains(port))
+			tmpDaemon = DebuggerCommunicationDaemon.createDaemon(port);
 		for (IDebugServerConnectionTest test : tests) {
 			test.testConnection(server, PlatformUI.getWorkbench().getDisplay()
 					.getActiveShell());
+		}
+		if (tmpDaemon != null) {
+			tmpDaemon.stopListen();
 		}
 	}
 

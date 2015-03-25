@@ -41,9 +41,12 @@ public class PHPDebugUIImages {
 	public static final String IMG_OVR_MEMBER_STATIC = "IMG_OVR_MEMBER_STATIC"; //$NON-NLS-1$
 	public static final String IMG_OVR_MEMBER_CONSTANT = "IMG_OVR_MEMBER_CONSTANT"; //$NON-NLS-1$
 
+	public static final String IMG_WIZBAN_XDEBUG_CONF = "IMG_WIZBAN_XDEBUG_CONF"; //$NON-NLS-1$
+	public static final String IMG_WIZBAN_ZEND_DEBUGGER_CONF = "IMG_WIZBAN_ZEND_DEBUGGER_CONF"; //$NON-NLS-1$
 	public static final String IMG_WIZBAN_PHPEXE = "IMG_WIZBAN_PHPEXE"; //$NON-NLS-1$
 	public static final String IMG_WIZBAN_DEBUG_SERVER = "IMG_WIZBAN_DEBUG_SERVER"; //$NON-NLS-1$
 
+	public static final String IMG_OBJ_DEBUG_CONF = "IMG_OBJ_DEBUG_CONF"; //$NON-NLS-1$
 	public static final String IMG_OBJ_PHP_EXE = "IMG_OBJ_PHP_EXE"; //$NON-NLS-1$
 	public static final String IMG_OBJ_PATH_MAPPING = "IMG_OBJ_PATH_MAPPING"; //$NON-NLS-1$
 	public static final String IMG_OBJ_MEMBER_PUBLIC_ACCESS = "IMG_OBJ_MEMBER_PUBLIC_ACCESS"; //$NON-NLS-1$
@@ -97,27 +100,32 @@ public class PHPDebugUIImages {
 		declareRegistryImage(IMG_OVR_CONDITIONAL_BREAKPOINT_DISABLED, T_OVR
 				+ "conditional_ovr_disabled.gif"); //$NON-NLS-1$
 		declareRegistryImage(IMG_OVR_MEMBER_CONSTANT, T_OVR
-				+ "constant_ovr.gif"); //$NON-NLS-1$
-		declareRegistryImage(IMG_OVR_MEMBER_STATIC, T_OVR + "static_ovr.gif"); //$NON-NLS-1$
+				+ "constant_ovr.png"); //$NON-NLS-1$
+		declareRegistryImage(IMG_OVR_MEMBER_STATIC, T_OVR + "static_ovr.png"); //$NON-NLS-1$
+		declareRegistryImage(IMG_WIZBAN_XDEBUG_CONF, T_WIZBAN
+				+ "xdebug_conf_wiz.png"); //$NON-NLS-1$
+		declareRegistryImage(IMG_WIZBAN_ZEND_DEBUGGER_CONF, T_WIZBAN
+				+ "zend_debugger_conf_wiz.png"); //$NON-NLS-1$
 		declareRegistryImage(IMG_WIZBAN_PHPEXE, T_WIZBAN + "phpexe_wiz.gif"); //$NON-NLS-1$
 		declareRegistryImage(IMG_WIZBAN_DEBUG_SERVER, T_WIZBAN
 				+ "server_debug_wiz.gif"); //$NON-NLS-1$
+		declareRegistryImage(IMG_OBJ_DEBUG_CONF, T_OBJ + "debug_conf.gif"); //$NON-NLS-1$
 		declareRegistryImage(IMG_OBJ_PHP_EXE, T_OBJ + "php_exe.gif"); //$NON-NLS-1$
 		declareRegistryImage(IMG_OBJ_PATH_MAPPING, T_OBJ + "path_mapping.gif"); //$NON-NLS-1$
-		declareRegistryImage(IMG_OBJ_MEMBER_LOCAL, T_OBJ + "member_local.gif"); //$NON-NLS-1$
+		declareRegistryImage(IMG_OBJ_MEMBER_LOCAL, T_OBJ + "member_local.png"); //$NON-NLS-1$
 		declareRegistryImage(IMG_OBJ_MEMBER_SUPER_GLOBAL, T_OBJ
-				+ "member_super_global.gif"); //$NON-NLS-1$
+				+ "member_super_global.png"); //$NON-NLS-1$
 		declareRegistryImage(IMG_OBJ_MEMBER_VIRTUAL_CLASS, T_OBJ
-				+ "member_virtual_class.gif"); //$NON-NLS-1$
-		declareRegistryImage(IMG_OBJ_MEMBER_ARRAY, T_OBJ + "member_array.gif"); //$NON-NLS-1$
+				+ "member_virtual_class.png"); //$NON-NLS-1$
+		declareRegistryImage(IMG_OBJ_MEMBER_ARRAY, T_OBJ + "member_array.png"); //$NON-NLS-1$
 		declareRegistryImage(IMG_OBJ_MEMBER_VIRTUAL_CONTAINER, T_OBJ
-				+ "member_virtual_container.gif"); //$NON-NLS-1$
+				+ "member_virtual_container.png"); //$NON-NLS-1$
 		declareRegistryImage(IMG_OBJ_MEMBER_PUBLIC_ACCESS, T_OBJ
-				+ "member_public_access.gif"); //$NON-NLS-1$
+				+ "member_public_access.png"); //$NON-NLS-1$
 		declareRegistryImage(IMG_OBJ_MEMBER_PROTECTED_ACCESS, T_OBJ
-				+ "member_protected_access.gif"); //$NON-NLS-1$
+				+ "member_protected_access.png"); //$NON-NLS-1$
 		declareRegistryImage(IMG_OBJ_MEMBER_PRIVATE_ACCESS, T_OBJ
-				+ "member_private_access.gif"); //$NON-NLS-1$
+				+ "member_private_access.png"); //$NON-NLS-1$
 	}
 
 	/**
