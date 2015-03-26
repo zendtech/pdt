@@ -37,7 +37,6 @@ import org.eclipse.dltk.compiler.env.IModuleSource;
 import org.eclipse.dltk.core.Flags;
 import org.eclipse.php.core.compiler.IPHPModifiers;
 import org.eclipse.php.core.compiler.PHPSourceElementRequestorExtension;
-import org.eclipse.php.internal.core.Constants;
 import org.eclipse.php.internal.core.Logger;
 import org.eclipse.php.internal.core.PHPCoreConstants;
 import org.eclipse.php.internal.core.PHPCorePlugin;
@@ -566,39 +565,20 @@ public class PHPSourceElementRequestor extends SourceElementRequestVisitor {
 						// http://manual.phpdoc.org/HTMLSmartyConverter/HandS/phpDocumentor/tutorial_tags.method.pkg.html
 
 						// workaround for lack of method return type
-						int methodModifiers = Modifiers.AccPublic;
 						String docTagValue = docTag.getValue().trim();
-						int index = docTagValue.indexOf('(');
+						int index = docTagValue.indexOf('('); //$NON-NLS-1$
 						if (index != -1) {
 							String[] split = WHITESPACE_SEPERATOR
 									.split(docTagValue.substring(0, index));
 							if (split.length == 1) {
-								docTagValue = new StringBuilder(
-										VOID_RETURN_TYPE)
-										.append(Constants.SPACE)
-										.append(docTagValue).toString();
-							} else if (split.length == 2
-									&& Constants.STATIC.equals(split[0])) {
-								StringBuilder sb = new StringBuilder(
-										Constants.STATIC);
-								sb.append(Constants.SPACE).append(
-										VOID_RETURN_TYPE);
-								sb.append(docTagValue.substring(6));
-								docTagValue = sb.toString();
+								docTagValue = VOID_RETURN_TYPE
+										+ " " + docTagValue; //$NON-NLS-1$
 							}
 						}
-						String[] split = WHITESPACE_SEPERATOR
+						final String[] split = WHITESPACE_SEPERATOR
 								.split(docTagValue);
 						if (split.length < 2) {
 							continue;
-						}
-						if (Constants.STATIC.equals(split[0])) {
-							methodModifiers |= Modifiers.AccStatic;
-							split = Arrays.copyOfRange(split, 1, split.length);
-							docTagValue = docTagValue.substring(7).trim();
-							if (split.length < 2) {
-								continue;
-							}
 						}
 
 						ISourceElementRequestor.MethodInfo mi = new ISourceElementRequestor.MethodInfo();
@@ -607,7 +587,7 @@ public class PHPSourceElementRequestor extends SourceElementRequestVisitor {
 						SimpleReference var = new SimpleReference(
 								docTag.sourceStart(), docTag.sourceStart() + 6,
 								removeParenthesis(split));
-						mi.modifiers = methodModifiers;
+						mi.modifiers = Modifiers.AccPublic;
 						mi.nameSourceStart = var.sourceStart();
 						mi.nameSourceEnd = var.sourceEnd();
 						mi.declarationStart = mi.nameSourceStart;
