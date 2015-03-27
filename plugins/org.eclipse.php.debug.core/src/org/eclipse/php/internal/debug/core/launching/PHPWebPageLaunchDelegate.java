@@ -29,8 +29,6 @@ import org.eclipse.php.internal.debug.core.IPHPDebugConstants;
 import org.eclipse.php.internal.debug.core.Logger;
 import org.eclipse.php.internal.debug.core.PHPDebugCoreMessages;
 import org.eclipse.php.internal.debug.core.PHPDebugPlugin;
-import org.eclipse.php.internal.debug.core.debugger.AbstractDebuggerConfiguration;
-import org.eclipse.php.internal.debug.core.preferences.PHPDebuggersRegistry;
 import org.eclipse.php.internal.debug.core.preferences.PHPProjectPreferences;
 import org.eclipse.php.internal.debug.core.zend.communication.DebuggerCommunicationDaemon;
 import org.eclipse.php.internal.debug.core.zend.debugger.IDebuggerInitializer;
@@ -187,20 +185,6 @@ public class PHPWebPageLaunchDelegate extends LaunchConfigurationDelegate {
 			terminated();
 			// throw CoreException();
 			return;
-		}
-
-		if (mode.equals(ILaunchManager.DEBUG_MODE)) {
-			AbstractDebuggerConfiguration debugger = PHPDebuggersRegistry
-					.getDebuggerConfiguration(DebuggerCommunicationDaemon.ZEND_DEBUGGER_ID);
-			IStatus status = debugger.validate(server);
-			if (status.getSeverity() != IStatus.OK) {
-				displayErrorMessage(
-						PHPDebugCoreMessages.PHPWebPageLaunchDelegate_DialogErrorDebug,
-						status.getMessage());
-				monitor.setCanceled(true);
-				monitor.done();
-				return;
-			}
 		}
 
 		String fileName = configuration.getAttribute(Server.FILE_NAME,

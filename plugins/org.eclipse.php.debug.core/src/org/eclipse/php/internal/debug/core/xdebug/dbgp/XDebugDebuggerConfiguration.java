@@ -13,7 +13,6 @@ package org.eclipse.php.internal.debug.core.xdebug.dbgp;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.Properties;
 
 import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.Status;
@@ -26,7 +25,6 @@ import org.eclipse.php.internal.debug.core.launching.XDebugWebLaunchConfiguratio
 import org.eclipse.php.internal.debug.core.preferences.PHPexeItem;
 import org.eclipse.php.internal.debug.core.preferences.PHPexes;
 import org.eclipse.php.internal.debug.core.xdebug.XDebugPreferenceMgr;
-import org.eclipse.php.internal.server.core.Server;
 import org.eclipse.swt.widgets.Shell;
 
 /**
@@ -35,14 +33,12 @@ import org.eclipse.swt.widgets.Shell;
  * @author Shalom Gibly
  * @since PDT 1.0
  */
-@SuppressWarnings("restriction")
 public class XDebugDebuggerConfiguration extends AbstractDebuggerConfiguration {
 
 	public static final String ID = "org.eclipse.php.debug.core.xdebugDebugger"; //$NON-NLS-1$
 
 	private static final String REMOTE_ENABLE = "remote_enable"; //$NON-NLS-1$
 	private static final String EXTENSION_MODULE_ID = "Xdebug"; //$NON-NLS-1$
-	private static final String EXTENSION_PROPERTY_PREFIX = "xdebug"; //$NON-NLS-1$	
 
 	/**
 	 * Constructs a new XDebugDebuggerConfiguration.
@@ -173,36 +169,6 @@ public class XDebugDebuggerConfiguration extends AbstractDebuggerConfiguration {
 			}
 		} catch (IOException e) {
 			PHPDebugPlugin.log(e);
-		}
-		return Status.OK_STATUS;
-	}
-
-	/*
-	 * (non-Javadoc)
-	 * 
-	 * @see
-	 * org.eclipse.php.internal.debug.core.debugger.AbstractDebuggerConfiguration
-	 * #validate(org.eclipse.php.internal.server.core.Server)
-	 */
-	public IStatus validate(Server server) {
-		Properties props = executeValidationScript(server);
-		if (props != null) {
-			if (props.containsKey(EXTENSION_PROPERTY_PREFIX)) {
-				String enableRemote = props
-						.getProperty(EXTENSION_PROPERTY_PREFIX + '.'
-								+ REMOTE_ENABLE);
-				if (!"1".equals(enableRemote)) { //$NON-NLS-1$
-					return new Status(
-							IStatus.WARNING,
-							PHPDebugPlugin.ID,
-							PHPDebugCoreMessages.XDebugDebuggerConfiguration_XDebugNotEnabledError);
-				}
-			} else {
-				return new Status(
-						IStatus.WARNING,
-						PHPDebugPlugin.ID,
-						PHPDebugCoreMessages.XDebugDebuggerConfiguration_XDebugNotInstalledError);
-			}
 		}
 		return Status.OK_STATUS;
 	}
