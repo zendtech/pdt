@@ -12,6 +12,24 @@ import org.eclipse.php.ui.wizards.ICompositeFragmentFactory;
 
 public class ServerTypesManager {
 
+	private class FragmentEntry implements Comparable<FragmentEntry> {
+
+		private String id;
+		private int ordinal;
+
+		public FragmentEntry(String id, int ordinal) {
+			this.id = id;
+			this.ordinal = ordinal;
+		}
+
+		@Override
+		public int compareTo(FragmentEntry entry) {
+			return (this.ordinal < entry.ordinal) ? -1
+					: (this.ordinal > entry.ordinal) ? 1 : 0;
+		}
+
+	}
+
 	protected static final String FRAGMENT_GROUP_ID = "org.eclipse.php.server.ui.serverWizardAndComposite"; //$NON-NLS-1$
 
 	private static ServerTypesManager manager;
@@ -47,10 +65,12 @@ public class ServerTypesManager {
 			return factories;
 		}
 		List<ICompositeFragmentFactory> result = new ArrayList<ICompositeFragmentFactory>();
-		List<String> vaildFragments = wizardFragments.get(type.getId());
-		for (ICompositeFragmentFactory factory : factories) {
-			if (vaildFragments.contains(factory.getId())) {
-				result.add(factory);
+		List<String> validFragments = wizardFragments.get(type.getId());
+		for (String fragmentId : validFragments) {
+			for (ICompositeFragmentFactory factory : factories) {
+				if (fragmentId.equals(factory.getId())) {
+					result.add(factory);
+				}
 			}
 		}
 		return result.toArray(new ICompositeFragmentFactory[result.size()]);
@@ -65,10 +85,12 @@ public class ServerTypesManager {
 			return factories;
 		}
 		List<ICompositeFragmentFactory> result = new ArrayList<ICompositeFragmentFactory>();
-		List<String> vaildFragments = settingsFragments.get(typeId);
-		for (ICompositeFragmentFactory factory : factories) {
-			if (vaildFragments.contains(factory.getId())) {
-				result.add(factory);
+		List<String> validFragments = settingsFragments.get(typeId);
+		for (String fragmentId : validFragments) {
+			for (ICompositeFragmentFactory factory : factories) {
+				if (fragmentId.equals(factory.getId())) {
+					result.add(factory);
+				}
 			}
 		}
 		return result.toArray(new ICompositeFragmentFactory[result.size()]);
@@ -107,10 +129,6 @@ public class ServerTypesManager {
 					wizardParts.addAll(getFragments(child));
 				} else if ("settings".equals(name)) { //$NON-NLS-1$
 					settingsParts.addAll(getFragments(child));
-				} else if ("wizardAndSettings".equals(name)) { //$NON-NLS-1$
-					List<String> fragments = getFragments(child);
-					wizardParts.addAll(fragments);
-					settingsParts.addAll(fragments);
 				}
 			}
 			if (type != null) {
@@ -125,20 +143,24 @@ public class ServerTypesManager {
 		}
 		this.wizardFragments = wizardFragments;
 		this.settingsFragments = settingsFragments;
-		IServerType basicType = new BasicServerType();
-		types.put(basicType.getId(), basicType);
-		wizardFragments.put(basicType.getId(), new ArrayList<String>());
-		settingsFragments.put(basicType.getId(), new ArrayList<String>());
 	}
 
 	private List<String> getFragments(IConfigurationElement element) {
+		List<FragmentEntry> fragmentEntries = new ArrayList<FragmentEntry>();
 		List<String> result = new ArrayList<String>();
 		IConfigurationElement[] fragments = element.getChildren();
 		for (IConfigurationElement fragment : fragments) {
 			if ("fragment".equals(fragment.getName())) { //$NON-NLS-1$
 				String id = fragment.getAttribute("id"); //$NON-NLS-1$
-				result.add(id);
+				String p = fragment.getAttribute("ordinal"); //$NON-NLS-1$
+				int ordinal = Integer.valueOf(p);
+				fragmentEntries.add(new FragmentEntry(id, ordinal));
 			}
+		}
+		// Sort by ordinal numbers
+		Collections.sort(fragmentEntries);
+		for (FragmentEntry fragmentEntry : fragmentEntries) {
+			result.add(fragmentEntry.id);
 		}
 		return result;
 	}

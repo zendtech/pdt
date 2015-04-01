@@ -52,7 +52,6 @@
          <sequence>
             <element ref="wizard" minOccurs="0" maxOccurs="1"/>
             <element ref="settings" minOccurs="0" maxOccurs="1"/>
-            <element ref="wizardAndSettings" minOccurs="0" maxOccurs="1"/>
          </sequence>
          <attribute name="id" type="string" use="required">
             <annotation>
@@ -90,20 +89,19 @@
       </complexType>
    </element>
 
-   <element name="wizardAndSettings">
-      <complexType>
-         <sequence>
-            <element ref="fragment" minOccurs="0" maxOccurs="unbounded"/>
-         </sequence>
-      </complexType>
-   </element>
-
    <element name="fragment">
       <complexType>
          <attribute name="id" type="string" use="required">
             <annotation>
                <documentation>
                   
+               </documentation>
+            </annotation>
+         </attribute>
+         <attribute name="ordinal" type="string" use="required">
+            <annotation>
+               <documentation>
+                  Ordinal number of fragment in sequence. It will be used to preserve the order of fragments in corresponding wizard/settings.
                </documentation>
             </annotation>
          </attribute>
@@ -137,7 +135,7 @@
          &lt;settings&gt;
             &lt;fragment
                id=&quot;org.eclipse.php.server.ui.wizard.BasicCompositeFragmentFactory&quot;&gt;
-	         &lt;/fragment&gt;
+          &lt;/fragment&gt;
             &lt;fragment
                   id=&quot;org.zend.php.zendserver.deployment.ui.TunnelingFragmentFactory&quot;&gt;
             &lt;/fragment&gt;
