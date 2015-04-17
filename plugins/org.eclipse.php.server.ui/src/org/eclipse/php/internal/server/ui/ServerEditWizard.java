@@ -14,6 +14,7 @@ package org.eclipse.php.internal.server.ui;
 import org.eclipse.jface.wizard.Wizard;
 import org.eclipse.php.internal.server.PHPServerUIMessages;
 import org.eclipse.php.internal.server.core.Server;
+import org.eclipse.php.internal.server.core.manager.ServersManager;
 
 /**
  * Wizard for editing PHP server settings.
@@ -50,7 +51,22 @@ public class ServerEditWizard extends Wizard {
 
 	@Override
 	public boolean performFinish() {
-		return serverPage.performFinish();
+		if (serverPage.performFinish()) {
+			// Save original server
+			try {
+				Server originalServer = ServersManager.findServer(server
+						.getUniqueId());
+				// Server exists, update it
+				if (originalServer != null) {
+					originalServer.update(server);
+				}
+			} catch (Throwable e) {
+				Logger.logException("Error while saving the server settings", e); //$NON-NLS-1$
+				return false;
+			}
+			return true;
+		}
+		return false;
 	}
 
 	@Override

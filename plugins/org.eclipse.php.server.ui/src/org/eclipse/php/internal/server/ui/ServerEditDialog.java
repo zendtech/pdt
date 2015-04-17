@@ -21,6 +21,7 @@ import org.eclipse.jface.operation.IRunnableWithProgress;
 import org.eclipse.jface.resource.ImageDescriptor;
 import org.eclipse.php.internal.server.PHPServerUIMessages;
 import org.eclipse.php.internal.server.core.Server;
+import org.eclipse.php.internal.server.core.manager.ServersManager;
 import org.eclipse.php.internal.ui.util.SWTUtil;
 import org.eclipse.php.internal.ui.wizards.CompositeFragment;
 import org.eclipse.php.internal.ui.wizards.IControlHandler;
@@ -202,6 +203,17 @@ public class ServerEditDialog extends TitleAreaDialog implements
 		Iterator composites = runtimeComposites.iterator();
 		while (composites.hasNext()) {
 			((CompositeFragment) composites.next()).performOk();
+		}
+		// Save original server
+		try {
+			Server originalServer = ServersManager.findServer(getServer()
+					.getUniqueId());
+			// Server exists, update it
+			if (originalServer != null) {
+				originalServer.update(server);
+			}
+		} catch (Throwable e) {
+			Logger.logException("Error while saving the server settings", e); //$NON-NLS-1$
 		}
 		super.okPressed();
 	}
