@@ -125,14 +125,12 @@ public class ServerEditDialog extends TitleAreaDialog implements
 						.getControl();
 				setTitle(fragment.getTitle());
 				setDescription(fragment.getDescription());
+				setImageDescriptor(fragment.getImageDescriptor());
 				fragment.validate();
 			}
 		});
 		getShell().setText(
 				PHPServerUIMessages.getString("ServerEditDialog.editServer")); //$NON-NLS-1$
-		getShell().setImage(
-				ServersPluginImages.get(ServersPluginImages.IMG_SERVER));
-
 		tabsListener = new TabsSelectionListener();
 		tabs.addSelectionListener(tabsListener);
 
@@ -267,6 +265,11 @@ public class ServerEditDialog extends TitleAreaDialog implements
 	 */
 	public Server getServer() {
 		return server;
+	}
+
+	@Override
+	public Kind getKind() {
+		return Kind.EDITOR;
 	}
 
 	/*

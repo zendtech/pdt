@@ -48,9 +48,12 @@ public class ServersPluginImages {
 	private static final String T_OBJ32 = "obj32"; //$NON-NLS-1$
 	private static final String T_WIZBAN = "wizban"; //$NON-NLS-1$
 
-	public static final String IMG_SERVER = NAME_PREFIX + "server.gif"; //$NON-NLS-1$
-	public static final String IMG_SERVER_TYPE = NAME_PREFIX + "server.png"; //$NON-NLS-1$
-	public static final String IMG_WIZ_SERVER = NAME_PREFIX + "server_wiz.gif"; //$NON-NLS-1$
+	public static final String IMG_SERVER = NAME_PREFIX + "server.png";
+	public static final String IMG_SERVER_TYPE = NAME_PREFIX
+			+ "generic_server.png"; //$NON-NLS-1$
+	public static final String IMG_WIZ_SERVER = NAME_PREFIX + "server_wiz.png"; //$NON-NLS-1$
+	public static final String IMG_WIZ_MAPPING_SERVER = NAME_PREFIX
+			+ "server_mapping_wiz.png"; //$NON-NLS-1$
 
 	public static final ImageDescriptor DESC_SERVER_TYPE = createManaged(
 			T_OBJ32, IMG_SERVER_TYPE);
@@ -58,6 +61,8 @@ public class ServersPluginImages {
 			IMG_SERVER);
 	public static final ImageDescriptor DESC_WIZ_SERVER = createManaged(
 			T_WIZBAN, IMG_WIZ_SERVER);
+	public static final ImageDescriptor DESC_WIZ_MAPPING_SERVER = createManaged(
+			T_WIZBAN, IMG_WIZ_MAPPING_SERVER);
 
 	/**
 	 * Returns the image managed under the given key in this registry.

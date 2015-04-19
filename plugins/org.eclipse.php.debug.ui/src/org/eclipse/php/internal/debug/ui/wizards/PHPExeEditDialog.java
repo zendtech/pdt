@@ -51,7 +51,6 @@ public class PHPExeEditDialog extends TitleAreaDialog implements
 			PHPexeItem[] existingItems) {
 		super(shell);
 		setShellStyle(getShellStyle() | SWT.RESIZE);
-
 		this.existingItems = existingItems;
 		this.phpExeItem = phpExeItem;
 		runtimeComposites = new ArrayList<CompositeFragment>(3);
@@ -101,6 +100,7 @@ public class PHPExeEditDialog extends TitleAreaDialog implements
 						.getControl();
 				setTitle(fragment.getTitle());
 				setDescription(fragment.getDescription());
+				setImageDescriptor(fragment.getImageDescriptor());
 				fragment.validate();
 			}
 		});
@@ -156,6 +156,11 @@ public class PHPExeEditDialog extends TitleAreaDialog implements
 		Point size = super.getInitialSize();
 		size.y += 100;
 		return size;
+	}
+
+	@Override
+	public Kind getKind() {
+		return Kind.EDITOR;
 	}
 
 }

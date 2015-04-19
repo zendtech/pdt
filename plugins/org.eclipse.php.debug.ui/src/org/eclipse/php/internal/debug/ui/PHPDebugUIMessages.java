@@ -69,7 +69,6 @@ public class PHPDebugUIMessages extends NLS {
 	public static String InstalledPHPsBlock_4;
 	public static String InstalledPHPsBlock_5;
 	public static String InstalledPHPsBlock_6;
-	public static String InstalledPHPsBlock_8;
 	public static String InstalledPHPsBlock_9;
 
 	public static String InstalledPHPsBlock_Fetching_php_exe_info;

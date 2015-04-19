@@ -27,7 +27,6 @@ import org.eclipse.swt.custom.StyleRange;
 import org.eclipse.swt.events.HelpEvent;
 import org.eclipse.swt.events.HelpListener;
 import org.eclipse.swt.layout.GridData;
-import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.program.Program;
 import org.eclipse.swt.widgets.*;
 import org.eclipse.ui.internal.help.WorkbenchHelpSystem;
@@ -38,6 +37,7 @@ import org.eclipse.ui.internal.help.WorkbenchHelpSystem;
  * @author Wojciech Galanciak, 2014
  * 
  */
+@SuppressWarnings("restriction")
 public class ServerTypeCompositeFragment extends CompositeFragment {
 
 	private class TypesLabelProvider extends StyledCellLabelProvider {
@@ -65,17 +65,7 @@ public class ServerTypeCompositeFragment extends CompositeFragment {
 	public ServerTypeCompositeFragment(Composite parent,
 			IControlHandler handler, boolean isForEditing) {
 		super(parent, handler, isForEditing);
-		setTitle(PHPServerUIMessages
-				.getString("ServerTypeCompositeFragment.Title")); //$NON-NLS-1$
-		setDescription(PHPServerUIMessages
-				.getString("ServerTypeCompositeFragment.Description")); //$NON-NLS-1$
-		controlHandler.setTitle(PHPServerUIMessages
-				.getString("ServerTypeCompositeFragment.Title")); //$NON-NLS-1$
-		controlHandler.setDescription(getDescription());
-		controlHandler.setImageDescriptor(ServersPluginImages.DESC_WIZ_SERVER);
-		setDisplayName(PHPServerUIMessages
-				.getString("ServerCompositeFragment.server")); //$NON-NLS-1$
-		createControl();
+		createDescription();
 	}
 
 	@Override
@@ -98,28 +88,24 @@ public class ServerTypeCompositeFragment extends CompositeFragment {
 		validate();
 	}
 
-	public Server getServer() {
-		return (Server) getData();
-	}
-
 	@Override
 	public boolean isComplete() {
 		return getType() != null;
+	}
+
+	public Server getServer() {
+		return (Server) getData();
 	}
 
 	public IServerType getType() {
 		return currentType;
 	}
 
-	protected void createControl() {
-		GridLayout layout = new GridLayout(1, true);
-		setLayout(layout);
-		setLayoutData(new GridData(GridData.FILL_BOTH));
-
+	protected void createContents(Composite parent) {
 		Collection<IServerType> types = ServerTypesManager.getInstance()
 				.getAll();
 
-		TableViewer viewer = new TableViewer(this);
+		TableViewer viewer = new TableViewer(parent);
 		Table table = viewer.getTable();
 		table.addListener(SWT.MeasureItem, new Listener() {
 			public void handleEvent(Event event) {
@@ -162,7 +148,7 @@ public class ServerTypeCompositeFragment extends CompositeFragment {
 		});
 
 		validate();
-		Dialog.applyDialogFont(this);
+		Dialog.applyDialogFont(parent);
 
 		getParent().setData(WorkbenchHelpSystem.HELP_KEY,
 				IHelpContextIds.ADDING_PHP_SERVERS);
@@ -175,6 +161,19 @@ public class ServerTypeCompositeFragment extends CompositeFragment {
 				}
 			}
 		});
+	}
+
+	protected void createDescription() {
+		setTitle(PHPServerUIMessages
+				.getString("ServerTypeCompositeFragment.Title")); //$NON-NLS-1$
+		setDescription(PHPServerUIMessages
+				.getString("ServerTypeCompositeFragment.Description")); //$NON-NLS-1$
+		controlHandler.setTitle(PHPServerUIMessages
+				.getString("ServerTypeCompositeFragment.Title")); //$NON-NLS-1$
+		controlHandler.setDescription(getDescription());
+		controlHandler.setImageDescriptor(ServersPluginImages.DESC_WIZ_SERVER);
+		setDisplayName(PHPServerUIMessages
+				.getString("ServerCompositeFragment.server")); //$NON-NLS-1$
 	}
 
 }

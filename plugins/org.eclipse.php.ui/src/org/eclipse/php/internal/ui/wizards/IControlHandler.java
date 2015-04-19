@@ -19,6 +19,15 @@ import org.eclipse.jface.resource.ImageDescriptor;
 public interface IControlHandler {
 
 	/**
+	 * Control handler kind.
+	 */
+	public enum Kind {
+
+		WIZARD, EDITOR;
+
+	}
+
+	/**
 	 * Updates the control error messages and buttons.
 	 */
 	public void update();
@@ -56,6 +65,13 @@ public interface IControlHandler {
 	 *            the new type, from IStatus
 	 */
 	public void setMessage(String newMessage, int newType);
+	
+	/**
+	 * Returns kind of control handler.
+	 * 
+	 * @return kind of control handler
+	 */
+	public Kind getKind();
 
 	/**
 	 * Runs the given IRunnableWithProgress in this context. It may not be

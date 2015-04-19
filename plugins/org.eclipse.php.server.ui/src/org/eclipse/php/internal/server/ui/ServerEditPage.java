@@ -90,6 +90,16 @@ public class ServerEditPage extends WizardPage implements IControlHandler {
 	/*
 	 * (non-Javadoc)
 	 * 
+	 * @see org.eclipse.php.internal.ui.wizards.IControlHandler#getKind()
+	 */
+	@Override
+	public Kind getKind() {
+		return Kind.EDITOR;
+	}
+
+	/*
+	 * (non-Javadoc)
+	 * 
 	 * @see
 	 * org.eclipse.php.internal.server.apache.ui.IControlHandler#getServer()
 	 */
@@ -140,7 +150,7 @@ public class ServerEditPage extends WizardPage implements IControlHandler {
 			if (!element.isSupported(server)) {
 				continue;
 			}
-			TabItem tabItem = new TabItem(tabs, SWT.BORDER);
+			TabItem tabItem = new TabItem(tabs, SWT.NONE);
 			CompositeFragment fragment = element.createComposite(tabs, this);
 			fragment.setData(server);
 			tabItem.setText(fragment.getDisplayName());
@@ -160,6 +170,16 @@ public class ServerEditPage extends WizardPage implements IControlHandler {
 				TabItem item = (TabItem) e.item;
 				CompositeFragment fragment = (CompositeFragment) item
 						.getControl();
+				if (fragment instanceof ServerCompositeFragment) {
+					IServerType type = ServerTypesManager.getInstance()
+							.getType(server);
+					if (type != null) {
+						((ServerCompositeFragment) fragment)
+								.setImageDescriptor(type.getWizardImage());
+					}
+				}
+				setImageDescriptor(fragment.getImageDescriptor());
+				setDescription(fragment.getDescription());
 				setTitle(fragment.getTitle());
 				fragment.validate();
 			}
@@ -170,8 +190,10 @@ public class ServerEditPage extends WizardPage implements IControlHandler {
 			setSelect(tabID);
 		}
 
-		CompositeFragment selectedFragment = runtimeComposites.get(tabs
-				.getSelectionIndex());
+		int selectionIndex = tabs.getSelectionIndex() != -1 ? tabs
+				.getSelectionIndex() : 0;
+		CompositeFragment selectedFragment = runtimeComposites
+				.get(selectionIndex);
 		setTitle(selectedFragment.getTitle());
 		setDescription(selectedFragment.getDescription());
 
