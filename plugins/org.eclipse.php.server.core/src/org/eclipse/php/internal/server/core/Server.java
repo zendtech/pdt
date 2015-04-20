@@ -372,6 +372,11 @@ public class Server implements IXMLPreferencesStorable, IAdaptable,
 				continue;
 			helper.setAttribute(key, copy.helper.map.get(key));
 		}
+		// Remove the ones that were removed in copy
+		for (String key : helper.map.keySet()) {
+			if (!copy.helper.map.containsKey(key))
+				helper.removeAttribute(key);
+		}
 	}
 
 }
