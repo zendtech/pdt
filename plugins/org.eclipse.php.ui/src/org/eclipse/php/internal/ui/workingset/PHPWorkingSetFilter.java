@@ -15,7 +15,10 @@ import org.eclipse.core.resources.IStorage;
 import org.eclipse.core.runtime.Assert;
 import org.eclipse.core.runtime.IAdaptable;
 import org.eclipse.core.runtime.IPath;
+import org.eclipse.dltk.core.IMember;
 import org.eclipse.dltk.core.IModelElement;
+import org.eclipse.dltk.core.IScriptProject;
+import org.eclipse.dltk.core.ISourceModule;
 import org.eclipse.dltk.internal.ui.workingsets.WorkingSetFilter;
 
 /**
@@ -30,11 +33,21 @@ public class PHPWorkingSetFilter extends WorkingSetFilter {
 	public boolean isEnclosing(IModelElement element) {
 		Assert.isNotNull(element);
 
+		if (element instanceof IMember) {
+			ISourceModule ancestor = element.getAncestor(ISourceModule.class);
+			return ancestor == null ? false : isEnclosing(ancestor);
+		}
+
 		IAdaptable[] cachedWorkingSet = getWorkingSet().getElements();
 
 		IResource resource = (IResource) element.getAdapter(IResource.class);
-		if (resource == null)
+		if (resource == null) {
+			IScriptProject ancestor = element.getAncestor(IScriptProject.class);
+			if (ancestor != null) {
+				return isEnclosing(ancestor);
+			}
 			return false;
+		}
 
 		IPath path = resource.getFullPath();
 		for (int i = 0; i < cachedWorkingSet.length; i++) {

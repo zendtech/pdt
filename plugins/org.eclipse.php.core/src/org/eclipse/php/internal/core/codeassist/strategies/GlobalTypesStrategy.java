@@ -14,6 +14,7 @@ package org.eclipse.php.internal.core.codeassist.strategies;
 import java.util.*;
 import java.util.Map.Entry;
 
+import org.eclipse.dltk.ast.Modifiers;
 import org.eclipse.dltk.ast.declarations.ModuleDeclaration;
 import org.eclipse.dltk.compiler.env.IModuleSource;
 import org.eclipse.dltk.core.*;
@@ -206,6 +207,9 @@ public class GlobalTypesStrategy extends GlobalElementStrategy {
 		String prefix = abstractContext.getPrefixWithoutProcessing();
 		IDLTKSearchScope scope = createSearchScope();
 		for (Entry<String, UsePart> entry : result.entrySet()) {
+			if (entry.getValue().getAlias() == null) {
+				continue;
+			}
 			String name = entry.getKey();
 			String fullName = entry.getValue().getNamespace()
 					.getFullyQualifiedName();
@@ -215,36 +219,35 @@ public class GlobalTypesStrategy extends GlobalElementStrategy {
 			try {
 				IType[] elements = PhpModelAccess.getDefault().findTypes(
 						fullName, MatchRule.EXACT, 0, 0, scope, null);
-
 				for (int i = 0; i < elements.length; i++) {
-					String elementName = elements[i].getElementName();
-					if (!PHPFlags.isNamespace(elements[i].getFlags())) {
-						reportAlias(reporter, scope, module, replacementRange,
-								elements[i], elementName, name, suffix);
-					} else {
-						String nsname = prefix.replace(name, fullName);
-						if (nsname.startsWith(elementName + SPLASH)
-								&& nsname.lastIndexOf(SPLASH) == elementName
-										.length()) {
-							// namespace strategy will handle this case
-							continue;
-						}
-						IType[] typesOfNS = elements[i].getTypes();
-
-						for (int j = 0; j < typesOfNS.length; j++) {
-							reportAlias(
-									reporter,
-									scope,
-									module,
-									replacementRange,
-									typesOfNS[j],
-									elementName + SPLASH
-											+ typesOfNS[j].getElementName(),
-									(elementName + SPLASH + typesOfNS[j]
-											.getElementName()).replace(
-											fullName, name), suffix);
-						}
+					reportAlias(reporter, scope, module, replacementRange,
+							elements[i], elements[i].getElementName(), name,
+							suffix);
+				}
+				IType[] namespaces = PhpModelAccess.getDefault()
+						.findNamespaces(null, fullName, MatchRule.EXACT, 0, 0,
+								scope, null);
+				for (int i = 0; i < namespaces.length; i++) {
+					String elementName = namespaces[i].getElementName();
+					String nsname = prefix.replace(name, fullName);
+					if (nsname.startsWith(elementName + SPLASH)
+							&& nsname.lastIndexOf(SPLASH) == elementName
+									.length()) {
+						// namespace strategy will handle this case
+						continue;
 					}
+
+					IType[] typesOfNS = elements[i].getTypes();
+
+					for (int j = 0; j < typesOfNS.length; j++) {
+						reportAlias(reporter, scope, module, replacementRange,
+								typesOfNS[j], elementName + SPLASH
+										+ typesOfNS[j].getElementName(),
+								(elementName + SPLASH + typesOfNS[j]
+										.getElementName()).replace(fullName,
+										name), suffix);
+					}
+
 				}
 			} catch (ModelException e) {
 				PHPCorePlugin.log(e);
@@ -287,21 +290,43 @@ public class GlobalTypesStrategy extends GlobalElementStrategy {
 			// Search by camel-case
 			IType[] types = PhpModelAccess.getDefault().findTypes(prefix,
 					MatchRule.CAMEL_CASE, trueFlag, falseFlag, scope, null);
+
 			result.addAll(Arrays.asList(types));
+
+			if ((Modifiers.AccNameSpace & falseFlag) == 0) {
+				IType[] namespaces = PhpModelAccess.getDefault()
+						.findNamespaces(null, prefix, MatchRule.CAMEL_CASE,
+								trueFlag, falseFlag, scope, null);
+
+				result.addAll(Arrays.asList(namespaces));
+			}
 		}
 		IType[] types = PhpModelAccess.getDefault().findTypes(null, prefix,
 				MatchRule.PREFIX, trueFlag, falseFlag, scope, null);
+		IType[] namespaces;
+		if ((Modifiers.AccNameSpace & falseFlag) == 0) {
+			namespaces = PhpModelAccess.getDefault().findNamespaces(null,
+					prefix, MatchRule.PREFIX, trueFlag, falseFlag, scope, null);
+		} else {
+			namespaces = new IType[0];
+		}
 		if (context instanceof NamespaceMemberContext) {
 			for (IType type : types) {
 				if (PHPModelUtils.getFullName(type).startsWith(prefix)) {
 					result.add(type);
 				}
 			}
+			for (IType type : namespaces) {
+				if (PHPModelUtils.getFullName(type).startsWith(prefix)) {
+					result.add(type);
+				}
+			}
 		} else {
 			result.addAll(Arrays.asList(types));
+			result.addAll(Arrays.asList(namespaces));
 		}
 
-		return (IType[]) result.toArray(new IType[result.size()]);
+		return result.toArray(new IType[result.size()]);
 	}
 
 	/**
