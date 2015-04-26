@@ -13,12 +13,14 @@ package org.eclipse.php.internal.server.ui;
 
 import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
+import java.util.List;
 
 import org.eclipse.jface.operation.IRunnableWithProgress;
 import org.eclipse.jface.wizard.WizardPage;
 import org.eclipse.php.internal.server.IHelpContextIds;
 import org.eclipse.php.internal.server.PHPServerUIMessages;
 import org.eclipse.php.internal.server.core.Server;
+import org.eclipse.php.internal.server.core.manager.ServersManager;
 import org.eclipse.php.internal.ui.wizards.CompositeFragment;
 import org.eclipse.php.internal.ui.wizards.IControlHandler;
 import org.eclipse.php.server.ui.types.IServerType;
@@ -46,10 +48,17 @@ public class ServerEditPage extends WizardPage implements IControlHandler {
 
 	protected static final String FRAGMENT_GROUP_ID = "org.eclipse.php.server.ui.serverWizardAndComposite"; //$NON-NLS-1$
 
+	public interface IPostFinish {
+
+		public void perform();
+
+	}
+
 	private Server server;
 	private ArrayList<CompositeFragment> runtimeComposites;
 	private TabFolder tabs;
 	private String tabID;
+	private List<IPostFinish> postFinish = new ArrayList<IPostFinish>();
 
 	/**
 	 * Instantiate a new server edit wizard page.
@@ -239,7 +248,31 @@ public class ServerEditPage extends WizardPage implements IControlHandler {
 				return false;
 			}
 		}
+		// Save original server
+		try {
+			Server originalServer = ServersManager.findServer(server
+					.getUniqueId());
+			// Server exists, update it
+			if (originalServer != null) {
+				originalServer.update(server);
+			}
+		} catch (Throwable e) {
+			Logger.logException("Error while saving the server settings", e); //$NON-NLS-1$
+			return false;
+		}
+		// Perform post finish actions
+		performPostFinish();
 		return true;
+	}
+
+	public void addPostFinish(IPostFinish operation) {
+		postFinish.add(operation);
+	}
+
+	private void performPostFinish() {
+		for (IPostFinish operation : postFinish) {
+			operation.perform();
+		}
 	}
 
 	private void setSelect(String id) {
