@@ -37,6 +37,8 @@ import org.eclipse.dltk.internal.ui.editor.*;
 import org.eclipse.dltk.internal.ui.text.ScriptWordFinder;
 import org.eclipse.dltk.ui.DLTKUIPlugin;
 import org.eclipse.dltk.ui.actions.IScriptEditorActionDefinitionIds;
+import org.eclipse.dltk.ui.text.folding.IFoldingStructureProvider;
+import org.eclipse.dltk.ui.text.folding.IFoldingStructureProviderExtension;
 import org.eclipse.emf.common.command.BasicCommandStack;
 import org.eclipse.emf.common.command.CommandStack;
 import org.eclipse.jface.action.Action;
@@ -87,6 +89,7 @@ import org.eclipse.php.internal.ui.autoEdit.TabAutoEditStrategy;
 import org.eclipse.php.internal.ui.editor.configuration.PHPStructuredTextViewerConfiguration;
 import org.eclipse.php.internal.ui.editor.hover.PHPSourceViewerInformationControl;
 import org.eclipse.php.internal.ui.editor.selectionactions.*;
+import org.eclipse.php.internal.ui.folding.IStructuredTextFoldingProvider;
 import org.eclipse.php.internal.ui.folding.PHPFoldingStructureProviderProxy;
 import org.eclipse.php.internal.ui.preferences.PreferenceConstants;
 import org.eclipse.php.internal.ui.text.DocumentCharacterIterator;
@@ -2458,6 +2461,22 @@ public class PHPStructuredEditor extends StructuredTextEditor implements
 	@SuppressWarnings("restriction")
 	public Object getAdapter(Class required) {
 
+		if (required == IFoldingStructureProviderExtension.class) {
+			IStructuredTextFoldingProvider foldingProvider = fProjectionModelUpdater
+					.getFoldingProvider();
+			if (foldingProvider instanceof IFoldingStructureProviderExtension) {
+				return foldingProvider;
+			}
+		}
+
+		if (required == IFoldingStructureProvider.class) {
+			IStructuredTextFoldingProvider foldingProvider = fProjectionModelUpdater
+					.getFoldingProvider();
+			if (foldingProvider instanceof IFoldingStructureProvider) {
+				return foldingProvider;
+			}
+		}
+
 		Object adapter = super.getAdapter(required);
 
 		// add selection listener to outline page
@@ -2788,6 +2807,15 @@ public class PHPStructuredEditor extends StructuredTextEditor implements
 			IVerticalRuler verticalRuler, int styles) {
 		return new PHPStructuredTextViewer(this, parent, verticalRuler,
 				getOverviewRuler(), isOverviewRulerVisible(), styles);
+	}
+
+	/**
+	 * Resets the foldings structure according to the folding preferences.
+	 */
+	public void resetProjection() {
+		if (fProjectionModelUpdater != null) {
+			fProjectionModelUpdater.initialize();
+		}
 	}
 
 	/*

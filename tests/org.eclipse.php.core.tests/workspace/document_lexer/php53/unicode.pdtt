@@ -2,14 +2,14 @@
 Bug 455696 - Code formatter will delete non ACSII function name
 --FILE--
 <?php
-function say_здрав�?тв�?йте() {
-$say_здрав�?тв�?йте = 'say_здрав�?тв�?йте';
-$say_здрав�?тв�?йте = "say_здрав�?тв�?йте";
-echo <<<say_здрав�?тв�?йте
-{$say_здрав�?тв�?йте}
-say_здрав�?тв�?йте;
+function say_здравствуйте() {
+$say_здравствуйте = 'say_здравствуйте';
+$say_здравствуйте = "say_здравствуйте";
+echo <<<say_здравствуйте
+{$say_здравствуйте}
+say_здравствуйте;
 }
-say_здрав�?тв�?йте();
+say_здравствуйте();
 ?>
 --EXPECT--
 PHP_TOKEN|<|2
@@ -19,43 +19,43 @@ WHITESPACE|
 |2
 PHP_FUNCTION|function|2
 WHITESPACE| |2
-PHP_LABEL|say_здрав�?тв�?йте|2
+PHP_LABEL|say_здравствуйте|2
 PHP_TOKEN|(|2
 PHP_TOKEN|)|2
 WHITESPACE| |2
 PHP_CURLY_OPEN|{|2
 WHITESPACE|
 |2
-PHP_VARIABLE|$say_здрав�?тв�?йте|2
+PHP_VARIABLE|$say_здравствуйте|2
 WHITESPACE| |2
 PHP_TOKEN|=|2
 WHITESPACE| |2
-PHP_CONSTANT_ENCAPSED_STRING|'say_здрав�?тв�?йте'|2
+PHP_CONSTANT_ENCAPSED_STRING|'say_здравствуйте'|2
 PHP_SEMICOLON|;|2
 WHITESPACE|
 |2
-PHP_VARIABLE|$say_здрав�?тв�?йте|2
+PHP_VARIABLE|$say_здравствуйте|2
 WHITESPACE| |2
 PHP_TOKEN|=|2
 WHITESPACE| |2
-PHP_CONSTANT_ENCAPSED_STRING|"say_здрав�?тв�?йте"|2
+PHP_CONSTANT_ENCAPSED_STRING|"say_здравствуйте"|2
 PHP_SEMICOLON|;|2
 WHITESPACE|
 |2
 PHP_ECHO|echo|2
 WHITESPACE| |2
-PHP_HEREDOC_TAG|<<<say_здрав�?тв�?йте
+PHP_HEREDOC_TAG|<<<say_здравствуйте
 |16
 PHP_CURLY_OPEN|{|2
-PHP_VARIABLE|$say_здрав�?тв�?йте|2
+PHP_VARIABLE|$say_здравствуйте|2
 PHP_CURLY_CLOSE|}|12
 PHP_HEREDOC_TAG|
-say_здрав�?тв�?йте;
+say_здравствуйте;
 |2
 PHP_CURLY_CLOSE|}|2
 WHITESPACE|
 |2
-PHP_LABEL|say_здрав�?тв�?йте|2
+PHP_LABEL|say_здравствуйте|2
 PHP_TOKEN|(|2
 PHP_TOKEN|)|2
 PHP_SEMICOLON|;|2
