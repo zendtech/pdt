@@ -2,63 +2,63 @@
 Bug 455696 - Code formatter will delete non ACSII function name
 --FILE--
 <?php
-function say_здравствуйте() {
-$say_здравствуйте = 'say_здравствуйте';
-$say_здравствуйте = "say_здравствуйте";
-echo <<<say_здравствуйте
-{$say_здравствуйте}
-say_здравствуйте;
+function say_здрав�?тв�?йте() {
+$say_здрав�?тв�?йте = 'say_здрав�?тв�?йте';
+$say_здрав�?тв�?йте = "say_здрав�?тв�?йте";
+echo <<<say_здрав�?тв�?йте
+{$say_здрав�?тв�?йте}
+say_здрав�?тв�?йте;
 }
-say_здравствуйте();
+say_здрав�?тв�?йте();
 ?>
 --EXPECT--
-PHP_TOKEN|<|1
-PHP_TOKEN|?|1
-PHP_LABEL|php|1
+PHP_TOKEN|<|2
+PHP_TOKEN|?|2
+PHP_LABEL|php|2
 WHITESPACE|
-|1
-PHP_FUNCTION|function|1
-WHITESPACE| |1
-PHP_LABEL|say_здравствуйте|1
-PHP_TOKEN|(|1
-PHP_TOKEN|)|1
-WHITESPACE| |1
-PHP_CURLY_OPEN|{|1
+|2
+PHP_FUNCTION|function|2
+WHITESPACE| |2
+PHP_LABEL|say_здрав�?тв�?йте|2
+PHP_TOKEN|(|2
+PHP_TOKEN|)|2
+WHITESPACE| |2
+PHP_CURLY_OPEN|{|2
 WHITESPACE|
-|1
-PHP_VARIABLE|$say_здравствуйте|1
-WHITESPACE| |1
-PHP_TOKEN|=|1
-WHITESPACE| |1
-PHP_CONSTANT_ENCAPSED_STRING|'say_здравствуйте'|1
-PHP_SEMICOLON|;|1
+|2
+PHP_VARIABLE|$say_здрав�?тв�?йте|2
+WHITESPACE| |2
+PHP_TOKEN|=|2
+WHITESPACE| |2
+PHP_CONSTANT_ENCAPSED_STRING|'say_здрав�?тв�?йте'|2
+PHP_SEMICOLON|;|2
 WHITESPACE|
-|1
-PHP_VARIABLE|$say_здравствуйте|1
-WHITESPACE| |1
-PHP_TOKEN|=|1
-WHITESPACE| |1
-PHP_CONSTANT_ENCAPSED_STRING|"say_здравствуйте"|1
-PHP_SEMICOLON|;|1
+|2
+PHP_VARIABLE|$say_здрав�?тв�?йте|2
+WHITESPACE| |2
+PHP_TOKEN|=|2
+WHITESPACE| |2
+PHP_CONSTANT_ENCAPSED_STRING|"say_здрав�?тв�?йте"|2
+PHP_SEMICOLON|;|2
 WHITESPACE|
-|1
-PHP_ECHO|echo|1
-WHITESPACE| |1
-PHP_HEREDOC_TAG|<<<say_здравствуйте
-|8
-PHP_CURLY_OPEN|{|1
-PHP_VARIABLE|$say_здравствуйте|1
-PHP_CURLY_CLOSE|}|6
+|2
+PHP_ECHO|echo|2
+WHITESPACE| |2
+PHP_HEREDOC_TAG|<<<say_здрав�?тв�?йте
+|16
+PHP_CURLY_OPEN|{|2
+PHP_VARIABLE|$say_здрав�?тв�?йте|2
+PHP_CURLY_CLOSE|}|12
 PHP_HEREDOC_TAG|
-say_здравствуйте;
-|1
-PHP_CURLY_CLOSE|}|1
+say_здрав�?тв�?йте;
+|2
+PHP_CURLY_CLOSE|}|2
 WHITESPACE|
-|1
-PHP_LABEL|say_здравствуйте|1
-PHP_TOKEN|(|1
-PHP_TOKEN|)|1
-PHP_SEMICOLON|;|1
+|2
+PHP_LABEL|say_здрав�?тв�?йте|2
+PHP_TOKEN|(|2
+PHP_TOKEN|)|2
+PHP_SEMICOLON|;|2
 WHITESPACE|
-|1
-PHP_CLOSETAG|?>|1
+|2
+PHP_CLOSETAG|?>|2

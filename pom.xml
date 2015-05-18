@@ -13,12 +13,13 @@
 		<antrun-version>1.7</antrun-version>
 		<maven.test.failure.ignore>true</maven.test.failure.ignore>
 		<test.vmargs />
-		<sonar.core.codeCoveragePlugin>jacoco</sonar.core.codeCoveragePlugin>
+		<sonar.java.coveragePlugin>jacoco</sonar.java.coveragePlugin>
 		<sonar.dynamicAnalysis>reuseReports</sonar.dynamicAnalysis>
-		<sonar.exclusions>**/parser/*/CompilerAstParser.java,**/parser/DocumentorLexer.java,**/scanner/*/PhpAstLexer.java,**/scanner/*/PhpAstParser.java,**/documentModel/parser/PHPTokenizer.java,**/parser/*/PhpLexer.java,**/*Messages.java</sonar.exclusions>
-		<sonar.jacoco.reportPath>../../org.eclipse.pdt.releng/target/jacoco.exec</sonar.jacoco.reportPath>
+		<sonar.exclusions>**/parser/*/CompilerAstParser.java,**/parser/DocumentorLexer.java,**/scanner/*/PhpAstLexer.java,**/scanner/*/PhpAstParser.java,**/scanner/*/ParserConstants.java,**/documentModel/parser/PHPTokenizer.java,**/parser/*/PhpLexer.java,**/*Messages.java,**/parser/*/CompilerParserConstants.java</sonar.exclusions>
+		<sonar.jacoco.reportPath>../../target/jacoco.exec</sonar.jacoco.reportPath>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 		<tycho.scmUrl>scm:git:git://git.eclipse.org/gitroot/pdt/org.eclipse.pdt.git</tycho.scmUrl>
+		<tycho.testArgLine />
 		<eclipseNext>false</eclipseNext>
 		<p2.mirrorsPrefix>/tools/pdt/updates/3.5/</p2.mirrorsPrefix>
 		<p2.statsURL>http://download.eclipse.org/stats</p2.statsURL>
@@ -171,32 +172,6 @@
 			<properties>
 				<test.vmargs>-XstartOnFirstThread</test.vmargs>
 			</properties>
-		</profile>
-		<profile>
-			<id>coverage</id>
-			<build>
-				<plugins>
-					<plugin>
-						<groupId>org.jacoco</groupId>
-						<artifactId>jacoco-maven-plugin</artifactId>
-						<version>0.6.4.201312101107</version>
-						<executions>
-							<execution>
-								<goals>
-									<goal>prepare-agent</goal>
-								</goals>
-								<configuration>
-									<destFile>${sonar.jacoco.reportPath}</destFile>
-									<includes>
-										<include>org.eclipse.php.*</include>
-									</includes>
-									<append>true</append>
-								</configuration>
-							</execution>
-						</executions>
-					</plugin>
-				</plugins>
-			</build>
 		</profile>
 		<profile>
 			<id>eclipse-current</id>

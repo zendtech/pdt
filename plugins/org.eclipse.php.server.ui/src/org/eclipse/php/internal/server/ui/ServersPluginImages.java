@@ -36,8 +36,8 @@ public class ServersPluginImages {
 	// Otherwise low color
 	// images are used
 	static {
-		fgIconBaseURL = Activator.getDefault().getBundle()
-				.getEntry("/icons/full/"); //$NON-NLS-1$
+		fgIconBaseURL = Activator.getDefault().getBundle().getEntry(
+				"/icons/full/"); //$NON-NLS-1$
 	}
 
 	// The plug-in registry
@@ -110,8 +110,8 @@ public class ServersPluginImages {
 			for (Iterator iter = fgAvoidSWTErrorMap.keySet().iterator(); iter
 					.hasNext();) {
 				String key = (String) iter.next();
-				fgImageRegistry.put(key,
-						(ImageDescriptor) fgAvoidSWTErrorMap.get(key));
+				fgImageRegistry.put(key, (ImageDescriptor) fgAvoidSWTErrorMap
+						.get(key));
 			}
 			fgAvoidSWTErrorMap = null;
 		}
@@ -144,8 +144,8 @@ public class ServersPluginImages {
 			int flags, Point size) {
 		try {
 			ImageDescriptor result = ImageDescriptor
-					.createFromURL(makeIconFileURL(prefix,
-							name.substring(NAME_PREFIX_LENGTH)));
+					.createFromURL(makeIconFileURL(prefix, name
+							.substring(NAME_PREFIX_LENGTH)));
 			if (fgAvoidSWTErrorMap == null) {
 				fgAvoidSWTErrorMap = new HashMap();
 			}

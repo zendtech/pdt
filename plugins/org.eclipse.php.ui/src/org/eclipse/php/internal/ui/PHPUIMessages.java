@@ -109,6 +109,9 @@ public final class PHPUIMessages extends NLS {
 	public static String OpenProjectAction_dialog_message;
 	public static String NewPHPManualSiteDialog_chooseCHMFile;
 	public static String ColorPage_Keyword;
+	public static String ColorPage_KeywordPrivate;
+	public static String ColorPage_KeywordProtected;
+	public static String ColorPage_KeywordPublic;
 	public static String PHPAnnotationHover_multipleMarkersAtThisLine;
 	public static String ColorPage_CodeExample_0;
 	public static String PasteSourceReferencesFromClipboardAction_paste1;
@@ -875,7 +878,6 @@ public final class PHPUIMessages extends NLS {
 	public static String AddBlockCommentAction_label;
 	public static String RenamePHPElementAction_0;
 	public static String IncludePathContainerDefaultPage_path_label;
-	public static String newPhpFile_create;
 	public static String Search_FindReferencesInProjectAction_label;
 	public static String PHPBasePreferencePage_doubleclick_expand;
 	public static String CutAction_text;

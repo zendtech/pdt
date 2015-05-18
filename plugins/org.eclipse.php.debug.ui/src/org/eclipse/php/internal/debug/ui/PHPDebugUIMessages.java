@@ -77,7 +77,7 @@ public class PHPDebugUIMessages extends NLS {
 	public static String InstalledPHPsBlock_Search_result_dialog_message;
 	public static String InstalledPHPsBlock_Searching_with_found;
 	public static String InstalledPHPsBlock_setDefault;
-	
+
 	public static String launch_failure_exec_msg_text;
 	public static String launch_failure_msg_title;
 	public static String launch_failure_no_config;
