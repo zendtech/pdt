@@ -21,6 +21,7 @@ import org.eclipse.jface.dialogs.TitleAreaDialog;
 import org.eclipse.jface.operation.IRunnableWithProgress;
 import org.eclipse.jface.resource.ImageDescriptor;
 import org.eclipse.php.internal.debug.core.preferences.PHPexeItem;
+import org.eclipse.php.internal.debug.core.preferences.PHPexes;
 import org.eclipse.php.internal.ui.util.SWTUtil;
 import org.eclipse.php.internal.ui.wizards.CompositeFragment;
 import org.eclipse.php.internal.ui.wizards.IControlHandler;
@@ -46,14 +47,23 @@ public class PHPExeEditDialog extends TitleAreaDialog implements
 	private List<CompositeFragment> runtimeComposites;
 	private PHPexeItem phpExeItem;
 	private PHPexeItem[] existingItems;
+	private String tabID;
+	private CTabFolder tabs;
 
 	public PHPExeEditDialog(Shell shell, PHPexeItem phpExeItem,
 			PHPexeItem[] existingItems) {
 		super(shell);
 		setShellStyle(getShellStyle() | SWT.RESIZE);
+		// Work on a simple working copy
+		this.phpExeItem = phpExeItem.makeCopy();
 		this.existingItems = existingItems;
-		this.phpExeItem = phpExeItem;
 		runtimeComposites = new ArrayList<CompositeFragment>(3);
+	}
+
+	public PHPExeEditDialog(Shell shell, PHPexeItem phpExeItem,
+			PHPexeItem[] existingItems, String tabID) {
+		this(shell, phpExeItem, existingItems);
+		this.tabID = tabID;
 	}
 
 	public void setDescription(String desc) {
@@ -78,7 +88,7 @@ public class PHPExeEditDialog extends TitleAreaDialog implements
 
 	protected Control createDialogArea(Composite parent) {
 		// Create a tabbed container that will hold all the fragments
-		final CTabFolder tabs = SWTUtil.createTabFolder(parent);
+		tabs = SWTUtil.createTabFolder(parent);
 		ICompositeFragmentFactory[] factories = WizardFragmentsFactoryRegistry
 				.getFragmentsFactories(FRAGMENT_GROUP_ID);
 		for (ICompositeFragmentFactory element : factories) {
@@ -91,6 +101,7 @@ public class PHPExeEditDialog extends TitleAreaDialog implements
 			}
 			tabItem.setText(fragment.getDisplayName());
 			tabItem.setControl(fragment);
+			tabItem.setData(fragment.getId());
 			runtimeComposites.add(fragment);
 		}
 		tabs.addSelectionListener(new SelectionAdapter() {
@@ -105,6 +116,10 @@ public class PHPExeEditDialog extends TitleAreaDialog implements
 			}
 		});
 		getShell().setText(Messages.PHPExeEditDialog_1);
+		// set the init selection of tabitem.
+		if (tabID != null) {
+			setSelect(tabID);
+		}
 		return tabs;
 	}
 
@@ -121,6 +136,12 @@ public class PHPExeEditDialog extends TitleAreaDialog implements
 		while (composites.hasNext()) {
 			composites.next().performOk();
 		}
+		PHPexeItem original = PHPexes.getInstance().findItem(
+				phpExeItem.getUniqueId());
+		// Update original item
+		PHPexes.getInstance().updateItem(original, phpExeItem);
+		// Save changes
+		PHPexes.getInstance().save();
 		super.okPressed();
 	}
 
@@ -161,6 +182,25 @@ public class PHPExeEditDialog extends TitleAreaDialog implements
 	@Override
 	public Kind getKind() {
 		return Kind.EDITOR;
+	}
+
+	private void setSelect(String id) {
+		if (id == null) {
+			return;
+		}
+		for (int i = 0; i < tabs.getItemCount(); i++) {
+			if (id.equals(tabs.getItem(i).getData())) {
+				tabs.setSelection(i);
+				// Update tab
+				CompositeFragment fragment = (CompositeFragment) tabs
+						.getItem(i).getControl();
+				setTitle(fragment.getTitle());
+				setImageDescriptor(fragment.getImageDescriptor());
+				setDescription(fragment.getDescription());
+				fragment.validate();
+				break;
+			}
+		}
 	}
 
 }

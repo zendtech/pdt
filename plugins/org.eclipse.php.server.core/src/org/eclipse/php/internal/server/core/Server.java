@@ -44,6 +44,7 @@ public class Server implements IXMLPreferencesStorable, IAdaptable,
 
 	public static final String LOCALSERVER = "localserver"; //$NON-NLS-1$
 	public static final String ID_PREFIX = "php-server"; //$NON-NLS-1$
+	public static final String NONE_DEBUGGER_ID = "org.eclipse.php.debug.core.noneDebugger"; //$NON-NLS-1$
 	private static final int DEFAULT_HTTP_PORT = 80;
 
 	private ServerHelper helper;
@@ -54,6 +55,7 @@ public class Server implements IXMLPreferencesStorable, IAdaptable,
 	public Server() {
 		helper = new ServerHelper(this);
 		createUniqueId();
+		setDebuggerId(NONE_DEBUGGER_ID);
 	}
 
 	/**
