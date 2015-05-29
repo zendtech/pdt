@@ -165,10 +165,10 @@ public final class PHPExeUtil {
 
 		private final String linkMessage;
 
-		public ErrorDialog(String linkMessage) {
+		public ErrorDialog(String title, String linkMessage) {
 			super(PlatformUI.getWorkbench().getActiveWorkbenchWindow()
-					.getShell(), Messages.PHPExeUtil_PHP_executable_error, null,
-					null, MessageDialog.ERROR, new String[] { "OK" }, 0); //$NON-NLS-1$
+					.getShell(), title, null, null, MessageDialog.ERROR,
+					new String[] { "OK" }, 0); //$NON-NLS-1$
 			this.linkMessage = linkMessage;
 		}
 
@@ -192,12 +192,12 @@ public final class PHPExeUtil {
 					linkClicked();
 				};
 			});
-			GridDataFactory.fillDefaults().align(SWT.FILL, SWT.BEGINNING)
+			GridDataFactory
+					.fillDefaults()
+					.align(SWT.FILL, SWT.BEGINNING)
 					.grab(true, false)
-					.hint(convertHorizontalDLUsToPixels(
-							IDialogConstants.MINIMUM_MESSAGE_AREA_WIDTH),
-							SWT.DEFAULT)
-					.applyTo(message);
+					.hint(convertHorizontalDLUsToPixels(IDialogConstants.MINIMUM_MESSAGE_AREA_WIDTH),
+							SWT.DEFAULT).applyTo(message);
 			return composite;
 		}
 
@@ -210,8 +210,8 @@ public final class PHPExeUtil {
 			.compile("PHP (\\d\\.\\d\\.\\d+).*? \\((.*?)\\)"); //$NON-NLS-1$
 	private static final Pattern PATTERN_PHP_CLI_CONFIG = Pattern
 			.compile("Configuration File \\(php.ini\\) Path => (.*)"); //$NON-NLS-1$
-	private static final Pattern PATTERN_PHP_CGI_CONFIG = Pattern.compile(
-			"Configuration File \\(php.ini\\) Path </td><td class=\"v\">(.*?)</td>"); //$NON-NLS-1$
+	private static final Pattern PATTERN_PHP_CGI_CONFIG = Pattern
+			.compile("Configuration File \\(php.ini\\) Path </td><td class=\"v\">(.*?)</td>"); //$NON-NLS-1$
 	private static final String WIN_VC_DOWNLOAD = "http://www.microsoft.com/en-us/download/details.aspx?id=30679"; //$NON-NLS-1$
 
 	private static final Map<File, PHPExeInfo> phpInfos = new HashMap<File, PHPExeInfo>();
@@ -498,9 +498,11 @@ public final class PHPExeUtil {
 					if (installErrors.contains(executableFile))
 						return;
 					installErrors.add(executableFile);
-					MessageDialog errorDialog = new ErrorDialog(MessageFormat
-							.format(Messages.PHPExeUtil_PHP_exe_could_not_be_verified,
-									executableFile.getAbsolutePath())) {
+					MessageDialog errorDialog = new ErrorDialog(
+							Messages.PHPExeUtil_PHP_executable_error,
+							MessageFormat
+									.format(Messages.PHPExeUtil_PHP_exe_could_not_be_verified,
+											executableFile.getAbsolutePath())) {
 						protected void linkClicked() {
 							try {
 								PlatformUI.getWorkbench().getBrowserSupport()
