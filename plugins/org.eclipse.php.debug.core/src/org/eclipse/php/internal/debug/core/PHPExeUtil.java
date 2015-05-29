@@ -164,11 +164,12 @@ public final class PHPExeUtil {
 	private static class ErrorDialog extends MessageDialog {
 
 		private final String linkMessage;
+		private Link messageLink;
 
-		public ErrorDialog(String title, String linkMessage) {
+		public ErrorDialog(String title, String errorMessage, String linkMessage) {
 			super(PlatformUI.getWorkbench().getActiveWorkbenchWindow()
-					.getShell(), title, null, null, MessageDialog.ERROR,
-					new String[] { "OK" }, 0); //$NON-NLS-1$
+					.getShell(), title, null, errorMessage,
+					MessageDialog.ERROR, new String[] { "OK" }, 0); //$NON-NLS-1$
 			this.linkMessage = linkMessage;
 		}
 
@@ -181,23 +182,42 @@ public final class PHPExeUtil {
 				GridDataFactory.fillDefaults().align(SWT.CENTER, SWT.BEGINNING)
 						.applyTo(imageLabel);
 			}
+			Composite descriptionComposite = new Composite(composite, SWT.NONE);
+			GridLayout layout = new GridLayout(1, true);
+			layout.marginHeight = 0;
+			layout.marginWidth = 0;
+			layout.verticalSpacing = 10;
+			descriptionComposite.setLayout(layout);
 			// create message
-			Composite labelComposite = new Composite(composite, SWT.NULL);
-			labelComposite.setLayout(new GridLayout(1, true));
-			Link message = new Link(labelComposite, SWT.WRAP);
-			message.setLayoutData(new GridData(GridData.FILL_HORIZONTAL));
-			message.setText(linkMessage);
-			message.addSelectionListener(new SelectionAdapter() {
-				public void widgetSelected(SelectionEvent e) {
-					linkClicked();
-				};
-			});
-			GridDataFactory
-					.fillDefaults()
-					.align(SWT.FILL, SWT.BEGINNING)
-					.grab(true, false)
-					.hint(convertHorizontalDLUsToPixels(IDialogConstants.MINIMUM_MESSAGE_AREA_WIDTH),
-							SWT.DEFAULT).applyTo(message);
+			if (message != null) {
+				messageLabel = new Label(descriptionComposite,
+						getMessageLabelStyle());
+				messageLabel.setText(message);
+				GridDataFactory
+						.fillDefaults()
+						.align(SWT.FILL, SWT.BEGINNING)
+						.grab(true, false)
+						.hint(convertHorizontalDLUsToPixels(IDialogConstants.MINIMUM_MESSAGE_AREA_WIDTH),
+								SWT.DEFAULT).applyTo(messageLabel);
+			}
+			// create description part with link
+			if (linkMessage != null) {
+				messageLink = new Link(descriptionComposite, SWT.WRAP);
+				messageLink
+						.setLayoutData(new GridData(GridData.FILL_HORIZONTAL));
+				messageLink.setText(linkMessage);
+				messageLink.addSelectionListener(new SelectionAdapter() {
+					public void widgetSelected(SelectionEvent e) {
+						linkClicked();
+					};
+				});
+				GridDataFactory
+						.fillDefaults()
+						.align(SWT.FILL, SWT.BEGINNING)
+						.grab(true, false)
+						.hint(convertHorizontalDLUsToPixels(IDialogConstants.MINIMUM_MESSAGE_AREA_WIDTH),
+								SWT.DEFAULT).applyTo(messageLink);
+			}
 			return composite;
 		}
 
@@ -502,7 +522,8 @@ public final class PHPExeUtil {
 							Messages.PHPExeUtil_PHP_executable_error,
 							MessageFormat
 									.format(Messages.PHPExeUtil_PHP_exe_could_not_be_verified,
-											executableFile.getAbsolutePath())) {
+											executableFile.getAbsolutePath()),
+							Messages.PHPExeUtil_Please_download_and_install_redistributables) {
 						protected void linkClicked() {
 							try {
 								PlatformUI.getWorkbench().getBrowserSupport()
