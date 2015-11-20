@@ -111,8 +111,7 @@ public enum ProjectOutlineGroups {
 					}
 				}
 				for (Entry<String, List<IType>> entry : nsByName.entrySet()) {
-					childrenList.add(new NamespaceNode(ProjectOutlineContentProvider.scripProject, entry.getKey(),
-							entry.getValue().toArray(new IType[entry.getValue().size()])));
+					childrenList.add(new NamespaceNode(ProjectOutlineContentProvider.scripProject, entry.getKey()));
 				}
 
 				break;
@@ -126,7 +125,7 @@ public enum ProjectOutlineGroups {
 				break;
 
 			case GROUP_FUNCTIONS:
-				IMethod[] findMethods = PhpModelAccess.getDefault().findMethods(null, MatchRule.PREFIX,
+				IMethod[] findMethods = PhpModelAccess.getDefault().findFunctions(null, MatchRule.PREFIX,
 						Modifiers.AccGlobal, 0, scope, null);
 				if (findMethods != null) {
 					childrenList.addAll(Arrays.asList(findMethods));

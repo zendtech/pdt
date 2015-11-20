@@ -322,6 +322,8 @@ public class DBGpTarget extends DBGpElement
 
 	private DBGpValueStorage valueStorage = new DBGpValueStorage();
 
+	private boolean hasInitialSource = true;
+
 	/**
 	 * Base constructor
 	 * 
@@ -541,19 +543,9 @@ public class DBGpTarget extends DBGpElement
 			} else {
 				// either no file was found, or the user pressed the stop
 				// debugger
-				if (isTerminated() == false) {
+				if (!isTerminated()) {
 					// stop wasn't pressed
-					Display.getDefault().asyncExec(new Runnable() {
-						public void run() {
-							// No appropriate file located or no file selected.
-							// Debug Terminated
-							MessageDialog.openError(Display.getDefault().getActiveShell(),
-									PHPDebugCoreMessages.XDebugMessage_debugError,
-									PHPDebugCoreMessages.XDebug_DBGpTarget_0);
-						}
-					});
-					session.endSession();
-					terminateDebugTarget(true);
+					hasInitialSource = false;
 				}
 			}
 		} catch (Exception e) {
@@ -567,39 +559,45 @@ public class DBGpTarget extends DBGpElement
 	 * 
 	 */
 	private void initiateSession() {
-		if (targetState != STATE_INIT_SESSION_WAIT && targetState != STATE_STARTED_SESSION_WAIT) {
+		if (!hasState(STATE_INIT_SESSION_WAIT, STATE_STARTED_SESSION_WAIT)) {
 			DBGpLogger.logWarning("initiateSession in Wrong State: " + targetState, this, null); //$NON-NLS-1$
 		}
 		stackFrames = null;
 		currentVariables = null;
 		superGlobalVars = null;
-		// clear any previous debug output object and create a new one.
+		// Clear any previous debug output object and create a new one.
 		debugOutput = new DebugOutput();
-
 		session.startSession();
-
-		// we are effectively suspended once the session has handshaked until we
-		// run
+		// We are suspended once the session has handshake until we run
 		setState(STATE_STARTED_SUSPENDED);
 		negotiateDBGpFeatures();
 		loadPredefinedBreakpoints();
-		if (!stopAtStart) {
-			// set state before issuing a run otherwise a timing window occurs
-			// where
-			// a run could suspend, the thread sets state to suspend but then
-			// this
-			// thread sets it to running.
+		if (!hasInitialSource) {
 			setState(STATE_STARTED_RUNNING);
 			session.sendAsyncCmd(DBGpCommand.run);
-		} else {
-			// first say we are suspended on a breakpoint to trigger a
-			// perspective switch
-			// then do an initial step into to step onto the 1st line
-			suspended(DebugEvent.BREAKPOINT);
-			try {
-				stepInto();
-			} catch (DebugException e) {
-			}
+			// Reset initial source flag
+			hasInitialSource = true;
+			return;
+		}
+		if (!stopAtStart) {
+			/*
+			 * Set state before issuing a run otherwise a timing window occurs
+			 * where a run could suspend, the thread sets state to suspend but
+			 * then this thread sets it to running.
+			 */
+			setState(STATE_STARTED_RUNNING);
+			session.sendAsyncCmd(DBGpCommand.run);
+			return;
+		}
+		/*
+		 * We have a related source and "Break at First Line" option on. First
+		 * say we are suspended on a breakpoint to trigger a perspective switch
+		 * then do an initial step into to step onto the 1st line
+		 */
+		suspended(DebugEvent.BREAKPOINT);
+		try {
+			stepInto();
+		} catch (DebugException e) {
 		}
 	}
 
@@ -627,7 +625,7 @@ public class DBGpTarget extends DBGpElement
 	 * @see org.eclipse.debug.core.model.IDebugTarget#getThreads()
 	 */
 	public IThread[] getThreads() throws DebugException {
-		if (isTerminated() || STATE_STARTED_SESSION_WAIT == targetState)
+		if (isTerminated() || hasState(STATE_STARTED_SESSION_WAIT))
 			return new IThread[0];
 		return allThreads;
 	}
@@ -691,14 +689,7 @@ public class DBGpTarget extends DBGpElement
 	 * @see org.eclipse.debug.core.model.ITerminate#canTerminate()
 	 */
 	public boolean canTerminate() {
-		// can only terminate if we have not terminated (allow for terminating
-		// state as well to be safe).
-		boolean canTerminate = (STATE_TERMINATED != targetState && STATE_CREATE != targetState
-				&& STATE_DISCONNECTED != targetState);
-		if (!canTerminate && process != null) {
-			canTerminate = canTerminate && process.canTerminate();
-		}
-		return canTerminate;
+		return !hasState(STATE_TERMINATED, STATE_CREATE, STATE_DISCONNECTED);
 	}
 
 	/*
@@ -708,21 +699,11 @@ public class DBGpTarget extends DBGpElement
 	 */
 
 	public boolean isTerminated() {
-		boolean terminated = (STATE_TERMINATED == targetState);
-		if (!terminated && process != null) {
-			return process.isTerminated();
-		}
-		return terminated;
+		return hasState(STATE_TERMINATED);
 	}
 
-	/**
-	 * returns if we have terminated or in the process of terminating
-	 * 
-	 * @return
-	 */
-	public boolean isTerminating() {
-		boolean terminating = (targetState == STATE_TERMINATED) || (targetState == STATE_TERMINATING);
-		return terminating;
+	private boolean isTerminating() {
+		return hasState(STATE_TERMINATED, STATE_TERMINATING);
 	}
 
 	/**
@@ -731,9 +712,7 @@ public class DBGpTarget extends DBGpElement
 	 * @return
 	 */
 	public boolean hasStarted() {
-		boolean started = (STATE_STARTED_RUNNING == targetState) || (STATE_STARTED_SESSION_WAIT == targetState)
-				|| (STATE_STARTED_SUSPENDED == targetState);
-		return started;
+		return hasState(STATE_STARTED_RUNNING, STATE_STARTED_SESSION_WAIT, STATE_STARTED_SUSPENDED);
 	}
 
 	/*
@@ -745,7 +724,7 @@ public class DBGpTarget extends DBGpElement
 		if (isTerminating()) {
 			// just in case we had some problem sending the stop command, allow
 			// terminate to still work.
-			if (session == null && STATE_TERMINATING == targetState) {
+			if (session == null && hasState(STATE_TERMINATING)) {
 				terminateDebugTarget(true);
 			}
 			return;
@@ -754,7 +733,7 @@ public class DBGpTarget extends DBGpElement
 		// we won't accept any more sessions, so stop listening
 		DBGpSessionHandler.getInstance().removeSessionListener(this);
 
-		if (STATE_STARTED_SUSPENDED == targetState) {
+		if (hasState(STATE_STARTED_SUSPENDED)) {
 			// we are suspended, so we can send the stop request to do a clean
 			// termination
 			synchronized (sessionMutex) {
@@ -805,7 +784,7 @@ public class DBGpTarget extends DBGpElement
 
 		synchronized (sessionMutex) {
 			session = null;
-			if (STATE_TERMINATING == targetState) {
+			if (hasState(STATE_TERMINATING)) {
 				// we are terminating, if we are a web launch, we need to issue
 				// the
 				// stop URL, then terminate the debug target.
@@ -869,13 +848,13 @@ public class DBGpTarget extends DBGpElement
 	 */
 	public void terminateDebugTarget(boolean isTerminate) {
 		// check we haven't already terminated
-		if (STATE_TERMINATED != targetState) {
+		if (!hasState(STATE_TERMINATED)) {
 			DBGpSessionHandler.getInstance().removeSessionListener(this);
 			IBreakpointManager bpmgr = DebugPlugin.getDefault().getBreakpointManager();
 			bpmgr.removeBreakpointListener(this);
 			bpmgr.removeBreakpointManagerListener(this);
 
-			if (isTerminate && STATE_STARTED_RUNNING == targetState) {
+			if (isTerminate && hasState(STATE_STARTED_RUNNING)) {
 				setState(STATE_TERMINATING);
 				if (process != null) {
 					try {
@@ -962,8 +941,7 @@ public class DBGpTarget extends DBGpElement
 	 * @see org.eclipse.debug.core.model.ISuspendResume#isSuspended()
 	 */
 	public boolean isSuspended() {
-		boolean isSuspended = (STATE_STARTED_SUSPENDED == targetState);
-		return isSuspended;
+		return hasState(STATE_STARTED_SUSPENDED);
 	}
 
 	/*
@@ -1098,8 +1076,7 @@ public class DBGpTarget extends DBGpElement
 	 * @see org.eclipse.debug.core.model.IDisconnect#canDisconnect()
 	 */
 	public boolean canDisconnect() {
-		boolean canDisconnect = STATE_STARTED_RUNNING == targetState || STATE_STARTED_SUSPENDED == targetState;
-		return canDisconnect;
+		return hasState(STATE_STARTED_RUNNING, STATE_STARTED_SUSPENDED);
 	}
 
 	/*
@@ -1111,7 +1088,7 @@ public class DBGpTarget extends DBGpElement
 		if (isTerminating()) {
 			return;
 		}
-		if (STATE_STARTED_RUNNING == targetState || STATE_STARTED_SUSPENDED == targetState) {
+		if (hasState(STATE_STARTED_RUNNING, STATE_STARTED_SUSPENDED)) {
 			// we are in the middle of a debug session, single or multi
 			// makes no difference, we should stop it
 			setState(STATE_DISCONNECTED);
@@ -1228,7 +1205,7 @@ public class DBGpTarget extends DBGpElement
 	 * @see org.eclipse.debug.core.model.IDisconnect#isDisconnected()
 	 */
 	public boolean isDisconnected() {
-		return STATE_DISCONNECTED == targetState || STATE_TERMINATED == targetState;
+		return hasState(STATE_DISCONNECTED, STATE_TERMINATED);
 	}
 
 	/**
@@ -1704,6 +1681,15 @@ public class DBGpTarget extends DBGpElement
 			DBGpLogger.debug("State Change: " + newStateStr); //$NON-NLS-1$
 		}
 		targetState = newState;
+	}
+
+	private boolean hasState(int... state) {
+		for (int i = 0; i < state.length; i++) {
+			if (targetState == state[i]) {
+				return true;
+			}
+		}
+		return false;
 	}
 
 	/**
@@ -2264,7 +2250,7 @@ public class DBGpTarget extends DBGpElement
 				session.setDebugTarget(this);
 				this.session = session;
 
-				if (STATE_INIT_SESSION_WAIT == targetState || STATE_CREATE == targetState) {
+				if (hasState(STATE_INIT_SESSION_WAIT, STATE_CREATE)) {
 
 					// if we are in initial session wait, fire the event to
 					// unblock if we haven't even got that far, fire the event
@@ -2385,8 +2371,7 @@ public class DBGpTarget extends DBGpElement
 	 * @return true if running.
 	 */
 	public boolean isRunning() {
-		boolean isRunning = (STATE_STARTED_RUNNING == targetState);
-		return isRunning;
+		return hasState(STATE_STARTED_RUNNING);
 	}
 
 	public boolean isMultiSessionManaged() {
@@ -2420,10 +2405,7 @@ public class DBGpTarget extends DBGpElement
 	}
 
 	public boolean isWaiting() {
-		// cannot say isWaiting for init_session_wait because that means the
-		// DebugOutput is null and that causes a null pointer exception.
-		boolean isWaiting = (STATE_STARTED_SESSION_WAIT == targetState);
-		return isWaiting;
+		return hasState(STATE_STARTED_SESSION_WAIT);
 	}
 
 	/**
