@@ -14,8 +14,6 @@ package org.eclipse.php.internal.ui.editor.contentassist;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 
-import org.eclipse.dltk.core.search.indexing.IndexManager;
-import org.eclipse.dltk.internal.core.ModelManager;
 import org.eclipse.dltk.ui.text.completion.IScriptContentAssistExtension;
 import org.eclipse.jface.text.IDocument;
 import org.eclipse.jface.text.ITextViewer;
@@ -24,6 +22,7 @@ import org.eclipse.jface.text.contentassist.ContentAssistant;
 import org.eclipse.jface.text.contentassist.IContentAssistProcessor;
 import org.eclipse.jface.window.DefaultToolTip;
 import org.eclipse.php.internal.core.documentModel.partitioner.PHPPartitionTypes;
+import org.eclipse.php.internal.core.util.PHPBuildUtils;
 import org.eclipse.php.internal.ui.PHPUiPlugin;
 import org.eclipse.php.internal.ui.editor.PHPStructuredTextViewer;
 import org.eclipse.php.internal.ui.editor.configuration.PHPStructuredTextViewerConfiguration;
@@ -92,7 +91,7 @@ public class PHPContentAssistant extends StructuredContentAssistant implements I
 							continue;
 						}
 					}
-					if (isIndexing()) {
+					if (PHPBuildUtils.isIndexing()) {
 						continue;
 					}
 					showAssist(fShowStyle);
@@ -270,7 +269,7 @@ public class PHPContentAssistant extends StructuredContentAssistant implements I
 
 	@Override
 	public String showPossibleCompletions() {
-		if (isIndexing()) {
+		if (PHPBuildUtils.isIndexing()) {
 			String message = Messages.PHPContentAssistant_0;
 			DefaultToolTip toolTip = new DefaultToolTip(fViewer.getTextWidget(), SWT.NONE, true);
 			toolTip.setText(message);
@@ -282,12 +281,6 @@ public class PHPContentAssistant extends StructuredContentAssistant implements I
 		}
 
 		return super.showPossibleCompletions();
-	}
-
-	public boolean isIndexing() {
-		IndexManager indexManager = ModelManager.getModelManager().getIndexManager();
-		// only one job can awaiting e.g. after file save (file will be indexed)
-		return indexManager.awaitingJobsCount() > 1;
 	}
 
 	public boolean provide(IContentAssistProcessor processor) {
