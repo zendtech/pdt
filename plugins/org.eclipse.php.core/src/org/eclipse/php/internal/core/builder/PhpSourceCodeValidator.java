@@ -105,7 +105,7 @@ public class PhpSourceCodeValidator extends AbstractValidator {
 		for (IProblem problem : problemCollector.getProblems()) {
 			ValidatorMessage vm = ValidatorMessage.create(problem.getMessage(), resource);
 			vm.setType(PhpProblemIdentifier.MARKER_TYPE_ID);
-			vm.setAttribute("id", DefaultProblemIdentifier.encode(PhpProblemIdentifier.SYNTAX));
+			vm.setAttribute("id", DefaultProblemIdentifier.encode(problem.getID()));
 			vm.setAttribute(IMarker.LINE_NUMBER, problem.getSourceLineNumber() + 1);
 			vm.setAttribute(IMarker.CHAR_START, problem.getSourceStart());
 			vm.setAttribute(IMarker.CHAR_END, problem.getSourceEnd());
