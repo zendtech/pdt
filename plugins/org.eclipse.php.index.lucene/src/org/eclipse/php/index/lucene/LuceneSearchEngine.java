@@ -282,7 +282,7 @@ public class LuceneSearchEngine implements ISearchEngine, ISearchEngineExtension
 		IndexSearcher indexSearcher = null;
 		Query query = new MatchAllDocsQuery();
 		final SearchMatchHandler searchMatchHandler = new SearchMatchHandler(scope, requestor);
-		List<SearchMatch> results = new ArrayList<>();
+		List<SearchMatch> results = new ArrayList<SearchMatch>();
 		for (String container : SearchScope.getContainers(scope)) {
 			// Use index searcher for given container, data type and element type
 			SearcherManager searcherManager = LuceneManager.INSTANCE.findIndexSearcher(container,

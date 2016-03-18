@@ -38,7 +38,7 @@ public class LuceneIndexer extends AbstractIndexer {
 
 	private static final class TimestampsCollector implements Collector {
 
-		private static final Set<String> fFields = new HashSet<>(Arrays.asList(IndexFields.F_PATH));
+		private static final Set<String> fFields = new HashSet<String>(Arrays.asList(IndexFields.F_PATH));
 
 		private final Map<String, Long> fResult;
 
@@ -80,7 +80,7 @@ public class LuceneIndexer extends AbstractIndexer {
 		try {
 			final Map<String, Long> result = new HashMap<String, Long>();
 			indexSearcher = LuceneManager.INSTANCE.findTimestampsSearcher(container).acquire();
-			final Set<String> fields = new HashSet<>();
+			final Set<String> fields = new HashSet<String>();
 			fields.add(IndexFields.F_PATH);
 			indexSearcher.search(new MatchAllDocsQuery(), new TimestampsCollector(result));
 			return result;
