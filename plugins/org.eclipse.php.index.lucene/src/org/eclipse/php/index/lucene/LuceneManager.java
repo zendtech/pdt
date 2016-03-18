@@ -325,8 +325,8 @@ public enum LuceneManager {
 	}
 
 	private static final String INDEX_DIR = "index"; //$NON-NLS-1$
-	private static final String PROPERTIES_FILE = "index.properties"; //$NON-NLS-1$
-	private static final String MAPPINGS_FILE = "mappings.ser"; //$NON-NLS-1$
+	private static final String PROPERTIES_FILE = ".properties"; //$NON-NLS-1$
+	private static final String MAPPINGS_FILE = ".mappings"; //$NON-NLS-1$
 	private static final String VERSION = String.valueOf(1);
 
 	private final IPath fBundlePath;
