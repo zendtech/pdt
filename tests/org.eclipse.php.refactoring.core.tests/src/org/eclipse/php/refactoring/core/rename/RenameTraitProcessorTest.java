@@ -10,11 +10,9 @@
  *******************************************************************************/
 package org.eclipse.php.refactoring.core.rename;
 
-import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.*;
 
 import org.eclipse.core.resources.IFile;
-import org.eclipse.core.runtime.jobs.IJobManager;
-import org.eclipse.core.runtime.jobs.Job;
 import org.eclipse.php.core.tests.PHPCoreTests;
 import org.eclipse.php.core.tests.runner.PDTTList;
 import org.eclipse.php.internal.core.PHPVersion;
@@ -61,10 +59,6 @@ public class RenameTraitProcessorTest extends AbstractRenameRefactoringTest {
 		checkInitCondition(processor);
 		checkFinalCondition(processor);
 
-		IJobManager jobManager = Job.getJobManager();
-		while (jobManager.isIdle() != true) {
-			Thread.sleep(100);
-		}
 		performChange(processor);
 		checkTestResult(testFile);
 	}

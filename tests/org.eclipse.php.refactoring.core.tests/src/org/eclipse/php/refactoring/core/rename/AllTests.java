@@ -17,7 +17,8 @@ import org.junit.runner.RunWith;
 import org.junit.runners.Suite;
 
 @RunWith(Suite.class)
-@Suite.SuiteClasses({ RenameClassProcessorTest.class, RenameTraitProcessorTest.class,
+@Suite.SuiteClasses({
+		RenameClassProcessorTest.class, /* RenameTraitProcessorTest.class, */
 		RenameClassMemberProcessorTest.class, RenameTraitMemberProcessorTest.class, RenameFunctionProcessorTest.class,
 		RenameGlobalConstantProcessorTest.class, RenameGlobalVariableProcessorTest.class,
 		RenameLocalVariableProcessorTest.class, RenameResourceProcessorTest.class, RenameProcessorTestCase0026915.class,
