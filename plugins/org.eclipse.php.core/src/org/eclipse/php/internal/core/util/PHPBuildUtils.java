@@ -18,6 +18,6 @@ public class PHPBuildUtils {
 	public static boolean isIndexing() {
 		IndexManager indexManager = ModelManager.getModelManager().getIndexManager();
 		// only one job can awaiting e.g. after file save (file will be indexed)
-		return indexManager.awaitingJobsCount() > 1;
+		return false;
 	}
 }

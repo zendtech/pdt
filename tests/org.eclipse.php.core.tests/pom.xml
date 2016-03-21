@@ -21,11 +21,11 @@
 				<version>${tycho-version}</version>
 				<configuration>
 					<testClass>org.eclipse.php.core.tests.AllTests</testClass>
-					<argLine>-Dh2.syncMethod=force ${tycho.testArgLine}</argLine>
+					<!-- <argLine>-Dh2.syncMethod=force ${tycho.testArgLine}</argLine> -->
 					<dependencies>
 						<dependency>
 							<type>p2-installable-unit</type>
-							<artifactId>org.eclipse.dltk.core.index.sql.h2</artifactId>
+							<artifactId>org.eclipse.php.index.lucene</artifactId>
 						</dependency>
 					</dependencies>
 					<testFailureIgnore>false</testFailureIgnore>

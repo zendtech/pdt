@@ -20,11 +20,11 @@
 					<useUIHarness>true</useUIHarness>
 					<useUIThread>false</useUIThread>
 					<argLine>-Dh2.syncMethod=force -Xmx512m -XX:MaxPermSize=256m ${test.vmargs} ${tycho.testArgLine}</argLine>
-					<testFailureIgnore>false</testFailureIgnore>
+					<testFailureIgnore>true</testFailureIgnore>
 					<dependencies>
 						<dependency>
 							<type>p2-installable-unit</type>
-							<artifactId>org.eclipse.dltk.core.index.sql.h2</artifactId>
+							<artifactId>org.eclipse.php.index.lucene</artifactId>
 						</dependency>
 						<dependency>
 							<type>p2-installable-unit</type>
