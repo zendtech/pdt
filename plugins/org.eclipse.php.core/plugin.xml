@@ -162,7 +162,7 @@
 			id="org.eclipse.php.core.buildParticipant.organizeUseStatements"
 			name="%organizeBuildParticipant.name"
 			nature="org.eclipse.php.core.PHPNature">
-			<!--<requires id="org.eclipse.php.core.buildParticipant.parser" />-->
+			<requires id="org.eclipse.php.core.buildParticipant.parser" />
 		</buildParticipant>
 	</extension>
 
@@ -438,24 +438,5 @@
             class="org.eclipse.php.internal.core.compiler.ast.parser.PhpProblemIdentifierFactory"
             namespace="org.eclipse.php.internal.core.compiler.ast.parser.PhpProblemIdentifier">
       </problemIdentifierFactory>
-   </extension>
-   <extension
-         id="org.eclipse.php.core.PHPValidator"
-         name="PHP Validation"
-         point="org.eclipse.wst.validation.validatorV2">
-      <validator
-            build="true"
-            class="org.eclipse.php.internal.core.builder.PhpSourceCodeValidator"
-            manual="true"
-            markerId="org.eclipse.php.core.phpproblemmarker"
-            version="1">
-         <include>
-            <rules>
-               <projectNature
-                     id="org.eclipse.php.core.PHPNature">
-               </projectNature>
-            </rules>
-         </include>
-      </validator>
    </extension>
 </plugin>

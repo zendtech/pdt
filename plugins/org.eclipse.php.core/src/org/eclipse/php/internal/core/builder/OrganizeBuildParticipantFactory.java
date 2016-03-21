@@ -17,15 +17,12 @@ import org.eclipse.core.runtime.IConfigurationElement;
 import org.eclipse.core.runtime.IExecutableExtension;
 import org.eclipse.dltk.ast.declarations.ModuleDeclaration;
 import org.eclipse.dltk.compiler.problem.DefaultProblem;
-import org.eclipse.dltk.compiler.problem.IProblemReporter;
 import org.eclipse.dltk.compiler.problem.ProblemSeverities;
 import org.eclipse.dltk.core.IModelElement;
 import org.eclipse.dltk.core.IScriptProject;
-import org.eclipse.dltk.core.SourceParserUtil;
 import org.eclipse.dltk.core.builder.AbstractBuildParticipantType;
 import org.eclipse.dltk.core.builder.IBuildContext;
 import org.eclipse.dltk.core.builder.IBuildParticipant;
-import org.eclipse.jface.text.DefaultLineTracker;
 import org.eclipse.jface.text.Document;
 import org.eclipse.jface.text.IDocument;
 import org.eclipse.php.core.libfolders.LibraryFolderManager;
@@ -70,39 +67,32 @@ public class OrganizeBuildParticipantFactory extends AbstractBuildParticipantTyp
 				// skip syntax check for code inside library folders
 				return;
 			}
-			if (context.getBuildType() != IBuildContext.RECONCILE_BUILD) {
-				return;
-			}
-			final ModuleDeclaration moduleDeclaration = SourceParserUtil
-					.getModuleDeclaration(context.getSourceModule());
+			final ModuleDeclaration moduleDeclaration = (ModuleDeclaration) context
+					.get(IBuildContext.ATTR_MODULE_DECLARATION);
+
 			if (moduleDeclaration != null) {
 				// Run the validation visitor:
 				try {
 					UseStatement[] statements = ASTUtils.getUseStatements(moduleDeclaration,
 							context.getContents().length);
 
-					moduleDeclaration.traverse(new ImportValidationVisitor(context.getSourceContents(),
-							context.getProblemReporter(), statements));
+					moduleDeclaration.traverse(new ImportValidationVisitor(context, statements));
 				} catch (Exception e) {
 				}
 			}
 		}
 	}
 
-	public static class ImportValidationVisitor extends PHPASTVisitor {
-
-		private IProblemReporter problemCollector;
+	private static class ImportValidationVisitor extends PHPASTVisitor {
+		private IBuildContext context;
 		private IDocument doc;
 		private UseStatement[] statements;
 		private NamespaceDeclaration currentNamespace;
-		private DefaultLineTracker lineTracker = new DefaultLineTracker();
 
-		public ImportValidationVisitor(String content, IProblemReporter problemCollector, UseStatement[] statements) {
-			this.problemCollector = problemCollector;
+		public ImportValidationVisitor(IBuildContext context, UseStatement[] statements) {
+			this.context = context;
 			this.statements = statements;
-			this.doc = new Document(content);
-			lineTracker = new DefaultLineTracker();
-			lineTracker.set(doc.get());
+			doc = new Document(new String(context.getContents()));
 		}
 
 		public boolean visit(NamespaceDeclaration n) throws Exception {
@@ -130,14 +120,14 @@ public class OrganizeBuildParticipantFactory extends AbstractBuildParticipantTyp
 				}
 				int sourceStart = multiPart ? part.getNamespace().sourceStart() : s.sourceStart();
 				int sourceEnd = multiPart ? part.getNamespace().sourceEnd() : s.sourceEnd();
-				int lineNumber = lineTracker.getLineNumberOfOffset(sourceStart);
+				int lineNumber = context.getLineTracker().getLineNumberOfOffset(sourceStart);
 
-				DefaultProblem problem = new DefaultProblem(
+				DefaultProblem problem = new DefaultProblem(context.getFile().getName(),
 						Messages.format(UNUSED_MESSAGE, part.getNamespace().getFullyQualifiedName()),
 						PhpProblemIdentifier.USE_STATEMENTS, new String[0], ProblemSeverities.Warning, sourceStart,
-						sourceEnd, lineNumber);
+						sourceEnd, lineNumber, -1);
 
-				problemCollector.reportProblem(problem);
+				context.getProblemReporter().reportProblem(problem);
 			}
 
 			return super.visit(s);

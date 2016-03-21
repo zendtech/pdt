@@ -24,7 +24,6 @@ import org.eclipse.core.resources.IProjectDescription;
 import org.eclipse.core.resources.IResource;
 import org.eclipse.core.resources.IncrementalProjectBuilder;
 import org.eclipse.core.resources.ResourcesPlugin;
-import org.eclipse.core.runtime.NullProgressMonitor;
 import org.eclipse.php.core.tests.PDTTUtils;
 import org.eclipse.php.core.tests.PHPCoreTests;
 import org.eclipse.php.core.tests.PdttFile;
@@ -33,7 +32,6 @@ import org.eclipse.php.core.tests.runner.PDTTList.BeforeList;
 import org.eclipse.php.internal.core.PHPVersion;
 import org.eclipse.php.internal.core.compiler.ast.parser.PhpProblemIdentifier;
 import org.eclipse.php.internal.core.project.PHPNature;
-import org.eclipse.wst.validation.ValidationFramework;
 import org.junit.Test;
 
 abstract public class AbstractErrorReportingTests {
@@ -50,7 +48,7 @@ abstract public class AbstractErrorReportingTests {
 	@Test
 	public void errors(String fileName) throws Exception {
 		IFile file = files.get(fileName);
-		ValidationFramework.getDefault().validate(file, new NullProgressMonitor());
+
 		StringBuilder buf = new StringBuilder();
 
 		IMarker[] markers = file.findMarkers(getMarkerType(), true, IResource.DEPTH_ZERO);
