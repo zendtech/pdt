@@ -11,13 +11,10 @@
 package org.eclipse.php.refactoring.core.rename;
 
 import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.fail;
 
 import org.eclipse.core.resources.IFile;
-import org.eclipse.core.runtime.CoreException;
-import org.eclipse.core.runtime.NullProgressMonitor;
-import org.eclipse.core.runtime.OperationCanceledException;
-import org.eclipse.ltk.core.refactoring.Change;
+import org.eclipse.core.runtime.jobs.IJobManager;
+import org.eclipse.core.runtime.jobs.Job;
 import org.eclipse.php.core.tests.PHPCoreTests;
 import org.eclipse.php.core.tests.runner.PDTTList;
 import org.eclipse.php.internal.core.PHPVersion;
@@ -64,25 +61,11 @@ public class RenameTraitProcessorTest extends AbstractRenameRefactoringTest {
 		checkInitCondition(processor);
 		checkFinalCondition(processor);
 
-		PHPCoreTests.waitForIndexer();
-		PHPCoreTests.waitForAutoBuild();
-		try {
-			Change change = processor.createChange(new NullProgressMonitor());
-			PHPCoreTests.waitForIndexer();
-			PHPCoreTests.waitForAutoBuild();
-			if (change != null) {
-				change.perform(new NullProgressMonitor());
-			}
-		} catch (OperationCanceledException e) {
-			e.printStackTrace();
-			fail(e.getMessage());
-		} catch (CoreException e) {
-			e.printStackTrace();
-			fail(e.getMessage());
-		} catch (Exception e) {
-			e.printStackTrace();
-			fail(e.getMessage());
+		IJobManager jobManager = Job.getJobManager();
+		while (jobManager.isIdle() != true) {
+			Thread.sleep(100);
 		}
+		performChange(processor);
 		checkTestResult(testFile);
 	}
 }
