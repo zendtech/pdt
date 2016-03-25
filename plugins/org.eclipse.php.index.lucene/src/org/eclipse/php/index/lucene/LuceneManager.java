@@ -53,24 +53,24 @@ public enum LuceneManager {
 
 	public enum ContainerIndexType {
 
-		DECLARATIONS("1"), //$NON-NLS-1$
-		REFERENCES("2"); //$NON-NLS-1$
+		DECLARATIONS("declarations"), //$NON-NLS-1$
+		REFERENCES("references"); //$NON-NLS-1$
 
-		private final String fId;
+		private final String fDirectory;
 
-		private ContainerIndexType(String id) {
-			this.fId = id;
+		private ContainerIndexType(String directory) {
+			this.fDirectory = directory;
 		}
 
-		public String getId() {
-			return fId;
+		public String getDirectory() {
+			return fDirectory;
 		}
 
 	}
 
 	private final class ContainerIndex {
 
-		private static final String TIMESTAMPS_ID = "0"; //$NON-NLS-1$
+		private static final String TIMESTAMPS_DIR = "timestamps"; //$NON-NLS-1$
 
 		private final String fContainerId;
 
@@ -102,7 +102,7 @@ public enum LuceneManager {
 			if (fTimestampsWriter == null) {
 				try {
 					Directory indexDir = FSDirectory.open(Paths.get(
-							fBundlePath.append(INDEX_DIR).append(fContainerId).append(TIMESTAMPS_ID).toOSString()));
+							fBundlePath.append(INDEX_DIR).append(fContainerId).append(TIMESTAMPS_DIR).toOSString()));
 					IndexWriterConfig config = new IndexWriterConfig(new DefaultAnalyzer());
 					config.setOpenMode(OpenMode.CREATE_OR_APPEND);
 					fTimestampsWriter = new IndexWriter(indexDir, config);
@@ -131,7 +131,7 @@ public enum LuceneManager {
 			if (writer == null) {
 				try {
 					Directory indexDir = FSDirectory.open(Paths.get(fBundlePath.append(INDEX_DIR).append(fContainerId)
-							.append(dataType.getId()).append(String.valueOf(elementType)).toOSString()));
+							.append(dataType.getDirectory()).append(String.valueOf(elementType)).toOSString()));
 					IndexWriterConfig config = new IndexWriterConfig(new DefaultAnalyzer());
 					config.setOpenMode(OpenMode.CREATE_OR_APPEND);
 					writer = new IndexWriter(indexDir, config);
@@ -304,6 +304,8 @@ public enum LuceneManager {
 		protected IStatus run(IProgressMonitor monitor) {
 			CountDownLatch latch = new CountDownLatch(0);
 			IndexManager indexManager = ModelManager.getModelManager().getIndexManager();
+			// Discard all running requests
+			indexManager.discardJobs(null);
 			// Wait for indexer before shutting down
 			while (indexManager.awaitingJobsCount() > 0) {
 				try {

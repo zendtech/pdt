@@ -12,8 +12,8 @@ import java.util.Map;
 
 import org.apache.lucene.index.BinaryDocValues;
 import org.apache.lucene.index.DocValues;
+import org.apache.lucene.index.LeafReader;
 import org.apache.lucene.index.LeafReaderContext;
-import org.apache.lucene.index.MultiDocValues;
 import org.apache.lucene.index.NumericDocValues;
 import org.apache.lucene.index.Term;
 import org.apache.lucene.queries.BooleanFilter;
@@ -96,45 +96,40 @@ public class LuceneSearchEngine implements ISearchEngine, ISearchEngineExtension
 		private String fContainer;
 		private int fElementType;
 		private List<SearchMatch> fResult;
-		private final LeafCollector fLeafCollector = new LeafCollector() {
-			@Override
-			public void setScorer(Scorer scorer) throws IOException {
-				// ignore
-			}
-			@Override
-			public void collect(int docId) throws IOException {
-				addResult(docId);
-			}
-		};
 
-		public ResultsCollector(String container, int elementType, List<SearchMatch> result, IndexSearcher searcher) {
+		public ResultsCollector(String container, int elementType, List<SearchMatch> result) {
 			this.fContainer = container;
 			this.fElementType = elementType;
 			this.fResult = result;
-			try {
-				fDocNumericValues = new HashMap<String, NumericDocValues>();
-				for (String field : NUMERIC_FIELDS) {
-					NumericDocValues docValues = MultiDocValues.getNumericValues(searcher.getIndexReader(), field);
-					if (docValues != null) {
-						fDocNumericValues.put(field, docValues);
-					}
-				}
-				fDocBinaryValues = new HashMap<String, BinaryDocValues>();
-				for (String field : BINARY_FIELDS) {
-					BinaryDocValues docValues = MultiDocValues.getBinaryValues(searcher.getIndexReader(), field);
-					if (docValues != null) {
-						fDocBinaryValues.put(field, docValues);
-					}
-				}
-			} catch (IOException e) {
-				Logger.logException(e);
-			}
-
 		}
 
-		@Override
 		public LeafCollector getLeafCollector(final LeafReaderContext context) throws IOException {
-			return fLeafCollector;
+			final LeafReader reader = context.reader();
+			fDocNumericValues = new HashMap<String, NumericDocValues>();
+			for (String field : NUMERIC_FIELDS) {
+				NumericDocValues docValues = reader.getNumericDocValues(field);
+				if (docValues != null) {
+					fDocNumericValues.put(field, docValues);
+				}
+			}
+			fDocBinaryValues = new HashMap<String, BinaryDocValues>();
+			for (String field : BINARY_FIELDS) {
+				BinaryDocValues docValues = reader.getBinaryDocValues(field);
+				if (docValues != null) {
+					fDocBinaryValues.put(field, docValues);
+				}
+			}
+			return new LeafCollector() {
+				@Override
+				public void setScorer(Scorer scorer) throws IOException {
+					// ignore
+				}
+
+				@Override
+				public void collect(int docId) throws IOException {
+					addResult(docId);
+				}
+			};
 		}
 
 		private void addResult(int docId) throws IOException {
@@ -289,7 +284,7 @@ public class LuceneSearchEngine implements ISearchEngine, ISearchEngineExtension
 					searchForRefs ? ContainerIndexType.REFERENCES : ContainerIndexType.DECLARATIONS, elementType);
 			try {
 				indexSearcher = searcherManager.acquire();
-				ResultsCollector collector = new ResultsCollector(container, elementType, results, indexSearcher);
+				ResultsCollector collector = new ResultsCollector(container, elementType, results);
 				if (filter != null) {
 					indexSearcher.search(query, filter, collector);
 				} else {
@@ -307,13 +302,15 @@ public class LuceneSearchEngine implements ISearchEngine, ISearchEngineExtension
 				}
 			}
 		}
-		// Sort final results by element name
-		Collections.sort(results, new Comparator<SearchMatch>() {
-			@Override
-			public int compare(SearchMatch e1, SearchMatch e2) {
-				return e1.getElementName().compareToIgnoreCase(e2.getElementName());
-			}
-		});
+		if (results.size() > 1) {
+			// Sort final results by element name
+			Collections.sort(results, new Comparator<SearchMatch>() {
+				@Override
+				public int compare(SearchMatch e1, SearchMatch e2) {
+					return e1.getElementName().compareToIgnoreCase(e2.getElementName());
+				}
+			});
+		}
 		// Pass results to entity handler
 		for (SearchMatch result : results) {
 			searchMatchHandler.handle(result, searchForRefs);
