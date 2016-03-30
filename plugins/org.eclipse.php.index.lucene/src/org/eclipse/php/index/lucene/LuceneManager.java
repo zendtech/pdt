@@ -22,15 +22,10 @@ import org.apache.lucene.analysis.standard.StandardFilter;
 import org.apache.lucene.analysis.util.CharTokenizer;
 import org.apache.lucene.index.IndexWriter;
 import org.apache.lucene.index.IndexWriterConfig;
-import org.apache.lucene.index.Term;
 import org.apache.lucene.index.IndexWriterConfig.OpenMode;
-import org.apache.lucene.queries.BooleanFilter;
-import org.apache.lucene.queries.TermFilter;
-import org.apache.lucene.search.ConstantScoreQuery;
-import org.apache.lucene.search.Query;
+import org.apache.lucene.index.Term;
 import org.apache.lucene.search.SearcherFactory;
 import org.apache.lucene.search.SearcherManager;
-import org.apache.lucene.search.BooleanClause.Occur;
 import org.apache.lucene.store.Directory;
 import org.apache.lucene.store.FSDirectory;
 import org.eclipse.core.resources.ISaveContext;
@@ -164,16 +159,14 @@ public enum LuceneManager {
 		}
 
 		public synchronized void cleanup(String sourceModule) {
-			BooleanFilter filter = new BooleanFilter();
-			filter.add(new TermFilter(new Term(IndexFields.F_PATH, sourceModule)), Occur.MUST);
-			Query query = new ConstantScoreQuery(filter);
+			Term term = new Term(IndexFields.F_PATH, sourceModule);
 			try {
 				// Cleanup related time stamp
-				getTimestampsWriter().deleteDocuments(query);
+				getTimestampsWriter().deleteDocuments(term);
 				// Cleanup all related documents in data writers
 				for (Map<Integer, IndexWriter> dataWriters : fIndexWriters.values()) {
 					for (IndexWriter writer : dataWriters.values()) {
-						writer.deleteDocuments(query);
+						writer.deleteDocuments(term);
 					}
 				}
 			} catch (IOException e) {
@@ -319,11 +312,11 @@ public enum LuceneManager {
 		}
 
 	}
-	
+
 	private static final class PropertyKeys {
-		
+
 		public static final String VERSION = "version"; //$NON-NLS-1$
-		
+
 	}
 
 	private static final String INDEX_DIR = "index"; //$NON-NLS-1$

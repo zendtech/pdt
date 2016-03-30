@@ -26,12 +26,12 @@ import org.eclipse.dltk.core.IModelElement;
 import org.eclipse.dltk.core.ISourceModule;
 import org.eclipse.dltk.core.environment.EnvironmentPathUtils;
 import org.eclipse.dltk.core.environment.IFileHandle;
-import org.eclipse.php.index.lucene.LuceneManager.ContainerIndexType;
 import org.eclipse.dltk.core.index2.AbstractIndexer;
 import org.eclipse.dltk.core.index2.search.ISearchEngine;
 import org.eclipse.dltk.internal.core.ExternalSourceModule;
 import org.eclipse.dltk.internal.core.SourceModule;
 import org.eclipse.dltk.internal.core.util.Util;
+import org.eclipse.php.index.lucene.LuceneManager.ContainerIndexType;
 
 @SuppressWarnings("restriction")
 public class LuceneIndexer extends AbstractIndexer {
@@ -80,18 +80,16 @@ public class LuceneIndexer extends AbstractIndexer {
 		try {
 			final Map<String, Long> result = new HashMap<String, Long>();
 			indexSearcher = LuceneManager.INSTANCE.findTimestampsSearcher(container).acquire();
-			final Set<String> fields = new HashSet<String>();
-			fields.add(IndexFields.F_PATH);
 			indexSearcher.search(new MatchAllDocsQuery(), new TimestampsCollector(result));
 			return result;
 		} catch (IOException e) {
-			e.printStackTrace();
+			Logger.logException(e);
 		} finally {
 			if (indexSearcher != null) {
 				try {
 					LuceneManager.INSTANCE.findTimestampsSearcher(container).release(indexSearcher);
 				} catch (IOException e) {
-					e.printStackTrace();
+					Logger.logException(e);
 				}
 			}
 		}
