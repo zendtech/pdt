@@ -8,9 +8,13 @@ import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Properties;
+import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
@@ -38,8 +42,11 @@ import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.Platform;
 import org.eclipse.core.runtime.Status;
 import org.eclipse.core.runtime.jobs.Job;
+import org.eclipse.dltk.core.DLTKLanguageManager;
+import org.eclipse.dltk.core.IDLTKLanguageToolkit;
 import org.eclipse.dltk.core.search.indexing.IndexManager;
 import org.eclipse.dltk.internal.core.ModelManager;
+import org.eclipse.dltk.internal.core.search.DLTKWorkspaceScope;
 
 @SuppressWarnings("restriction")
 public enum LuceneManager {
@@ -382,7 +389,7 @@ public enum LuceneManager {
 			fProperties.put(PropertyKeys.VERSION, VERSION);
 			saveProperties();
 		}
-		// TODO - cleanup possibly non-existing container mappings
+		cleanup();
 	}
 
 	private synchronized ContainerIndex getContainerIndex(String container) {
@@ -509,6 +516,29 @@ public enum LuceneManager {
 					Logger.logException(e);
 				}
 			}
+		}
+	}
+	
+	private void cleanup() {
+		List<String> containers = new ArrayList<String>();
+		for (IDLTKLanguageToolkit toolkit : DLTKLanguageManager.getLanguageToolkits()) {
+			DLTKWorkspaceScope scope = ModelManager.getModelManager().getWorkspaceScope(toolkit);
+			for (IPath path : scope.enclosingProjectsAndZips()) {
+				containers.add(path.toString());
+			}
+		}
+		Set<String> toRemove = new HashSet<String>();
+		for (String mappedContainer : fContainerMappings.keySet()) {
+			if (!containers.contains(mappedContainer)) {
+				toRemove.add(mappedContainer);
+			}
+		}
+		if (!toRemove.isEmpty()) {
+			for (String container : toRemove) {
+				removeContainerIndex(container);
+			}
+			// Save cleaned up container mappings
+			saveContainerIds();
 		}
 	}
 
