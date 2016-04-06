@@ -47,6 +47,11 @@ public class LuceneIndexer extends AbstractIndexer {
 		}
 
 		@Override
+		public boolean needsScores() {
+			return false;
+		}
+
+		@Override
 		public LeafCollector getLeafCollector(LeafReaderContext context) throws IOException {
 			final LeafReader reader = context.reader();
 			final NumericDocValues timestampField = context.reader().getNumericDocValues(IndexFields.NDV_TIMESTAMP);

@@ -11,28 +11,23 @@ import java.util.List;
 import java.util.Map;
 
 import org.apache.lucene.index.BinaryDocValues;
-import org.apache.lucene.index.DocValues;
 import org.apache.lucene.index.LeafReader;
 import org.apache.lucene.index.LeafReaderContext;
 import org.apache.lucene.index.NumericDocValues;
 import org.apache.lucene.index.Term;
-import org.apache.lucene.queries.BooleanFilter;
-import org.apache.lucene.queries.TermFilter;
 import org.apache.lucene.search.BooleanClause.Occur;
-import org.apache.lucene.util.Bits;
+import org.apache.lucene.search.BooleanQuery.Builder;
 import org.apache.lucene.util.BytesRef;
+import org.apache.lucene.search.BooleanQuery;
 import org.apache.lucene.search.Collector;
-import org.apache.lucene.search.DocIdSet;
-import org.apache.lucene.search.DocValuesDocIdSet;
-import org.apache.lucene.search.Filter;
 import org.apache.lucene.search.IndexSearcher;
 import org.apache.lucene.search.LeafCollector;
 import org.apache.lucene.search.MatchAllDocsQuery;
-import org.apache.lucene.search.PrefixFilter;
+import org.apache.lucene.search.PrefixQuery;
 import org.apache.lucene.search.Query;
-import org.apache.lucene.search.QueryWrapperFilter;
 import org.apache.lucene.search.Scorer;
 import org.apache.lucene.search.SearcherManager;
+import org.apache.lucene.search.TermQuery;
 import org.apache.lucene.search.WildcardQuery;
 import org.eclipse.core.runtime.IPath;
 import org.eclipse.core.runtime.IProgressMonitor;
@@ -103,6 +98,11 @@ public class LuceneSearchEngine implements ISearchEngine, ISearchEngineExtension
 			this.fResult = result;
 		}
 
+		@Override
+		public boolean needsScores() {
+			return true;
+		}
+
 		public LeafCollector getLeafCollector(final LeafReaderContext context) throws IOException {
 			final LeafReader reader = context.reader();
 			fDocNumericValues = new HashMap<String, NumericDocValues>();
@@ -160,47 +160,6 @@ public class LuceneSearchEngine implements ISearchEngine, ISearchEngineExtension
 		}
 	}
 
-	private static final class BitFlagsFilter extends Filter {
-
-		private String fField;
-		private int fTrueFlags;
-		private int fFalseFlags;
-
-		public BitFlagsFilter(String field, int trueFlags, int falseFlags) {
-			fField = field;
-			fTrueFlags = trueFlags;
-			fFalseFlags = falseFlags;
-		}
-
-		@Override
-		public DocIdSet getDocIdSet(LeafReaderContext context, Bits acceptDocs) throws IOException {
-			final NumericDocValues values = DocValues.getNumeric(context.reader(), fField);
-			return new DocValuesDocIdSet(context.reader().maxDoc(), acceptDocs) {
-				@Override
-				protected boolean matchDoc(int doc) {
-					long flags = values.get(doc);
-					if (fTrueFlags != 0) {
-						if ((fTrueFlags & flags) == 0) {
-							return false;
-						}
-					}
-					if (fFalseFlags != 0) {
-						if ((fFalseFlags & flags) != 0) {
-							return false;
-						}
-					}
-					return true;
-				}
-			};
-		}
-
-		@Override
-		public int hashCode() {
-			return fField.hashCode() * fTrueFlags * fFalseFlags;
-		}
-
-	}
-
 	@Override
 	public void search(int elementType, String qualifier, String elementName, int trueFlags, int falseFlags, int limit,
 			SearchFor searchFor, MatchRule matchRule, IDLTKSearchScope scope, ISearchRequestor requestor,
@@ -224,58 +183,57 @@ public class LuceneSearchEngine implements ISearchEngine, ISearchEngineExtension
 					requestor, monitor);
 		}
 	}
-
-	private Filter createFilter(final int elementType, String qualifier, String elementName, String parent,
+	
+	private Query createQuery(final int elementType, String qualifier, String elementName, String parent,
 			final int trueFlags, final int falseFlags, final boolean searchForRefs, MatchRule matchRule,
 			IDLTKSearchScope scope) {
-		BooleanFilter filter = new BooleanFilter();
+		Builder queryBuilder = new Builder();
 		if (elementName != null && !elementName.isEmpty()) {
 			String elementNameLC = elementName.toLowerCase();
-			Filter nameFilter = null;
+			Query nameQuery = null;
 			Term nameCaseInsensitiveTerm = new Term(F_ELEMENT_NAME_LC, elementNameLC);
 			if (matchRule == MatchRule.PREFIX) {
-				nameFilter = new PrefixFilter(nameCaseInsensitiveTerm);
+				nameQuery = new PrefixQuery(nameCaseInsensitiveTerm);
 			} else if (matchRule == MatchRule.EXACT) {
-				nameFilter = new TermFilter(nameCaseInsensitiveTerm);
+				nameQuery = new TermQuery(nameCaseInsensitiveTerm);
 			} else if (matchRule == MatchRule.CAMEL_CASE) {
-				Term term = new Term(F_CC_NAME, elementName);
-				nameFilter = new PrefixFilter(term);
+				nameQuery = new PrefixQuery(new Term(F_CC_NAME, elementName));
 			} else if (matchRule == MatchRule.PATTERN) {
-				nameFilter = new QueryWrapperFilter(new WildcardQuery(nameCaseInsensitiveTerm));
+				nameQuery = new WildcardQuery(nameCaseInsensitiveTerm);
 			} else {
 				throw new UnsupportedOperationException();
 			}
-			if (nameFilter != null) {
-				filter.add(nameFilter, Occur.MUST);
+			if (nameQuery != null) {
+				queryBuilder.add(nameQuery, Occur.FILTER);
 			}
 		}
 		if (qualifier != null && !qualifier.isEmpty()) {
-			filter.add(new TermFilter(new Term(F_QUALIFIER, qualifier)), Occur.MUST);
+			queryBuilder.add(new TermQuery(new Term(F_QUALIFIER, qualifier)), Occur.FILTER);
 		}
 		if (parent != null && !parent.isEmpty()) {
-			filter.add(new TermFilter(new Term(F_PARENT, parent)), Occur.MUST);
+			queryBuilder.add(new TermQuery(new Term(F_PARENT, parent)), Occur.FILTER);
 		}
 		if (trueFlags != 0 || falseFlags != 0) {
-			filter.add(new BitFlagsFilter(NDV_FLAGS, trueFlags, falseFlags), Occur.MUST);
+			queryBuilder.add(new BitFlagsQuery(trueFlags, falseFlags), Occur.FILTER);
 		}
 		List<String> scripts = SearchScope.getScripts(scope);
 		if (!scripts.isEmpty()) {
-			BooleanFilter scriptFilter = new BooleanFilter();
+			Builder scriptQueryBuilder = new Builder();
 			for (String script : scripts) {
-				scriptFilter.add(new TermFilter(new Term(F_PATH, script)), Occur.MUST);
+				scriptQueryBuilder.add(new TermQuery(new Term(F_PATH, script)), Occur.FILTER);
 			}
-			filter.add(scriptFilter, Occur.MUST);
+			queryBuilder.add(scriptQueryBuilder.build(), Occur.FILTER);
 		}
-		return filter.clauses().isEmpty() ? null : filter;
+		BooleanQuery query = queryBuilder.build();
+		return query.clauses().isEmpty() ? null : query;
 	}
 
 	private void doSearch(final int elementType, String qualifier, String elementName, String parent,
 			final int trueFlags, final int falseFlags, int limit, final boolean searchForRefs, MatchRule matchRule,
 			IDLTKSearchScope scope, ISearchRequestor requestor, IProgressMonitor monitor) {
-		Filter filter = createFilter(elementType, qualifier, elementName, parent, trueFlags, falseFlags, searchForRefs,
+		Query query = createQuery(elementType, qualifier, elementName, parent, trueFlags, falseFlags, searchForRefs,
 				matchRule, scope);
 		IndexSearcher indexSearcher = null;
-		Query query = new MatchAllDocsQuery();
 		final SearchMatchHandler searchMatchHandler = new SearchMatchHandler(scope, requestor);
 		List<SearchMatch> results = new ArrayList<SearchMatch>();
 		for (String container : SearchScope.getContainers(scope)) {
@@ -285,10 +243,10 @@ public class LuceneSearchEngine implements ISearchEngine, ISearchEngineExtension
 			try {
 				indexSearcher = searcherManager.acquire();
 				ResultsCollector collector = new ResultsCollector(container, elementType, results);
-				if (filter != null) {
-					indexSearcher.search(query, filter, collector);
-				} else {
+				if (query != null) {
 					indexSearcher.search(query, collector);
+				} else {
+					indexSearcher.search(new MatchAllDocsQuery(), collector);
 				}
 			} catch (IOException e) {
 				Logger.logException(e);

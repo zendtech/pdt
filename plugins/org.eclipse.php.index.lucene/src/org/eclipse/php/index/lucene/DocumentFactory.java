@@ -19,7 +19,6 @@ public enum DocumentFactory {
 		Document doc = new Document();
 		// Add text fields for search (no store, doc values will be used instead)
 		addTextEntry(doc, F_PATH, source, false);
-		addTextEntry(doc, F_ELEMENT_NAME, info.elementName, false);
 		addTextEntry(doc, F_QUALIFIER, info.qualifier, false);
 		addTextLCEntry(doc, F_ELEMENT_NAME_LC, info.elementName, false);
 		// Add numeric doc values
@@ -37,7 +36,6 @@ public enum DocumentFactory {
 		Document doc = new Document();
 		// Add text fields for search (no store, doc values will be used instead)
 		addTextEntry(doc, F_PATH, source, false);
-		addTextEntry(doc, F_ELEMENT_NAME, info.elementName, false);
 		addTextEntry(doc, F_PARENT, info.parent, false);
 		addTextEntry(doc, F_QUALIFIER, info.qualifier, false);
 		addTextLCEntry(doc, F_ELEMENT_NAME_LC, info.elementName, false);

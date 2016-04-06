@@ -7,7 +7,6 @@ public final class IndexFields {
 	}
 	
 	public static final String F_PATH = "path"; //$NON-NLS-1$
-	public static final String F_ELEMENT_NAME = "elementName"; //$NON-NLS-1$
 	public static final String F_ELEMENT_NAME_LC = "elementNameLC"; //$NON-NLS-1$
 	public static final String F_CC_NAME = "ccName"; //$NON-NLS-1$
 	public static final String F_QUALIFIER = "qualifier"; //$NON-NLS-1$
