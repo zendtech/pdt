@@ -1,3 +1,13 @@
+/*******************************************************************************
+ * Copyright (c) 2016 Zend Technologies and others.
+ * All rights reserved. This program and the accompanying materials
+ * are made available under the terms of the Eclipse Public License v1.0
+ * which accompanies this distribution, and is available at
+ * http://www.eclipse.org/legal/epl-v10.html
+ * 
+ * Contributors:
+ *     Zend Technologies - initial API and implementation
+ *******************************************************************************/
 package org.eclipse.php.index.lucene;
 
 import java.util.HashMap;
@@ -21,6 +31,11 @@ import org.eclipse.dltk.internal.core.ModelManager;
 import org.eclipse.dltk.internal.core.ProjectFragment;
 import org.eclipse.dltk.internal.core.search.DLTKSearchScope;
 
+/**
+ * Class responsible for handling search match.
+ * 
+ * @author Michal Niewrzal
+ */
 @SuppressWarnings("restriction")
 public class SearchMatchHandler {
 
@@ -55,11 +70,23 @@ public class SearchMatchHandler {
 	private ISearchRequestor fSearchRequestor;
 	private IDLTKSearchScope fScope;
 
+	/**
+	 * Creates new search match handler.
+	 * 
+	 * @param scope
+	 * @param searchRequestor
+	 */
 	public SearchMatchHandler(IDLTKSearchScope scope, ISearchRequestor searchRequestor) {
 		this.fScope = scope;
 		this.fSearchRequestor = searchRequestor;
 	}
 
+	/**
+	 * Handle search match.
+	 * 
+	 * @param match
+	 * @param isReference
+	 */
 	public void handle(SearchMatch match, boolean isReference) {
 		String containerPath = match.getContainer();
 		IDLTKLanguageToolkit toolkit = ((DLTKSearchScope) fScope).getLanguageToolkit();
@@ -116,8 +143,8 @@ public class SearchMatchHandler {
 		ModelManager modelManager = ModelManager.getModelManager();
 		name = modelManager.intern(name);
 		// Pass to requestor
-		fSearchRequestor.match(match.getElementType(), match.getFlags(), match.getOffset(),
-				match.getLength(), match.getNameOffset(), match.getNameLength(), name, match.getMetadata(), match.getDoc(),
+		fSearchRequestor.match(match.getElementType(), match.getFlags(), match.getOffset(), match.getLength(),
+				match.getNameOffset(), match.getNameLength(), name, match.getMetadata(), match.getDoc(),
 				match.getQualifier(), match.getParent(), sourceModule, isReference);
 
 	}

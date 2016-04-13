@@ -1,3 +1,13 @@
+/*******************************************************************************
+ * Copyright (c) 2016 Zend Technologies and others.
+ * All rights reserved. This program and the accompanying materials
+ * are made available under the terms of the Eclipse Public License v1.0
+ * which accompanies this distribution, and is available at
+ * http://www.eclipse.org/legal/epl-v10.html
+ * 
+ * Contributors:
+ *     Zend Technologies - initial API and implementation
+ *******************************************************************************/
 package org.eclipse.php.index.lucene;
 
 import java.io.File;
@@ -48,14 +58,47 @@ import org.eclipse.dltk.core.search.indexing.IndexManager;
 import org.eclipse.dltk.internal.core.ModelManager;
 import org.eclipse.dltk.internal.core.search.DLTKWorkspaceScope;
 
+/**
+ * <p>
+ * Apache Lucene indexes manager responsible for managing indexes model.
+ * </p>
+ * <p>
+ * Indexes are stored in hierarchical directory structure as follows:
+ * <code><pre>
+ * index_root
+ *   |_container_id
+ *     |_declarations
+ *       |_model_element_type_id (index data)
+ *       ...
+ *     |_references
+ *       |_model_element_type_id (index data)
+ *       ...
+ *     |_timestamps (index data)
+ * </pre></code>
+ * </p>
+ * 
+ * @author Bartlomiej Laczkowski
+ */
 @SuppressWarnings("restriction")
 public enum LuceneManager {
 
+	/**
+	 * Manager Instance.
+	 */
 	INSTANCE;
 
+	/**
+	 * Container index type (declarations or references).
+	 */
 	public enum ContainerIndexType {
 
+		/**
+		 * Index type for storing declarations data.
+		 */
 		DECLARATIONS("declarations"), //$NON-NLS-1$
+		/**
+		 * Index type for storing references data.
+		 */
 		REFERENCES("references"); //$NON-NLS-1$
 
 		private final String fDirectory;
@@ -70,19 +113,17 @@ public enum LuceneManager {
 
 	}
 
-	private final class ContainerIndex {
+	private final class ContainerEntry {
 
 		private static final String TIMESTAMPS_DIR = "timestamps"; //$NON-NLS-1$
 
 		private final String fContainerId;
-
 		private IndexWriter fTimestampsWriter;
 		private SearcherManager fTimestampsSearcher;
-
 		private Map<ContainerIndexType, Map<Integer, IndexWriter>> fIndexWriters;
 		private Map<ContainerIndexType, Map<Integer, SearcherManager>> fIndexSearchers;
 
-		public ContainerIndex(String containerId) {
+		public ContainerEntry(String containerId) {
 			fContainerId = containerId;
 			initialize();
 		}
@@ -211,9 +252,9 @@ public enum LuceneManager {
 
 	private final class ContainerCleaner extends Job {
 
-		private ContainerIndex fContainerEntry;
+		private ContainerEntry fContainerEntry;
 
-		public ContainerCleaner(ContainerIndex containerEntry) {
+		public ContainerCleaner(ContainerEntry containerEntry) {
 			super(""); //$NON-NLS-1$
 			setUser(false);
 			setSystem(true);
@@ -334,38 +375,80 @@ public enum LuceneManager {
 	private final IPath fBundlePath;
 	private final Properties fProperties;
 	private final Map<String, String> fContainerMappings;
-	private final Map<String, ContainerIndex> fContainerIndexes;
+	private final Map<String, ContainerEntry> fContainerEntries;
 
 	private LuceneManager() {
 		fProperties = new Properties();
 		fContainerMappings = new HashMap<String, String>();
-		fContainerIndexes = new HashMap<String, ContainerIndex>();
+		fContainerEntries = new HashMap<String, ContainerEntry>();
 		fBundlePath = Platform.getStateLocation(LucenePlugin.getDefault().getBundle());
 		startup();
 	}
 
+	/**
+	 * Finds and returns index writer for given container, data type and model
+	 * element.
+	 * 
+	 * @param container
+	 * @param dataType
+	 * @param elementType
+	 * @return index writer
+	 */
 	public final IndexWriter findIndexWriter(String container, ContainerIndexType dataType, int elementType) {
-		return getContainerIndex(container).getIndexWriter(dataType, elementType);
+		return getContainerEntry(container).getIndexWriter(dataType, elementType);
 	}
 
+	/**
+	 * Finds and returns index searcher for given container, data type and model
+	 * element.
+	 * 
+	 * @param container
+	 * @param dataType
+	 * @param elementType
+	 * @return index searcher
+	 */
 	public final SearcherManager findIndexSearcher(String container, ContainerIndexType dataType, int elementType) {
-		return getContainerIndex(container).getIndexSearcher(dataType, elementType);
+		return getContainerEntry(container).getIndexSearcher(dataType, elementType);
 	}
 
+	/**
+	 * Finds and returns time stamps index writer for given container.
+	 * 
+	 * @param container
+	 * @return time stamps index writer
+	 */
 	public final IndexWriter findTimestampsWriter(String container) {
-		return getContainerIndex(container).getTimestampsWriter();
+		return getContainerEntry(container).getTimestampsWriter();
 	}
 
+	/**
+	 * Finds and returns time stamps index searcher for given container.
+	 * 
+	 * @param container
+	 * @return time stamps index searcher
+	 */
 	public final SearcherManager findTimestampsSearcher(String container) {
-		return getContainerIndex(container).getTimestampsSearcher();
+		return getContainerEntry(container).getTimestampsSearcher();
 	}
 
+	/**
+	 * Cleans up related container index entry (container entry is removed
+	 * completely).
+	 * 
+	 * @param container
+	 */
 	public final void cleanup(final String container) {
-		removeContainerIndex(container);
+		removeContainerEntry(container);
 	}
 
+	/**
+	 * Cleans up given container's source module index data.
+	 * 
+	 * @param container
+	 * @param sourceModule
+	 */
 	public final void cleanup(String container, String sourceModule) {
-		getContainerIndex(container).cleanup(sourceModule);
+		getContainerEntry(container).cleanup(sourceModule);
 	}
 
 	private synchronized void startup() {
@@ -380,7 +463,7 @@ public enum LuceneManager {
 
 	private synchronized void shutdown() {
 		// Close all searchers & writers in all container entries
-		for (ContainerIndex entry : fContainerIndexes.values()) {
+		for (ContainerEntry entry : fContainerEntries.values()) {
 			entry.close();
 		}
 		// Save version if there is a need
@@ -392,7 +475,7 @@ public enum LuceneManager {
 		cleanup();
 	}
 
-	private synchronized ContainerIndex getContainerIndex(String container) {
+	private synchronized ContainerEntry getContainerEntry(String container) {
 		String containerId = fContainerMappings.get(container);
 		if (containerId == null) {
 			do {
@@ -400,19 +483,19 @@ public enum LuceneManager {
 				containerId = UUID.randomUUID().toString();
 			} while (fContainerMappings.containsValue(containerId));
 			fContainerMappings.put(container, containerId);
-			fContainerIndexes.put(containerId, new ContainerIndex(containerId));
+			fContainerEntries.put(containerId, new ContainerEntry(containerId));
 			// Persist mapping
 			saveContainerIds();
 		}
-		return fContainerIndexes.get(containerId);
+		return fContainerEntries.get(containerId);
 	}
 
-	private synchronized void removeContainerIndex(String container) {
+	private synchronized void removeContainerEntry(String container) {
 		String containerId = fContainerMappings.remove(container);
 		if (containerId != null) {
-			ContainerIndex containerIndex = fContainerIndexes.remove(containerId);
+			ContainerEntry containerEntry = fContainerEntries.remove(containerId);
 			saveContainerIds();
-			containerIndex.delete();
+			containerEntry.delete();
 		}
 	}
 
@@ -459,7 +542,7 @@ public enum LuceneManager {
 			fContainerMappings.putAll((Map<String, String>) ois.readObject());
 			for (String container : fContainerMappings.keySet()) {
 				String containerId = fContainerMappings.get(container);
-				fContainerIndexes.put(containerId, new ContainerIndex(containerId));
+				fContainerEntries.put(containerId, new ContainerEntry(containerId));
 			}
 		} catch (Exception e) {
 			Logger.logException(e);
@@ -518,7 +601,7 @@ public enum LuceneManager {
 			}
 		}
 	}
-	
+
 	private void cleanup() {
 		List<String> containers = new ArrayList<String>();
 		for (IDLTKLanguageToolkit toolkit : DLTKLanguageManager.getLanguageToolkits()) {
@@ -535,7 +618,7 @@ public enum LuceneManager {
 		}
 		if (!toRemove.isEmpty()) {
 			for (String container : toRemove) {
-				removeContainerIndex(container);
+				removeContainerEntry(container);
 			}
 			// Save cleaned up container mappings
 			saveContainerIds();

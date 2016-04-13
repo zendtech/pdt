@@ -1,11 +1,27 @@
+/*******************************************************************************
+ * Copyright (c) 2016 Zend Technologies and others.
+ * All rights reserved. This program and the accompanying materials
+ * are made available under the terms of the Eclipse Public License v1.0
+ * which accompanies this distribution, and is available at
+ * http://www.eclipse.org/legal/epl-v10.html
+ * 
+ * Contributors:
+ *     Zend Technologies - initial API and implementation
+ *******************************************************************************/
 package org.eclipse.php.index.lucene;
 
+/**
+ * Constants for Lucene document fields.
+ * 
+ * @author Michal Niewrzal, Bartlomiej Laczkowski
+ */
 public final class IndexFields {
 
 	private IndexFields() {
 		// Constants only
 	}
-	
+
+	// Common set of fields
 	public static final String F_PATH = "path"; //$NON-NLS-1$
 	public static final String F_ELEMENT_NAME_LC = "elementNameLC"; //$NON-NLS-1$
 	public static final String F_CC_NAME = "ccName"; //$NON-NLS-1$

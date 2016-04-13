@@ -1,3 +1,13 @@
+/*******************************************************************************
+ * Copyright (c) 2016 Zend Technologies and others.
+ * All rights reserved. This program and the accompanying materials
+ * are made available under the terms of the Eclipse Public License v1.0
+ * which accompanies this distribution, and is available at
+ * http://www.eclipse.org/legal/epl-v10.html
+ * 
+ * Contributors:
+ *     Zend Technologies - initial API and implementation
+ *******************************************************************************/
 package org.eclipse.php.index.lucene;
 
 import java.io.IOException;
@@ -26,13 +36,18 @@ import org.eclipse.dltk.core.IModelElement;
 import org.eclipse.dltk.core.ISourceModule;
 import org.eclipse.dltk.core.environment.EnvironmentPathUtils;
 import org.eclipse.dltk.core.environment.IFileHandle;
+import org.eclipse.php.index.lucene.LuceneManager.ContainerIndexType;
 import org.eclipse.dltk.core.index2.AbstractIndexer;
 import org.eclipse.dltk.core.index2.search.ISearchEngine;
 import org.eclipse.dltk.internal.core.ExternalSourceModule;
 import org.eclipse.dltk.internal.core.SourceModule;
 import org.eclipse.dltk.internal.core.util.Util;
-import org.eclipse.php.index.lucene.LuceneManager.ContainerIndexType;
 
+/**
+ * Lucene based implementation for DLTK indexer.
+ * 
+ * @author Michal Niewrzal, Bartlomiej Laczkowski
+ */
 @SuppressWarnings("restriction")
 public class LuceneIndexer extends AbstractIndexer {
 
@@ -60,6 +75,7 @@ public class LuceneIndexer extends AbstractIndexer {
 				public void setScorer(Scorer scorer) throws IOException {
 					// ignore
 				}
+
 				@Override
 				public void collect(int docId) throws IOException {
 					Document document = reader.document(docId, fFields);
@@ -70,14 +86,25 @@ public class LuceneIndexer extends AbstractIndexer {
 
 	}
 
-	private String fFilename;
+	private String fFile;
 	private String fContainer;
 
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see org.eclipse.dltk.core.index2.IIndexer#createSearchEngine()
+	 */
 	@Override
 	public ISearchEngine createSearchEngine() {
 		return new LuceneSearchEngine();
 	}
 
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see org.eclipse.dltk.core.index2.IIndexer#getDocuments(org.eclipse.core.
+	 * runtime.IPath)
+	 */
 	@Override
 	public Map<String, Long> getDocuments(IPath containerPath) {
 		IndexSearcher indexSearcher = null;
@@ -101,28 +128,48 @@ public class LuceneIndexer extends AbstractIndexer {
 		return Collections.emptyMap();
 	}
 
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see org.eclipse.dltk.core.index2.IIndexingRequestor#addDeclaration(org.
+	 * eclipse.dltk.core.index2.IIndexingRequestor.DeclarationInfo)
+	 */
 	@Override
 	public void addDeclaration(DeclarationInfo info) {
 		try {
 			IndexWriter writer = LuceneManager.INSTANCE.findIndexWriter(fContainer, ContainerIndexType.DECLARATIONS,
 					info.elementType);
-			writer.addDocument(DocumentFactory.INSTANCE.createForDeclaration(fFilename, info));
+			writer.addDocument(DocumentFactory.INSTANCE.createForDeclaration(fFile, info));
 		} catch (IOException e) {
 			Logger.logException(e);
 		}
 	}
 
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see
+	 * org.eclipse.dltk.core.index2.IIndexingRequestor#addReference(org.eclipse.
+	 * dltk.core.index2.IIndexingRequestor.ReferenceInfo)
+	 */
 	@Override
 	public void addReference(ReferenceInfo info) {
 		try {
 			IndexWriter writer = LuceneManager.INSTANCE.findIndexWriter(fContainer, ContainerIndexType.REFERENCES,
 					info.elementType);
-			writer.addDocument(DocumentFactory.INSTANCE.createForReference(fFilename, info));
+			writer.addDocument(DocumentFactory.INSTANCE.createForReference(fFile, info));
 		} catch (IOException e) {
 			Logger.logException(e);
 		}
 	}
 
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see
+	 * org.eclipse.dltk.core.index2.AbstractIndexer#indexDocument(org.eclipse.
+	 * dltk.core.ISourceModule)
+	 */
 	@Override
 	public void indexDocument(ISourceModule sourceModule) {
 		final IFileHandle fileHandle = EnvironmentPathUtils.getFile(sourceModule);
@@ -134,20 +181,34 @@ public class LuceneIndexer extends AbstractIndexer {
 			resetDocument(sourceModule, toolkit);
 			long lastModified = fileHandle == null ? 0 : fileHandle.lastModified();
 			// Cleanup and write new info...
-			LuceneManager.INSTANCE.cleanup(fContainer, fFilename);
+			LuceneManager.INSTANCE.cleanup(fContainer, fFile);
 			IndexWriter indexWriter = LuceneManager.INSTANCE.findTimestampsWriter(fContainer);
-			indexWriter.addDocument(DocumentFactory.INSTANCE.createForTimestamp(fFilename, lastModified));
+			indexWriter.addDocument(DocumentFactory.INSTANCE.createForTimestamp(fFile, lastModified));
 			super.indexDocument(sourceModule);
 		} catch (Exception e) {
 			Logger.logException(e);
 		}
 	}
 
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see
+	 * org.eclipse.dltk.core.index2.IIndexer#removeContainer(org.eclipse.core.
+	 * runtime.IPath)
+	 */
 	@Override
 	public void removeContainer(IPath containerPath) {
 		LuceneManager.INSTANCE.cleanup(containerPath.toString());
 	}
 
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see
+	 * org.eclipse.dltk.core.index2.IIndexer#removeDocument(org.eclipse.core.
+	 * runtime.IPath, java.lang.String)
+	 */
 	@Override
 	public void removeDocument(IPath containerPath, String sourceModulePath) {
 		LuceneManager.INSTANCE.cleanup(containerPath.toString(), sourceModulePath);
@@ -168,7 +229,7 @@ public class LuceneIndexer extends AbstractIndexer {
 			relativePath = Util.relativePath(sourceModule.getPath(), containerPath.segmentCount());
 		}
 		this.fContainer = containerPath.toString();
-		this.fFilename = relativePath;
+		this.fFile = relativePath;
 	}
 
 }

@@ -1,3 +1,13 @@
+/*******************************************************************************
+ * Copyright (c) 2016 Zend Technologies and others.
+ * All rights reserved. This program and the accompanying materials
+ * are made available under the terms of the Eclipse Public License v1.0
+ * which accompanies this distribution, and is available at
+ * http://www.eclipse.org/legal/epl-v10.html
+ * 
+ * Contributors:
+ *     Zend Technologies - initial API and implementation
+ *******************************************************************************/
 package org.eclipse.php.index.lucene;
 
 import static org.eclipse.php.index.lucene.IndexFields.*;
@@ -16,8 +26,6 @@ import org.apache.lucene.index.LeafReaderContext;
 import org.apache.lucene.index.NumericDocValues;
 import org.apache.lucene.index.Term;
 import org.apache.lucene.search.BooleanClause.Occur;
-import org.apache.lucene.search.BooleanQuery.Builder;
-import org.apache.lucene.util.BytesRef;
 import org.apache.lucene.search.BooleanQuery;
 import org.apache.lucene.search.Collector;
 import org.apache.lucene.search.IndexSearcher;
@@ -29,6 +37,7 @@ import org.apache.lucene.search.Scorer;
 import org.apache.lucene.search.SearcherManager;
 import org.apache.lucene.search.TermQuery;
 import org.apache.lucene.search.WildcardQuery;
+import org.apache.lucene.util.BytesRef;
 import org.eclipse.core.runtime.IPath;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.dltk.core.ScriptModelUtil;
@@ -39,6 +48,11 @@ import org.eclipse.dltk.core.index2.search.ISearchRequestor;
 import org.eclipse.dltk.core.search.IDLTKSearchScope;
 import org.eclipse.dltk.internal.core.search.DLTKSearchScope;
 
+/**
+ * Lucene based implementation for DLTK search engine.
+ * 
+ * @author Michal Niewrzal, Bartlomiej Laczkowski
+ */
 @SuppressWarnings("restriction")
 public class LuceneSearchEngine implements ISearchEngine, ISearchEngineExtension {
 
@@ -160,6 +174,17 @@ public class LuceneSearchEngine implements ISearchEngine, ISearchEngineExtension
 		}
 	}
 
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see org.eclipse.dltk.core.index2.search.ISearchEngine#search(int,
+	 * java.lang.String, java.lang.String, int, int, int,
+	 * org.eclipse.dltk.core.index2.search.ISearchEngine.SearchFor,
+	 * org.eclipse.dltk.core.index2.search.ISearchEngine.MatchRule,
+	 * org.eclipse.dltk.core.search.IDLTKSearchScope,
+	 * org.eclipse.dltk.core.index2.search.ISearchRequestor,
+	 * org.eclipse.core.runtime.IProgressMonitor)
+	 */
 	@Override
 	public void search(int elementType, String qualifier, String elementName, int trueFlags, int falseFlags, int limit,
 			SearchFor searchFor, MatchRule matchRule, IDLTKSearchScope scope, ISearchRequestor requestor,
@@ -168,6 +193,18 @@ public class LuceneSearchEngine implements ISearchEngine, ISearchEngineExtension
 				requestor, monitor);
 	}
 
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see
+	 * org.eclipse.dltk.core.index2.search.ISearchEngineExtension#search(int,
+	 * java.lang.String, java.lang.String, java.lang.String, int, int, int,
+	 * org.eclipse.dltk.core.index2.search.ISearchEngine.SearchFor,
+	 * org.eclipse.dltk.core.index2.search.ISearchEngine.MatchRule,
+	 * org.eclipse.dltk.core.search.IDLTKSearchScope,
+	 * org.eclipse.dltk.core.index2.search.ISearchRequestor,
+	 * org.eclipse.core.runtime.IProgressMonitor)
+	 */
 	@Override
 	public void search(int elementType, String qualifier, String elementName, String parent, int trueFlags,
 			int falseFlags, int limit, SearchFor searchFor, MatchRule matchRule, IDLTKSearchScope scope,
@@ -183,11 +220,19 @@ public class LuceneSearchEngine implements ISearchEngine, ISearchEngineExtension
 					requestor, monitor);
 		}
 	}
-	
-	private Query createQuery(final int elementType, String qualifier, String elementName, String parent,
+
+	private Query createQuery(final String elementName, final String qualifier, final String parent,
 			final int trueFlags, final int falseFlags, final boolean searchForRefs, MatchRule matchRule,
 			IDLTKSearchScope scope) {
-		Builder queryBuilder = new Builder();
+		BooleanQuery query = new BooleanQuery();
+		List<String> scripts = SearchScope.getScripts(scope);
+		if (!scripts.isEmpty()) {
+			BooleanQuery scriptQuery = new BooleanQuery();
+			for (String script : scripts) {
+				scriptQuery.add(new TermQuery(new Term(F_PATH, script)), Occur.FILTER);
+			}
+			query.add(scriptQuery, Occur.FILTER);
+		}
 		if (elementName != null && !elementName.isEmpty()) {
 			String elementNameLC = elementName.toLowerCase();
 			Query nameQuery = null;
@@ -204,40 +249,30 @@ public class LuceneSearchEngine implements ISearchEngine, ISearchEngineExtension
 				throw new UnsupportedOperationException();
 			}
 			if (nameQuery != null) {
-				queryBuilder.add(nameQuery, Occur.FILTER);
+				query.add(nameQuery, Occur.FILTER);
 			}
 		}
 		if (qualifier != null && !qualifier.isEmpty()) {
-			queryBuilder.add(new TermQuery(new Term(F_QUALIFIER, qualifier)), Occur.FILTER);
+			query.add(new TermQuery(new Term(F_QUALIFIER, qualifier)), Occur.FILTER);
 		}
 		if (parent != null && !parent.isEmpty()) {
-			queryBuilder.add(new TermQuery(new Term(F_PARENT, parent)), Occur.FILTER);
+			query.add(new TermQuery(new Term(F_PARENT, parent)), Occur.FILTER);
 		}
 		if (trueFlags != 0 || falseFlags != 0) {
-			queryBuilder.add(new BitFlagsQuery(trueFlags, falseFlags), Occur.FILTER);
+			query.add(new BitFlagsQuery(trueFlags, falseFlags), Occur.FILTER);
 		}
-		List<String> scripts = SearchScope.getScripts(scope);
-		if (!scripts.isEmpty()) {
-			Builder scriptQueryBuilder = new Builder();
-			for (String script : scripts) {
-				scriptQueryBuilder.add(new TermQuery(new Term(F_PATH, script)), Occur.FILTER);
-			}
-			queryBuilder.add(scriptQueryBuilder.build(), Occur.FILTER);
-		}
-		BooleanQuery query = queryBuilder.build();
 		return query.clauses().isEmpty() ? null : query;
 	}
 
 	private void doSearch(final int elementType, String qualifier, String elementName, String parent,
 			final int trueFlags, final int falseFlags, int limit, final boolean searchForRefs, MatchRule matchRule,
 			IDLTKSearchScope scope, ISearchRequestor requestor, IProgressMonitor monitor) {
-		Query query = createQuery(elementType, qualifier, elementName, parent, trueFlags, falseFlags, searchForRefs,
-				matchRule, scope);
+		Query query = createQuery(elementName, qualifier, parent, trueFlags, falseFlags, searchForRefs, matchRule,
+				scope);
 		IndexSearcher indexSearcher = null;
 		final SearchMatchHandler searchMatchHandler = new SearchMatchHandler(scope, requestor);
 		List<SearchMatch> results = new ArrayList<SearchMatch>();
 		for (String container : SearchScope.getContainers(scope)) {
-			// Use index searcher for given container, data type and element type
 			SearcherManager searcherManager = LuceneManager.INSTANCE.findIndexSearcher(container,
 					searchForRefs ? ContainerIndexType.REFERENCES : ContainerIndexType.DECLARATIONS, elementType);
 			try {
