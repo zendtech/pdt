@@ -13,5 +13,4 @@ Bundle-RequiredExecutionEnvironment: JavaSE-1.7
 Bundle-ActivationPolicy: lazy
 Bundle-ClassPath: .,
  lib/lucene-analyzers-common-5.2.1.jar,
- lib/lucene-backward-codecs-5.2.1.jar,
  lib/lucene-core-5.2.1.jar

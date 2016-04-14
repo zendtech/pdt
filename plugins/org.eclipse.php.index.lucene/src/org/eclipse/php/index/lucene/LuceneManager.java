@@ -42,6 +42,7 @@ import org.apache.lucene.search.SearcherFactory;
 import org.apache.lucene.search.SearcherManager;
 import org.apache.lucene.store.Directory;
 import org.apache.lucene.store.FSDirectory;
+import org.apache.lucene.util.Version;
 import org.eclipse.core.resources.ISaveContext;
 import org.eclipse.core.resources.ISaveParticipant;
 import org.eclipse.core.resources.ResourcesPlugin;
@@ -274,20 +275,6 @@ public enum LuceneManager {
 			return Status.OK_STATUS;
 		}
 
-		private boolean delete(File path) {
-			if (path.exists()) {
-				File[] files = path.listFiles();
-				for (int i = 0; i < files.length; i++) {
-					if (files[i].isDirectory()) {
-						delete(files[i]);
-					} else {
-						files[i].delete();
-					}
-				}
-			}
-			return (path.delete());
-		}
-
 	}
 
 	private final class DefaultAnalyzer extends Analyzer {
@@ -361,17 +348,22 @@ public enum LuceneManager {
 
 	}
 
-	private static final class PropertyKeys {
+	private static final class IndexProperties {
 
-		public static final String VERSION = "version"; //$NON-NLS-1$
+		private static final String PREFIX = LucenePlugin.ID + ".property."; //$NON-NLS-1$
+		
+		public static final String KEY_MODEL_VERSION = PREFIX + "model.version"; //$NON-NLS-1$
+		public static final String KEY_LUCENE_VERSION = PREFIX + "lucene.version"; //$NON-NLS-1$
+		
+		public static final String MODEL_VERSION = "1.0"; //$NON-NLS-1$
+		public static final String LUCENE_VERSION = Version.LATEST.toString();
 
 	}
 
 	private static final String INDEX_DIR = "index"; //$NON-NLS-1$
 	private static final String PROPERTIES_FILE = ".properties"; //$NON-NLS-1$
 	private static final String MAPPINGS_FILE = ".mappings"; //$NON-NLS-1$
-	private static final String VERSION = String.valueOf(1);
-
+	
 	private final IPath fBundlePath;
 	private final Properties fProperties;
 	private final Map<String, String> fContainerMappings;
@@ -452,8 +444,29 @@ public enum LuceneManager {
 	}
 
 	private synchronized void startup() {
+		File indexDir = Paths.get(fBundlePath.append(INDEX_DIR).toOSString()).toFile();
+		if (!indexDir.exists()) {
+			indexDir.mkdirs();
+		}
 		loadProperties();
+		boolean cleanupIndex = false;
+		boolean updateProperties = false;
+		String modelVersion = fProperties.getProperty(IndexProperties.KEY_MODEL_VERSION);
+		String luceneVersion = fProperties.getProperty(IndexProperties.KEY_LUCENE_VERSION);
+		if (!IndexProperties.MODEL_VERSION.equals(modelVersion) || !IndexProperties.LUCENE_VERSION.equals(luceneVersion)) {
+			cleanupIndex = true;
+			updateProperties = true;
+		}
+		if (cleanupIndex) {
+			delete(indexDir);
+			indexDir.mkdirs();
+		}
+		if (updateProperties) {
+			registerProperties();
+			saveProperties();
+		}
 		loadContainerIds();
+		registerContainers();
 		try {
 			ResourcesPlugin.getWorkspace().addSaveParticipant(LucenePlugin.ID, new SaveParticipant());
 		} catch (CoreException e) {
@@ -465,12 +478,6 @@ public enum LuceneManager {
 		// Close all searchers & writers in all container entries
 		for (ContainerEntry entry : fContainerEntries.values()) {
 			entry.close();
-		}
-		// Save version if there is a need
-		String version = fProperties.getProperty(PropertyKeys.VERSION);
-		if (!VERSION.equals(version)) {
-			fProperties.put(PropertyKeys.VERSION, VERSION);
-			saveProperties();
 		}
 		cleanup();
 	}
@@ -527,10 +534,6 @@ public enum LuceneManager {
 
 	@SuppressWarnings("unchecked")
 	private void loadContainerIds() {
-		File indexDir = Paths.get(fBundlePath.append(INDEX_DIR).toOSString()).toFile();
-		if (!indexDir.exists()) {
-			indexDir.mkdirs();
-		}
 		File file = Paths.get(fBundlePath.append(INDEX_DIR).append(MAPPINGS_FILE).toOSString()).toFile();
 		ObjectInputStream ois = null;
 		try {
@@ -540,10 +543,6 @@ public enum LuceneManager {
 			FileInputStream fis = new FileInputStream(file);
 			ois = new ObjectInputStream(fis);
 			fContainerMappings.putAll((Map<String, String>) ois.readObject());
-			for (String container : fContainerMappings.keySet()) {
-				String containerId = fContainerMappings.get(container);
-				fContainerEntries.put(containerId, new ContainerEntry(containerId));
-			}
 		} catch (Exception e) {
 			Logger.logException(e);
 		} finally {
@@ -601,6 +600,19 @@ public enum LuceneManager {
 			}
 		}
 	}
+	
+	private void registerProperties() {
+		fProperties.clear();
+		fProperties.put(IndexProperties.KEY_MODEL_VERSION, IndexProperties.MODEL_VERSION);
+		fProperties.put(IndexProperties.KEY_LUCENE_VERSION, IndexProperties.LUCENE_VERSION);
+	}
+	
+	private void registerContainers() {
+		for (String container : fContainerMappings.keySet()) {
+			String containerId = fContainerMappings.get(container);
+			fContainerEntries.put(containerId, new ContainerEntry(containerId));
+		}
+	}
 
 	private void cleanup() {
 		List<String> containers = new ArrayList<String>();
@@ -623,6 +635,20 @@ public enum LuceneManager {
 			// Save cleaned up container mappings
 			saveContainerIds();
 		}
+	}
+	
+	private boolean delete(File path) {
+		if (path.exists()) {
+			File[] files = path.listFiles();
+			for (int i = 0; i < files.length; i++) {
+				if (files[i].isDirectory()) {
+					delete(files[i]);
+				} else {
+					files[i].delete();
+				}
+			}
+		}
+		return (path.delete());
 	}
 
 }
