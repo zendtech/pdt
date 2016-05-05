@@ -254,7 +254,7 @@
 		</pluginRepository>
 		<pluginRepository>
 			<id>eclipse.org-mylyn</id>
-			<url>https://repo.eclipse.org/content/repositories/mylyn-snapshots/</url>
+			<url>https://repo.eclipse.org/content/repositories/mylyn-releases/</url>
 		</pluginRepository>
 	</pluginRepositories>
 
