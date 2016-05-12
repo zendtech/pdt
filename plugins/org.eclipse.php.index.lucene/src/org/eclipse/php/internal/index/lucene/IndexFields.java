@@ -8,7 +8,7 @@
  * Contributors:
  *     Zend Technologies - initial API and implementation
  *******************************************************************************/
-package org.eclipse.php.index.lucene;
+package org.eclipse.php.internal.index.lucene;
 
 /**
  * Constants for Lucene document fields.

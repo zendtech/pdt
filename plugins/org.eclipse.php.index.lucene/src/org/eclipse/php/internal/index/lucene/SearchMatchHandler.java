@@ -8,7 +8,7 @@
  * Contributors:
  *     Zend Technologies - initial API and implementation
  *******************************************************************************/
-package org.eclipse.php.index.lucene;
+package org.eclipse.php.internal.index.lucene;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -39,7 +39,7 @@ import org.eclipse.dltk.internal.core.search.DLTKSearchScope;
 @SuppressWarnings("restriction")
 public class SearchMatchHandler {
 
-	private class FilePathHandler {
+	private static class FilePathHandler {
 
 		private IPath fFolderPath = Path.EMPTY;
 		private String fFileName;
@@ -65,8 +65,8 @@ public class SearchMatchHandler {
 		}
 	}
 
-	private Map<String, IProjectFragment> fProjectFragmentCache = new HashMap<String, IProjectFragment>();
-	private Map<String, ISourceModule> fSourceModuleCache = new HashMap<String, ISourceModule>();
+	private Map<String, IProjectFragment> fProjectFragmentCache = new HashMap<>();
+	private Map<String, ISourceModule> fSourceModuleCache = new HashMap<>();
 	private ISearchRequestor fSearchRequestor;
 	private IDLTKSearchScope fScope;
 
@@ -76,7 +76,8 @@ public class SearchMatchHandler {
 	 * @param scope
 	 * @param searchRequestor
 	 */
-	public SearchMatchHandler(IDLTKSearchScope scope, ISearchRequestor searchRequestor) {
+	public SearchMatchHandler(IDLTKSearchScope scope,
+			ISearchRequestor searchRequestor) {
 		this.fScope = scope;
 		this.fSearchRequestor = searchRequestor;
 	}
@@ -88,22 +89,29 @@ public class SearchMatchHandler {
 	 * @param isReference
 	 */
 	public void handle(SearchMatch match, boolean isReference) {
-		String containerPath = match.getContainer();
-		IDLTKLanguageToolkit toolkit = ((DLTKSearchScope) fScope).getLanguageToolkit();
+		String containerPath = match.container;
+		IDLTKLanguageToolkit toolkit = ((DLTKSearchScope) fScope)
+				.getLanguageToolkit();
 		if (toolkit instanceof IDLTKLanguageToolkitExtension
-				&& ((IDLTKLanguageToolkitExtension) toolkit).isArchiveFileName(containerPath)) {
-			containerPath = containerPath + IDLTKSearchScope.FILE_ENTRY_SEPARATOR;
+				&& ((IDLTKLanguageToolkitExtension) toolkit)
+						.isArchiveFileName(containerPath)) {
+			containerPath = containerPath
+					+ IDLTKSearchScope.FILE_ENTRY_SEPARATOR;
 		}
-		if (containerPath.length() != 0 && containerPath.charAt(containerPath.length() - 1) != IPath.SEPARATOR) {
+		if (containerPath.length() != 0 && containerPath
+				.charAt(containerPath.length() - 1) != IPath.SEPARATOR) {
 			containerPath = containerPath + IPath.SEPARATOR;
 		}
-		String filePath = match.getPath();
+		String filePath = match.path;
 		final String resourcePath = containerPath + filePath;
-		IProjectFragment projectFragment = fProjectFragmentCache.get(containerPath);
+		IProjectFragment projectFragment = fProjectFragmentCache
+				.get(containerPath);
 		if (projectFragment == null) {
-			projectFragment = ((DLTKSearchScope) fScope).projectFragment(resourcePath);
+			projectFragment = ((DLTKSearchScope) fScope)
+					.projectFragment(resourcePath);
 			if (projectFragment == null) {
-				projectFragment = ((DLTKSearchScope) fScope).projectFragment(containerPath);
+				projectFragment = ((DLTKSearchScope) fScope)
+						.projectFragment(containerPath);
 			}
 			fProjectFragmentCache.put(containerPath, projectFragment);
 		}
@@ -117,35 +125,44 @@ public class SearchMatchHandler {
 		if (sourceModule == null) {
 			if (projectFragment.isArchive()) {
 				FilePathHandler filePathHandler = new FilePathHandler(filePath);
-				IScriptFolder scriptFolder = new ArchiveFolder((ProjectFragment) projectFragment,
+				IScriptFolder scriptFolder = new ArchiveFolder(
+						(ProjectFragment) projectFragment,
 						filePathHandler.getFolderPath());
-				sourceModule = scriptFolder.getSourceModule(filePathHandler.getFileName());
+				sourceModule = scriptFolder
+						.getSourceModule(filePathHandler.getFileName());
 			} else if (projectFragment.isExternal()) {
 				FilePathHandler filePathHandler = new FilePathHandler(filePath);
-				IScriptFolder scriptFolder = new ExternalScriptFolder((ProjectFragment) projectFragment,
+				IScriptFolder scriptFolder = new ExternalScriptFolder(
+						(ProjectFragment) projectFragment,
 						filePathHandler.getFolderPath());
-				sourceModule = scriptFolder.getSourceModule(filePathHandler.getFileName());
+				sourceModule = scriptFolder
+						.getSourceModule(filePathHandler.getFileName());
 			} else if (projectFragment.isBuiltin()) {
 				FilePathHandler filePathHandler = new FilePathHandler(filePath);
-				IScriptFolder scriptFolder = new BuiltinScriptFolder((ProjectFragment) projectFragment,
+				IScriptFolder scriptFolder = new BuiltinScriptFolder(
+						(ProjectFragment) projectFragment,
 						filePathHandler.getFolderPath());
-				sourceModule = scriptFolder.getSourceModule(filePathHandler.getFileName());
+				sourceModule = scriptFolder
+						.getSourceModule(filePathHandler.getFileName());
 			} else {
-				IProject project = projectFragment.getScriptProject().getProject();
-				sourceModule = DLTKCore.createSourceModuleFrom(project.getFile(filePath));
+				IProject project = projectFragment.getScriptProject()
+						.getProject();
+				sourceModule = DLTKCore
+						.createSourceModuleFrom(project.getFile(filePath));
 			}
 			fSourceModuleCache.put(resourcePath, sourceModule);
 		}
-		String name = match.getElementName();
+		String name = match.elementName;
 		if (name == null) {
 			return;
 		}
 		ModelManager modelManager = ModelManager.getModelManager();
 		name = modelManager.intern(name);
 		// Pass to requestor
-		fSearchRequestor.match(match.getElementType(), match.getFlags(), match.getOffset(), match.getLength(),
-				match.getNameOffset(), match.getNameLength(), name, match.getMetadata(), match.getDoc(),
-				match.getQualifier(), match.getParent(), sourceModule, isReference);
+		fSearchRequestor.match(match.elementType, match.flags, match.offset,
+				match.length, match.nameOffset, match.nameLength, name,
+				match.metadata, match.doc, match.qualifier, match.parent,
+				sourceModule, isReference);
 
 	}
 

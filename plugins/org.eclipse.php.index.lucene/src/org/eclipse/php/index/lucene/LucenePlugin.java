@@ -37,13 +37,6 @@ public class LucenePlugin extends Plugin {
 		return plugin;
 	}
 
-	/*
-	 * (non-Javadoc)
-	 *
-	 * @see
-	 * org.osgi.framework.BundleActivator#start(org.osgi.framework.BundleContext
-	 * )
-	 */
 	@Override
 	public void start(BundleContext context) throws Exception {
 		super.start(context);
@@ -51,19 +44,12 @@ public class LucenePlugin extends Plugin {
 
 	}
 
-	/*
-	 * (non-Javadoc)
-	 *
-	 * @see
-	 * org.osgi.framework.BundleActivator#stop(org.osgi.framework.BundleContext
-	 * )
-	 */
 	@Override
 	public void stop(BundleContext context) throws Exception {
 		try {
 			Job.getJobManager().join(LUCENE_JOB_FAMILY, null);
-			plugin = null;
 		} finally {
+			plugin = null;
 			super.stop(context);
 		}
 	}
