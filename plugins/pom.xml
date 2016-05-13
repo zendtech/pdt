@@ -93,7 +93,6 @@
 		<module>org.eclipse.php.server.ui</module>
 		<module>org.eclipse.php.ui</module>
 		<module>org.eclipse.php.astview</module>
-		<module>org.eclipse.php.index.lucene</module>
 	</modules>
 
 </project>

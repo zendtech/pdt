@@ -25,7 +25,7 @@
 					<dependencies>
 						<dependency>
 							<type>p2-installable-unit</type>
-							<artifactId>org.eclipse.php.index.lucene</artifactId>
+							<artifactId>org.eclipse.dltk.core.index.lucene</artifactId>
 						</dependency>
 						<dependency>
 							<type>p2-installable-unit</type>
