@@ -81,6 +81,7 @@ public class OverrideIndicatorLabelDecorator implements ILabelDecorator, ILightw
 	 * 
 	 * @see ILabelDecorator#decorateText(String, Object)
 	 */
+	@Override
 	public String decorateText(String text, Object element) {
 		return text;
 	}
@@ -90,6 +91,7 @@ public class OverrideIndicatorLabelDecorator implements ILabelDecorator, ILightw
 	 * 
 	 * @see ILabelDecorator#decorateImage(Image, Object)
 	 */
+	@Override
 	public Image decorateImage(Image image, Object element) {
 		if (image == null)
 			return null;
@@ -120,9 +122,18 @@ public class OverrideIndicatorLabelDecorator implements ILabelDecorator, ILightw
 		if (element instanceof IMethod) {
 			try {
 				IMethod method = (IMethod) element;
+				if (method.getParent().getElementType() != IModelElement.TYPE) {
+					return 0;
+				}
 				if (!method.getScriptProject().isOnBuildpath(method)) {
 					return 0;
 				}
+
+				IType parent = (IType) method.getParent();
+				if (parent.getSuperClasses() == null || parent.getSuperClasses().length == 0) {
+					return 0;
+				}
+
 				int flags = method.getFlags();
 				if (!method.isConstructor() && !Flags.isPrivate(flags) && !Flags.isStatic(flags)) {
 					int res = getOverrideIndicators(method);
@@ -204,8 +215,28 @@ public class OverrideIndicatorLabelDecorator implements ILabelDecorator, ILightw
 	/*
 	 * (non-Javadoc)
 	 * 
+	 * @see
+	 * org.eclipse.jface.viewers.ILightweightLabelDecorator#decorate(java.lang
+	 * .Object, org.eclipse.jface.viewers.IDecoration)
+	 */
+	@Override
+	public void decorate(Object element, IDecoration decoration) {
+		int adornmentFlags = computeAdornmentFlags(element);
+		if ((adornmentFlags & ScriptElementImageDescriptor.IMPLEMENTS) != 0) {
+
+			decoration.addOverlay(DLTKPluginImages.DESC_OVR_IMPLEMENTS);
+		} else if ((adornmentFlags & ScriptElementImageDescriptor.OVERRIDES) != 0) {
+
+			decoration.addOverlay(DLTKPluginImages.DESC_OVR_OVERRIDES);
+		}
+	}
+
+	/*
+	 * (non-Javadoc)
+	 * 
 	 * @see IBaseLabelProvider#addListener(ILabelProviderListener)
 	 */
+	@Override
 	public void addListener(ILabelProviderListener listener) {
 	}
 
@@ -214,6 +245,7 @@ public class OverrideIndicatorLabelDecorator implements ILabelDecorator, ILightw
 	 * 
 	 * @see IBaseLabelProvider#dispose()
 	 */
+	@Override
 	public void dispose() {
 		if (fRegistry != null && fUseNewRegistry) {
 			fRegistry.dispose();
@@ -225,6 +257,7 @@ public class OverrideIndicatorLabelDecorator implements ILabelDecorator, ILightw
 	 * 
 	 * @see IBaseLabelProvider#isLabelProperty(Object, String)
 	 */
+	@Override
 	public boolean isLabelProperty(Object element, String property) {
 		return true;
 	}
@@ -234,25 +267,8 @@ public class OverrideIndicatorLabelDecorator implements ILabelDecorator, ILightw
 	 * 
 	 * @see IBaseLabelProvider#removeListener(ILabelProviderListener)
 	 */
+	@Override
 	public void removeListener(ILabelProviderListener listener) {
-	}
-
-	/*
-	 * (non-Javadoc)
-	 * 
-	 * @see
-	 * org.eclipse.jface.viewers.ILightweightLabelDecorator#decorate(java.lang
-	 * .Object, org.eclipse.jface.viewers.IDecoration)
-	 */
-	public void decorate(Object element, IDecoration decoration) {
-		int adornmentFlags = computeAdornmentFlags(element);
-		if ((adornmentFlags & ScriptElementImageDescriptor.IMPLEMENTS) != 0) {
-
-			decoration.addOverlay(DLTKPluginImages.DESC_OVR_IMPLEMENTS);
-		} else if ((adornmentFlags & ScriptElementImageDescriptor.OVERRIDES) != 0) {
-
-			decoration.addOverlay(DLTKPluginImages.DESC_OVR_OVERRIDES);
-		}
 	}
 
 	private static boolean isAbstract(IMember member) throws ModelException {
