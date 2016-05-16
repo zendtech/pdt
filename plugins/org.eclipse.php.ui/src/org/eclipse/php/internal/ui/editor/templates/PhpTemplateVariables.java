@@ -382,6 +382,7 @@ public class PhpTemplateVariables {
 		}
 	}
 
+	@Deprecated
 	public static class Namespace extends TemplateVariableResolver {
 		public static final String NAME = "namespace"; //$NON-NLS-1$
 

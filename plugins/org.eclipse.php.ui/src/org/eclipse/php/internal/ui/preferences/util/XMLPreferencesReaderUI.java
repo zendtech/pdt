@@ -24,6 +24,7 @@ import org.eclipse.ui.preferences.IWorkingCopyManager;
  * XML preferences reader for reading XML structures from the prefernces store.
  * This class works in combination with IXMLPreferencesStorable.
  */
+@Deprecated
 public class XMLPreferencesReaderUI extends XMLPreferencesReader {
 
 	/**
