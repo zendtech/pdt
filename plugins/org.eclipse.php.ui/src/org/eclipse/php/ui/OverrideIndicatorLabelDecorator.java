@@ -132,7 +132,6 @@ public class OverrideIndicatorLabelDecorator implements ILabelDecorator, ILightw
 					return 0;
 				}
 
-
 				if (!shouldCompute((IType) method.getParent())) {
 					return 0;
 				}
@@ -191,25 +190,6 @@ public class OverrideIndicatorLabelDecorator implements ILabelDecorator, ILightw
 			}
 		}
 		return 0;
-	}
-
-	/*
-	 * (non-Javadoc)
-	 * 
-	 * @see
-	 * org.eclipse.jface.viewers.ILightweightLabelDecorator#decorate(java.lang
-	 * .Object, org.eclipse.jface.viewers.IDecoration)
-	 */
-	@Override
-	public void decorate(Object element, IDecoration decoration) {
-		int adornmentFlags = computeAdornmentFlags(element);
-		if ((adornmentFlags & ScriptElementImageDescriptor.IMPLEMENTS) != 0) {
-
-			decoration.addOverlay(DLTKPluginImages.DESC_OVR_IMPLEMENTS);
-		} else if ((adornmentFlags & ScriptElementImageDescriptor.OVERRIDES) != 0) {
-
-			decoration.addOverlay(DLTKPluginImages.DESC_OVR_OVERRIDES);
-		}
 	}
 
 	/*
