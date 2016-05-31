@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2009 IBM Corporation and others.
+ * Copyright (c) 2009, 2016 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -227,13 +227,13 @@ public abstract class AbstractPhpLexer implements Scanner, PHPRegionTypes {
 
 		bufferedState = createLexicalStateMemento();
 		String yylex = yylex();
-		if (PHPPartitionTypes.isPHPDocCommentState(yylex)) {
-			final StringBuffer buffer = new StringBuffer();
+		if (PHPPartitionTypes.isPHPDocRegion(yylex)) {
+			final StringBuilder buffer = new StringBuilder();
 			int length = 0;
-			while (PHPPartitionTypes.isPHPDocCommentState(yylex)) {
+			while (PHPPartitionTypes.isPHPDocRegion(yylex)) {
 				buffer.append(yytext());
+				length += yylength();
 				yylex = yylex();
-				length++;
 			}
 			bufferedTokens = new LinkedList<ITextRegion>();
 			checkForTodo(bufferedTokens, PHPRegionTypes.PHPDOC_COMMENT, 0, length, buffer.toString());

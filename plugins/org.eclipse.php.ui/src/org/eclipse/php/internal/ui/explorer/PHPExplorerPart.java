@@ -12,7 +12,6 @@
  *******************************************************************************/
 package org.eclipse.php.internal.ui.explorer;
 
-import org.eclipse.dltk.core.ISourceModule;
 import org.eclipse.dltk.internal.ui.navigator.ScriptExplorerContentProvider;
 import org.eclipse.dltk.internal.ui.navigator.ScriptExplorerLabelProvider;
 import org.eclipse.dltk.internal.ui.scriptview.ScriptExplorerActionGroup;
@@ -25,13 +24,10 @@ import org.eclipse.dltk.ui.PreferenceConstants;
 import org.eclipse.jface.preference.IPreferenceStore;
 import org.eclipse.jface.viewers.TreeViewer;
 import org.eclipse.jface.viewers.Viewer;
-import org.eclipse.php.internal.core.includepath.IncludePath;
 import org.eclipse.php.internal.ui.actions.ConfigureWorkingSetAction;
 import org.eclipse.php.internal.ui.actions.PHPExplorerActionGroup;
 import org.eclipse.php.internal.ui.dnd.PHPNavigatorDropAdapter;
 import org.eclipse.php.internal.ui.dnd.PHPViewerDropSupport;
-import org.eclipse.php.internal.ui.explorer.PHPExplorerContentProvider.IncludePathContainer;
-import org.eclipse.php.internal.ui.util.NamespaceNode;
 import org.eclipse.swt.dnd.DND;
 import org.eclipse.swt.dnd.FileTransfer;
 import org.eclipse.swt.dnd.Transfer;
@@ -45,49 +41,13 @@ import org.eclipse.ui.views.navigator.NavigatorDropAdapter;
 
 /**
  * PHP Explorer view part to display the projects, contained files and
- * referenced folders/libraries. The view displays those in a
- * "file-system oriented" manner, and not in a "model oriented" manner.
+ * referenced folders/libraries. The view displays those in a "file-system
+ * oriented" manner, and not in a "model oriented" manner.
  * 
  * @author apeled, ncohen
  * 
  */
 public class PHPExplorerPart extends ScriptExplorerPart {
-
-	protected class PHPExplorerElementSorter extends ModelElementSorter {
-		private static final int INCLUDE_PATH_CONTAINER = 59;
-
-		public int category(Object element) {
-			if (element instanceof IncludePathContainer)
-				return INCLUDE_PATH_CONTAINER;
-			else
-				return super.category(element);
-		}
-
-		public int compare(Viewer viewer, Object e1, Object e2) {
-			// Put Include Path node to the bottom:
-			if (e1 instanceof IncludePath || e2 instanceof IncludePath) {
-				return -1;
-			}
-
-			if (e1 instanceof NamespaceNode && e2 instanceof NamespaceNode) {
-				return ((NamespaceNode) e1).getElementName().compareTo(((NamespaceNode) e2).getElementName());
-			}
-
-			// Fix #256585 - sort by resource name
-			Object c1 = e1;
-			if (e1 instanceof ISourceModule) {
-				c1 = ((ISourceModule) e1).getResource();
-			}
-			Object c2 = e2;
-			if (e2 instanceof ISourceModule) {
-				c2 = ((ISourceModule) e2).getResource();
-			}
-			if (c1 != null && c2 != null) {
-				return super.compare(viewer, c1, c2);
-			}
-			return super.compare(viewer, e1, e2);
-		}
-	}
 
 	protected class PHPExplorerWorkingSetAwareModelElementSorter extends PHPExplorerElementSorter {
 
@@ -163,8 +123,8 @@ public class PHPExplorerPart extends ScriptExplorerPart {
 	}
 
 	/**
-	 * Overriding DTLK original setComerator, and setting
-	 * "includePathContainer - aware" comparators
+	 * Overriding DTLK original setComerator, and setting "includePathContainer
+	 * - aware" comparators
 	 */
 	@Override
 	protected void setComparator() {

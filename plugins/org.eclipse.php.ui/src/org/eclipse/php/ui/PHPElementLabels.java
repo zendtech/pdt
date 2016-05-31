@@ -13,8 +13,12 @@ package org.eclipse.php.ui;
 
 import org.eclipse.dltk.core.*;
 import org.eclipse.dltk.ui.ScriptElementLabels;
+import org.eclipse.php.core.compiler.IPHPModifiers;
+import org.eclipse.php.core.compiler.PHPFlags;
 
 public class PHPElementLabels extends ScriptElementLabels {
+	private final String MIXED_RETURN_TYPE = "mixed"; //$NON-NLS-1$
+	private final String VOID_RETURN_TYPE = "void"; //$NON-NLS-1$
 
 	protected void getTypeLabel(IType type, long flags, StringBuffer buf) {
 		if (getFlag(flags, T_FULLY_QUALIFIED | T_CONTAINER_QUALIFIED)) {
@@ -113,11 +117,15 @@ public class PHPElementLabels extends ScriptElementLabels {
 
 			if (getFlag(flags, ScriptElementLabels.M_APP_RETURNTYPE) && method.exists() && !method.isConstructor()) {
 				String type = method.getType();
-				if (type != null) {
-					// int offset = buf.length();
-					buf.append(ScriptElementLabels.DECL_STRING);
-					buf.append(type);
+				if (type == null) {
+					if ((method.getFlags() & IPHPModifiers.AccReturn) != 0) {
+						type = MIXED_RETURN_TYPE;
+					} else {
+						type = VOID_RETURN_TYPE;
+					}
 				}
+				buf.append(ScriptElementLabels.DECL_STRING);
+				buf.append(type);
 			}
 
 			// post qualification
@@ -140,21 +148,31 @@ public class PHPElementLabels extends ScriptElementLabels {
 				final boolean bTypes = getFlag(flags, M_PARAMETER_TYPES);
 				final boolean bInitializers = getFlag(flags, M_PARAMETER_INITIALIZERS);
 				final IParameter[] params = method.getParameters();
+				final boolean isVariadic = PHPFlags.isVariadic(method.getFlags());
 				for (int i = 0, nParams = params.length; i < nParams; i++) {
 					if (i > 0) {
 						buf.append(COMMA_STRING);
 					}
+					boolean isLast = i + 1 == nParams;
 					if (bTypes) {
 						if (params[i].getType() != null) {
 							buf.append(params[i].getType());
 							if (bNames) {
 								buf.append(' ');
+							} else if (isLast && isVariadic) {
+								buf.append(ELLIPSIS_STRING);
 							}
 						} else if (!bNames) {
+							if (isLast && isVariadic) {
+								buf.append(ELLIPSIS_STRING);
+							}
 							buf.append(params[i].getName());
 						}
 					}
 					if (bNames) {
+						if (isLast && isVariadic) {
+							buf.append(ELLIPSIS_STRING);
+						}
 						buf.append(params[i].getName());
 					}
 					if (bInitializers && params[i].getDefaultValue() != null) {

@@ -24,10 +24,7 @@ import java.util.Map;
 import org.eclipse.core.resources.IFile;
 import org.eclipse.core.resources.IProject;
 import org.eclipse.core.resources.IProjectDescription;
-import org.eclipse.core.resources.IResource;
-import org.eclipse.core.resources.IncrementalProjectBuilder;
 import org.eclipse.core.resources.ResourcesPlugin;
-import org.eclipse.core.runtime.NullProgressMonitor;
 import org.eclipse.dltk.core.CompletionProposal;
 import org.eclipse.dltk.core.CompletionRequestor;
 import org.eclipse.dltk.core.DLTKCore;
@@ -45,6 +42,7 @@ import org.eclipse.php.internal.core.PHPVersion;
 import org.eclipse.php.internal.core.codeassist.AliasType;
 import org.eclipse.php.internal.core.project.PHPNature;
 import org.eclipse.php.internal.core.typeinference.FakeConstructor;
+import org.eclipse.wst.validation.ValidationFramework;
 import org.junit.After;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -95,6 +93,10 @@ public class CodeAssistTests {
 			return;
 		}
 
+		if (ResourcesPlugin.getWorkspace().isAutoBuilding()) {
+			ResourcesPlugin.getWorkspace().getDescription().setAutoBuilding(false);
+		}
+
 		project.create(null);
 		project.open(null);
 
@@ -102,15 +104,17 @@ public class CodeAssistTests {
 		IProjectDescription desc = project.getDescription();
 		desc.setNatureIds(new String[] { PHPNature.ID });
 		project.setDescription(desc, null);
+
+		// WTP validator can be disabled during code assist tests
+		ValidationFramework.getDefault().suspendValidation(project, true);
 		PHPCoreTests.setProjectPhpVersion(project, version);
 
-		if (ResourcesPlugin.getWorkspace().isAutoBuilding()) {
-			ResourcesPlugin.getWorkspace().getDescription().setAutoBuilding(false);
-		}
+		PHPCoreTests.index(project);
 	}
 
 	@AfterList
 	public void tearDownSuite() throws Exception {
+		PHPCoreTests.removeIndex(project);
 		project.close(null);
 		project.delete(true, true, null);
 		project = null;
@@ -131,12 +135,14 @@ public class CodeAssistTests {
 	@After
 	public void after() throws Exception {
 		if (testFile != null) {
+			PHPCoreTests.removeIndex(testFile);
 			testFile.delete(true, null);
 			testFile = null;
 		}
 		if (otherFiles != null) {
 			for (IFile file : otherFiles) {
 				if (file != null) {
+					PHPCoreTests.removeIndex(file);
 					file.delete(true, null);
 				}
 			}
@@ -166,18 +172,17 @@ public class CodeAssistTests {
 		data = data.substring(0, offset) + data.substring(offset + 1);
 		testFile = project.getFile("test.php");
 		testFile.create(new ByteArrayInputStream(data.getBytes()), true, null);
+		PHPCoreTests.index(testFile);
 		this.otherFiles = new ArrayList<IFile>(otherFiles.length);
 		int i = 0;
 		for (String otherFileContent : otherFiles) {
 			IFile tmp = project.getFile(String.format("test%s.php", i));
 			tmp.create(new ByteArrayInputStream(otherFileContent.getBytes()), true, null);
 			this.otherFiles.add(i, tmp);
+			PHPCoreTests.index(tmp);
 			i++;
 		}
-		project.refreshLocal(IResource.DEPTH_INFINITE, null);
 
-		testFile.touch(new NullProgressMonitor());
-		project.build(IncrementalProjectBuilder.INCREMENTAL_BUILD, null);
 		PHPCoreTests.waitForIndexer();
 		// PHPCoreTests.waitForAutoBuild();
 

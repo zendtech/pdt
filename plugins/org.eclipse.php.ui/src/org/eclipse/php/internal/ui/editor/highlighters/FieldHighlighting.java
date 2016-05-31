@@ -31,11 +31,9 @@ public class FieldHighlighting extends AbstractSemanticHighlighting {
 
 		@Override
 		public boolean visit(SingleFieldDeclaration fieldDecl) {
-			ClassDeclaration cd = null;
 			ASTNode parent = fieldDecl.getParent();
 			while (parent != null) {
 				if (parent instanceof ClassDeclaration) {
-					cd = (ClassDeclaration) parent;
 					break;
 				}
 				parent = parent.getParent();
@@ -198,8 +196,8 @@ public class FieldHighlighting extends AbstractSemanticHighlighting {
 	}
 
 	@Override
-	public void initDefaultPreferences() {
-		getStyle().setDefaultTextColor(0, 0, 192);
+	protected void initDefaultPreferences() {
+		getStyle().setEnabledByDefault(true).setDefaultTextColor(0, 0, 192);
 	}
 
 	public String getDisplayName() {

@@ -93,8 +93,8 @@ public class ConstantHighlighting extends AbstractSemanticHighlighting {
 	}
 
 	@Override
-	public void initDefaultPreferences() {
-		getStyle().setEnabledByDefault(false).setDefaultTextColor(0, 0, 192).setItalicByDefault(true);
+	protected void initDefaultPreferences() {
+		getStyle().setEnabledByDefault(true).setDefaultTextColor(0, 0, 192).setItalicByDefault(true);
 	}
 
 	public String getDisplayName() {

@@ -106,19 +106,6 @@ public class PHPModelUtils {
 	 * @param element
 	 *            Element name
 	 * @return namespace prefix
-	 * @deprecated replaced by
-	 *             {@link PHPModelUtils#extractNameSpaceName(String)}
-	 */
-	public static String extractNameSapceName(String element) {
-		return extractNameSpaceName(element);
-	}
-
-	/**
-	 * Extracts the name space name from the given fully qualified name
-	 * 
-	 * @param element
-	 *            Element name
-	 * @return namespace prefix
 	 */
 	public static String extractNameSpaceName(String element) {
 		String nameSpaceName = null;
@@ -2116,7 +2103,7 @@ public class PHPModelUtils {
 		int currChar = offset;
 		int bracketsNum = 1;
 		char inStringMode = 0;
-		while (bracketsNum != 0 && currChar >= 0) {
+		while (bracketsNum != 0 && currChar > 0) {
 			currChar--;
 			// get the current char
 			final char charAt = statementText.charAt(currChar);
@@ -2185,7 +2172,7 @@ public class PHPModelUtils {
 
 	public static String getFullName(NamespaceName namespaceName) {
 
-		StringBuffer sb = new StringBuffer();
+		StringBuilder sb = new StringBuilder();
 		if (namespaceName.isGlobal()) {
 			sb.append(NamespaceReference.NAMESPACE_SEPARATOR);
 		}

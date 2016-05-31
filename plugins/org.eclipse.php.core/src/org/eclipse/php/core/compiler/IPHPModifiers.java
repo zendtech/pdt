@@ -25,13 +25,6 @@ public interface IPHPModifiers extends Modifiers {
 	public static final int NonPhp = 1 << Modifiers.USER_MODIFIER;
 
 	/**
-	 * Element that has "@internal" in its PHPDoc
-	 * 
-	 * @deprecated
-	 */
-	public static final int Internal = 1 << (Modifiers.USER_MODIFIER + 1);
-
-	/**
 	 * Constructor method
 	 */
 	public static final int Constructor = 1 << (Modifiers.USER_MODIFIER + 2);
@@ -43,11 +36,25 @@ public interface IPHPModifiers extends Modifiers {
 	public static final int AccAnonymous = (1 << Modifiers.USER_MODIFIER + 6);
 
 	/**
+	 * Method / Function have return or yield statement
+	 * 
+	 * @since 4.0
+	 */
+	public static final int AccReturn = (1 << Modifiers.USER_MODIFIER + 7);
+
+	/**
+	 * Variadic method
+	 * 
+	 * @since 4.0
+	 */
+	public static final int AccVariadic = (1 << Modifiers.USER_MODIFIER + 8);
+
+	/**
 	 * All access modifiers as one for compiler validation
 	 * 
 	 * @since 4.0
 	 */
 	public static final int AccessMask = AccPublic | AccPrivate | AccProtected;
 
-	public static final int USER_MODIFIER = Modifiers.USER_MODIFIER + 7;
+	public static final int USER_MODIFIER = Modifiers.USER_MODIFIER + 9;
 }

@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2009 IBM Corporation and others.
+ * Copyright (c) 2009, 2016 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -70,7 +70,7 @@ public class TaskPatternsProvider {
 		return workspacePatterns;
 	}
 
-	// If necessary, initialise the needed listeners on the given project and
+	// If necessary, initialize the needed listeners on the given project and
 	// update its patterns.
 	private void registerProject(IProject project) {
 		if (projectToListener.get(project) == null) {
@@ -93,10 +93,15 @@ public class TaskPatternsProvider {
 		for (int i = 0; i < workspaceTaskTags.length; i++) {
 			TaskTag tag = workspaceTaskTags[i];
 			String tagString = tag.getTag();
+			// https://bugs.eclipse.org/bugs/show_bug.cgi?id=492373
+			// Best approximation to fit the jflex highlighting rule
+			// "@"[a-zA-Z-]+ since tagString can start with a @ or any
+			// other character.
 			if (caseSensitive) {
-				patterns[i] = Pattern.compile(tagString, Pattern.LITERAL);
+				patterns[i] = Pattern.compile("(?<![a-zA-Z-])" + Pattern.quote(tagString) + "(?![a-zA-Z-])");
 			} else {
-				patterns[i] = Pattern.compile(tagString, Pattern.CASE_INSENSITIVE | Pattern.LITERAL);
+				patterns[i] = Pattern.compile("(?<![a-zA-Z-])" + Pattern.quote(tagString) + "(?![a-zA-Z-])",
+						Pattern.CASE_INSENSITIVE);
 			}
 		}
 

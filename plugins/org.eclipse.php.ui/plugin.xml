@@ -656,7 +656,7 @@
 	<extension point="org.eclipse.ui.actionSetPartAssociations">
 		<actionSetPartAssociation
 			targetID="org.eclipse.ui.edit.text.actionSet.presentation">
-			<part id="org.eclipse.php.ui.explorer" />
+			<part id="org.eclipse.php.editor" />
 		</actionSetPartAssociation>
 		<actionSetPartAssociation targetID="org.eclipse.php.ui.A_OpenActionSet">
 			<part id="org.eclipse.php.ui.explorer" />
@@ -1008,6 +1008,21 @@
 	</extension>
 
 	<extension point="org.eclipse.ui.menus">
+		<menuContribution
+           locationURI="popup:org.eclipse.php.ui.edit.text.refactor.quickMenu">
+           <command commandId="org.eclipse.dltk.ui.edit.text.script.rename.element"
+				id="org.eclipse.php.ui.refactoring.rename" label="%action.label.3"
+				style="push"
+				>
+			</command>
+	       <command commandId="org.eclipse.php.ui.edit.text.move.element" 
+	       	id="org.eclipse.php.ui.actions.move" label="%action.label.4"
+	       	style="push"
+	       	>
+	       </command>
+	       
+           <separator name="reorgGroup" visible="true"/>
+        </menuContribution>
 		<!-- Contributing Actions/handlers to WST's Editor source menus -->
 		<menuContribution locationURI="menu:sourceMenuId?before=sourceBegin">
 			<command commandId="org.eclipse.php.ui.edit.text.add.description"
@@ -1054,7 +1069,71 @@
 				</visibleWhen>
 			</command>
 		</menuContribution>
-		
+		<menuContribution
+	           locationURI="popup:org.eclipse.php.ui.edit.text.source.quickMenu?after=sourceBegin">
+				<command commandId="org.eclipse.wst.sse.ui.toggle.comment" id="ToggleComment" style="push">
+					<visibleWhen checkEnabled="false">
+						<reference definitionId="org.eclipse.php.ui.phpContentType.definition"></reference>
+					</visibleWhen>
+				</command>
+				<command commandId="org.eclipse.wst.sse.ui.add.block.comment" id="AddBlockComment" style="push">
+					<visibleWhen checkEnabled="false">
+						<reference definitionId="org.eclipse.php.ui.phpContentType.definition"></reference>
+					</visibleWhen>
+				</command>
+				<command commandId="org.eclipse.wst.sse.ui.remove.block.comment" id="RemoveBlockComment" style="push">
+					<visibleWhen checkEnabled="false">
+						<reference definitionId="org.eclipse.php.ui.phpContentType.definition"></reference>
+					</visibleWhen>
+				</command>
+				<separator name="format" visible="true"></separator>
+				<command
+		              commandId="org.eclipse.php.ui.editor.organize.use.statements"
+		              label="%ActionDefinition.organizeUseStatements.name"
+		              style="push">
+		           <visibleWhen
+		                 checkEnabled="false">
+		              <reference
+		                    definitionId="org.eclipse.php.ui.phpContentType.definition">
+		              </reference>
+		           </visibleWhen>
+		        </command>
+				<command
+			           commandId="org.eclipse.wst.sse.ui.cleanup.document"
+			           id="CleanupDocument"
+			           style="push">
+						<visibleWhen checkEnabled="false">
+							<and>
+								<reference definitionId="org.eclipse.wst.sse.ui.sseActiveContext.definition"/>
+								<not><reference definitionId="org.eclipse.wst.sse.ui.hideFormat" /></not>
+							</and>
+						</visibleWhen>
+			    </command>
+				<command 
+					commandId="org.eclipse.wst.sse.ui.format.document" 
+					id="FormatDocument" 
+					mnemonic="%command.format.document.mnemonic" 
+					style="push">
+						<visibleWhen checkEnabled="false">
+							<and>
+								<reference definitionId="org.eclipse.wst.sse.ui.sseActiveContext.definition"/>
+								<not><reference definitionId="org.eclipse.wst.sse.ui.hideFormat" /></not>
+							</and>
+						</visibleWhen>
+				</command>
+				<command 
+					commandId="org.eclipse.wst.sse.ui.format.active.elements" 
+					id="FormatElements" 
+					mnemonic="%command.format.active.elements.mnemonic" 
+					style="push">
+						<visibleWhen checkEnabled="false">
+							<and>
+								<reference definitionId="org.eclipse.wst.sse.ui.sseActiveContext.definition"/>
+								<not><reference definitionId="org.eclipse.wst.sse.ui.hideFormat" /></not>
+							</and>
+						</visibleWhen>
+				</command>
+		</menuContribution>
 		<menuContribution
 	           locationURI="popup:sourcePopupMenuId?after=sourceBegin">
 				<command commandId="org.eclipse.wst.sse.ui.toggle.comment" id="ToggleComment" style="push">
@@ -1145,7 +1224,13 @@
             name="%ActionDefinition.sourceQuickMenu.name"
             description="%ActionDefinition.sourceQuickMenu.description"
             categoryId="org.eclipse.php.ui.category.source"
-            id="org.eclipse.dltk.ui.edit.text.java.source.quickMenu">
+            id="org.eclipse.php.ui.edit.text.source.quickMenu">
+      </command>
+      <command
+            name="%ActionDefinition.refactorQuickMenu.name"
+            description="%ActionDefinition.refactorQuickMenu.description"
+            categoryId="org.eclipse.php.ui.category.source"
+            id="org.eclipse.php.ui.edit.text.refactor.quickMenu">
       </command>
 		<command name="%action.addDescription.name" description="%action.addDescription.description"
 			categoryId="org.eclipse.ui.category.edit" id="org.eclipse.php.ui.edit.text.add.description" />
@@ -1250,6 +1335,12 @@
             categoryId="org.eclipse.ui.category.edit"
             id="org.eclipse.pdt.ui.edit.text.select.last">
       </command>
+      <command
+            name="%ActionDefinition.assignToLocalCommand.name"
+            description="%ActionDefinition.assignToLocalCommand.description"
+            categoryId="org.eclipse.php.ui.category.source"
+            id="org.eclipse.php.internal.ui.assignToLocal.assist">
+      </command>
 	</extension>
 
 	<extension point="org.eclipse.ui.bindings">
@@ -1267,18 +1358,23 @@
 			commandId="org.eclipse.dltk.ui.edit.text.script.show.outline" schemeId="org.eclipse.ui.defaultAcceleratorConfiguration" />
 		<!-- source -->
       <key
-            sequence="M2+M3+S" contextId="org.eclipse.dltk.ui.context.views"
-            commandId="org.eclipse.dltk.ui.edit.text.java.source.quickMenu"
+            sequence="M1+M3+S" contextId="org.eclipse.dltk.ui.context.views"
+            commandId="org.eclipse.php.ui.edit.text.source.quickMenu"
             schemeId="org.eclipse.ui.defaultAcceleratorConfiguration"/>
+            
       <key
-            platform="carbon"
-            sequence="M2+M3+S"
-            commandId=""
+            sequence="M1+M3+S" contextId="org.eclipse.php.ui.phpEditorScope"
+            commandId="org.eclipse.php.ui.edit.text.source.quickMenu"
             schemeId="org.eclipse.ui.defaultAcceleratorConfiguration"/>
+            
       <key
-            platform="carbon"
-            sequence="COMMAND+ALT+S" contextId="org.eclipse.dltk.ui.context.views"
-            commandId="org.eclipse.dltk.ui.edit.text.java.source.quickMenu"
+            sequence="M1+M3+T" contextId="org.eclipse.dltk.ui.context.views"
+            commandId="org.eclipse.php.ui.edit.text.refactor.quickMenu"
+            schemeId="org.eclipse.ui.defaultAcceleratorConfiguration"/>
+            
+      <key
+            sequence="M1+M3+T" contextId="org.eclipse.php.ui.phpEditorScope"
+            commandId="org.eclipse.php.ui.edit.text.refactor.quickMenu"
             schemeId="org.eclipse.ui.defaultAcceleratorConfiguration"/>
             
 		<key sequence="M1+M2+J" contextId="org.eclipse.php.ui.phpEditorScope"
@@ -1493,6 +1589,12 @@
             schemeId="org.eclipse.ui.defaultAcceleratorConfiguration"
             sequence="M1+M2+G">
       </key>
+      
+      <key
+            sequence="M1+2 L"
+            contextId="org.eclipse.php.ui.phpEditorScope"
+            commandId="org.eclipse.php.internal.ui.assignToLocal.assist"
+            schemeId="org.eclipse.ui.defaultAcceleratorConfiguration"/>
 
     <scheme
           description="%scheme.description"
@@ -1757,7 +1859,7 @@
 	       </action>
 	    </viewerContribution>
 	    
-  		<objectContribution
+		<objectContribution
             objectClass="org.eclipse.core.resources.IProject"
             adaptable="true"
             id="org.eclipse.php.ui.projectSetup">
@@ -1768,8 +1870,19 @@
 				enablesFor="+"
 				id="org.eclipse.php.internal.ui.actions.SetupPHPProjectAction">
 			</action>
-   		</objectContribution>
-
+			<visibility>
+				<not>
+					<or>
+						<objectState 
+							name="projectNature" 
+							value="org.eclipse.php.core.PHPNature"/>
+						<objectState
+							name="open"
+							value="false"/>
+					</or>
+				</not>
+			</visibility>
+		</objectContribution>
 	</extension>
 
 
@@ -1882,6 +1995,18 @@
 			</objectClass>
 		</enablement>
 	</decorator>
+		<decorator
+			label="%PHPLanguageLibraryDecorator.label"
+			state="true"
+			class="org.eclipse.php.ui.PHPLanguageLibraryDecorator"
+			id="org.eclipse.php.ui.languagelibrary.decorator"
+			lightweight="true">
+		<enablement>
+			<objectClass
+				name="org.eclipse.dltk.internal.ui.scriptview.BuildPathContainer">
+			</objectClass>
+		</enablement>
+		</decorator>
 	</extension>
 	
 	<extension point="org.eclipse.ui.decorators">
@@ -2464,6 +2589,9 @@
           <contentExtension pattern="org.eclipse.ui.navigator.resourceContent" />
           <contentExtension pattern="org.eclipse.ui.navigator.resources.filters.*"/>
           <contentExtension pattern="org.eclipse.ui.navigator.resources.linkHelper"/>
+          <contentExtension
+                pattern="org.eclipse.php.ui.navigator.linkHelper">
+          </contentExtension>
        </includes>
     </viewerContentBinding>
     
@@ -2474,26 +2602,34 @@
     </viewerActionBinding>
  </extension>
  
- <extension
-       point="org.eclipse.ui.navigator.navigatorContent">
-    <navigatorContent
-          activeByDefault="true"
-          contentProvider="org.eclipse.php.internal.ui.navigator.PHPNavigatorContentProvider"
-          icon="icons/full/goto_phpRes_16.png"
-          id="org.eclipse.php.ui.phpContent"
-          labelProvider="org.eclipse.php.internal.ui.navigator.PHPNavigatorLabelProvider"
-          name="PHP Elements"
-          priority="normal">			
-          
-          <triggerPoints>
-          		<or>
-					<adapt type="org.eclipse.core.resources.IFile">
-						<test property="org.eclipse.core.resources.contentTypeId " value="org.eclipse.php.core.phpsource"/>
+<extension point="org.eclipse.ui.navigator.navigatorContent">
+	<navigatorContent
+		activeByDefault="true"
+		contentProvider="org.eclipse.php.internal.ui.navigator.PHPNavigatorContentProvider"
+		icon="icons/full/goto_phpRes_16.png"
+		id="org.eclipse.php.ui.phpContent"
+		labelProvider="org.eclipse.php.internal.ui.navigator.PHPNavigatorLabelProvider"
+		name="PHP Elements"
+		priority="normal">
+
+			<triggerPoints>
+				<or>
+					<adapt type="org.eclipse.core.resources.IProject">
+						<test property="org.eclipse.core.resources.projectNature" value="org.eclipse.php.core.PHPNature"/>
 					</adapt>
-					<instanceof value="org.eclipse.dltk.core.IMember" />
+					<adapt type="org.eclipse.core.resources.IFile">
+							<test property="org.eclipse.core.resources.contentTypeId " value="org.eclipse.php.core.phpsource"/>
+					</adapt>
+					<instanceof value="org.eclipse.dltk.core.IScriptFolder" />
 					<instanceof value="org.eclipse.dltk.internal.ui.model.ScriptModelProvider"/>
 				</or>
 			</triggerPoints>
+			
+			<possibleChildren>
+				<instanceof value="org.eclipse.dltk.core.IScriptFolder" />
+				<instanceof value="org.eclipse.core.resources.IFile"/>
+			</possibleChildren>
+			
 			<actionProvider 
 				class="org.eclipse.dltk.internal.ui.navigator.ScriptExplorerActionProvider"
 				id="org.eclipse.php.ui.navigator.actions.ViewActions">
@@ -2507,27 +2643,134 @@
 					</or>
 				</enablement>
 			</actionProvider>
-			<commonSorter
-					class="org.eclipse.dltk.ui.ModelElementSorter"
-					id="org.eclipse.dltk.ui.modelElementorg.eclipse.internal.ui.navigator.ScriptDropAssistanteAlwaysRegardlessOfSuppressedExt">
-					 <parentExpression>
-	               <or>
-						<adapt type="org.eclipse.core.resources.IFile">
-							<test property="org.eclipse.core.resources.projectNature" value="org.eclipse.php.core.phpsource"/>
+			
+			<actionProvider
+				class="org.eclipse.dltk.internal.ui.navigator.ScriptExplorerOpenActionProvider"
+				id="org.eclipse.php.ui.navigator.actions.OpenActions"
+				overrides="org.eclipse.ui.navigator.resources.OpenActions"> 
+				<enablement>
+					<or>
+						<and>
+							<instanceof	value="org.eclipse.core.resources.IResource" />
+							<adapt type="org.eclipse.core.resources.IProject">
+								<test property="org.eclipse.core.resources.projectNature" value="org.eclipse.php.core.PHPNature"/>
+							</adapt>
+						</and>
+						<instanceof value="org.eclipse.dltk.core.IModelElement" />
+					</or>
+				</enablement>
+			</actionProvider>
+			
+			<actionProvider
+					class="org.eclipse.php.internal.ui.navigator.PHPNavigatorRefactorActionProvider"
+					id="org.eclipse.php.ui.navigator.actions.RefactorActions"
+					overrides="org.eclipse.ui.navigator.resources.actions.RefactorActions"> 
+				<enablement>
+					<or>
+						<adapt type="org.eclipse.core.resources.IProject">
+							<test property="org.eclipse.core.resources.projectNature" value="org.eclipse.php.core.PHPNature"/>
 						</adapt>
-	                  <instanceof value="org.eclipse.dltk.core.IMember"/>
-	                  <instanceof value="org.eclipse.dltk.internal.ui.model.ScriptModelProvider"/>
-	               </or>
-	            </parentExpression>
+						<adapt type="org.eclipse.core.resources.IFile">
+							<test property="org.eclipse.core.resources.contentTypeId " value="org.eclipse.php.core.phpsource"/>
+						</adapt>
+						<instanceof value="org.eclipse.dltk.core.IModelElement" />
+					</or>
+				</enablement>
+			</actionProvider>
+			
+			<actionProvider
+					class="org.eclipse.php.internal.ui.navigator.PHPNavigatorFileOperationActionProvider"
+					id="org.eclipse.php.ui.navigator.actions.FileOperationActions"> 
+				<enablement>
+					<or>
+						<instanceof value="org.eclipse.dltk.core.IScriptFolder" />
+						<instanceof value="org.eclipse.dltk.core.ISourceModule" />
+					</or>
+				</enablement>
+			</actionProvider>
+			
+			<actionProvider
+				class="org.eclipse.php.internal.ui.actions.LibraryFolderActionGroup"
+				id="org.eclipse.php.ui.navigator.actions.LibraryFolderActions">
+				<enablement>
+					<or>
+						<instanceof value="org.eclipse.dltk.core.IScriptFolder" />
+					</or>
+				</enablement>
+			</actionProvider>
+			
+			<commonSorter
+					class="org.eclipse.php.internal.ui.explorer.PHPExplorerElementSorter"
+					id="org.eclipse.dltk.ui.modelElementorg.eclipse.internal.ui.navigator.ScriptDropAssistanteAlwaysRegardlessOfSuppressedExt">
+					<parentExpression>
+						<or>
+							<adapt type="org.eclipse.core.resources.IProject">
+								<test property="org.eclipse.core.resources.projectNature" value="org.eclipse.php.core.PHPNature"/>
+							</adapt>
+							<adapt type="org.eclipse.core.resources.IFile">
+								<test property="org.eclipse.core.resources.projectNature" value="org.eclipse.php.core.phpsource"/>
+							</adapt>
+							<instanceof value="org.eclipse.dltk.core.IScriptFolder" />
+							<instanceof value="org.eclipse.php.internal.core.includepath.IncludePath"/>
+							<instanceof value="org.eclipse.dltk.internal.ui.model.ScriptModelProvider"/>
+						</or>
+					</parentExpression>
 			</commonSorter>
-			<override
-               policy="InvokeAlwaysRegardlessOfSuppressedExt"
-               suppressedExtensionId="org.eclipse.team.ui.resourceContent"/>
-			<possibleChildren>
-				<instanceof	value="org.eclipse.dltk.core.IMember" />
-			</possibleChildren>
+			<override policy="InvokeAlwaysRegardlessOfSuppressedExt"
+				suppressedExtensionId="org.eclipse.ui.navigator.resourceContent"/>
+				
+			<commonWizard menuGroupId="org.eclipse.php.project.ui"
+				type="new" wizardId="org.eclipse.php.ui.wizards.PHPFileCreationWizard">
+      			<enablement>
+      				<or>
+						<adapt type="org.eclipse.core.resources.IProject">
+							<test property="org.eclipse.core.resources.projectNature" value="org.eclipse.php.core.PHPNature"/>
+						</adapt>
+						<instanceof value="org.eclipse.dltk.core.IModelElement"/>
+	               </or>
+      			</enablement>
+			</commonWizard>
+   			<commonWizard
+         		menuGroupId="org.eclipse.php.project.ui"
+         		type="new"
+         		wizardId="org.eclipse.php.ui.wizards.UntitledPHPDocumentWizard">
+      			<enablement>
+         			<or>
+            			<adapt type="org.eclipse.core.resources.IProject">
+               				<test
+                     			property="org.eclipse.core.resources.projectNature"
+                     			value="org.eclipse.php.core.PHPNature">
+               				</test>
+            			</adapt>
+			            <instanceof
+			                  value="org.eclipse.dltk.core.IModelElement">
+			            </instanceof>
+        			</or>
+				</enablement>
+			</commonWizard>
+
+			<commonWizard
+				type="new"
+				wizardId="org.eclipse.ui.wizards.new.folder">
+				<enablement>
+					<or>
+						<instanceof value="org.eclipse.dltk.core.IScriptFolder" />
+						<instanceof value="org.eclipse.dltk.core.ISourceModule" />
+					</or>
+				</enablement>
+			</commonWizard>
+			<commonWizard
+				type="new"
+				wizardId="org.eclipse.ui.wizards.new.file">
+				<enablement>
+					<or>
+						<instanceof value="org.eclipse.dltk.core.IScriptFolder" />
+						<instanceof value="org.eclipse.dltk.core.ISourceModule" />
+					</or>
+				</enablement>
+			</commonWizard>	
+		</navigatorContent>
 		
-	    </navigatorContent>
    		<commonFilter
 		        activeByDefault="false"
 		        class="org.eclipse.dltk.internal.ui.filters.EmptyPackageFilter"
@@ -2572,6 +2815,20 @@
             class="org.eclipse.dltk.internal.ui.filters.ImportDeclarationFilter"
             id="org.eclipse.php.ui.navigator.filtersr.ImportDeclarationFilter" />
  	</extension>
+	<extension
+	       point="org.eclipse.ui.navigator.linkHelper">
+	    <linkHelper
+	          class="org.eclipse.php.internal.ui.navigator.PHPNavigatorLinkHelper"
+	          id="org.eclipse.php.ui.navigator.linkHelper">
+			<editorInputEnablement>
+			</editorInputEnablement>
+	        <selectionEnablement>
+	            <instanceof
+	                  value="org.eclipse.dltk.core.IModelElement">
+	            </instanceof>
+	        </selectionEnablement>
+	    </linkHelper>
+	</extension>
  
 	<extension point="org.eclipse.php.ui.quickAssistProcessors">
 		<quickAssistProcessor
@@ -2580,6 +2837,14 @@
 			class="org.eclipse.php.internal.ui.quickassist.VarCommentQuickAssistProcessor">
 			<command id="org.eclipse.php.ui.insertVarComment"/>
 		</quickAssistProcessor>
+	      <quickAssistProcessor
+	            id="org.eclipse.php.ui.quickassist.assignToLocalQuickAssistProcessor"
+	            name="%assignToLocalQuickAssitProcessor.name"
+	            class="org.eclipse.php.internal.ui.quickassist.AssignToLocalQuickAssistProcessor">
+	            <command
+	                  id="org.eclipse.php.internal.ui.assignToLocal.assist">
+	            </command>
+	      </quickAssistProcessor>
 	</extension>
 	<extension
 	       point="org.eclipse.php.ui.quickFixProcessors">
@@ -2599,5 +2864,13 @@
            class="org.eclipse.php.internal.ui.text.correction.CorrectionMarkerResolutionGenerator"
            markerType="org.eclipse.php.core.phpproblemmarker">
       </markerResolutionGenerator>
+   </extension>
+   <extension
+         point="org.eclipse.dltk.ui.modelCompareProvider">
+      <modelCompareProvider
+            class="org.eclipse.php.internal.ui.navigator.PHPNavigatorModelCompareProvider"
+            id="org.eclipse.php.ui.modelCompareProvider"
+            language="org.eclipse.php.core.PHPNature">
+      </modelCompareProvider>
    </extension>
 </plugin>

@@ -15,7 +15,9 @@ import java.lang.reflect.Field;
 import java.util.ArrayList;
 
 import org.eclipse.dltk.compiler.problem.CategorizedProblem;
+import org.eclipse.dltk.compiler.problem.DefaultProblem;
 import org.eclipse.dltk.compiler.problem.IProblem;
+import org.eclipse.dltk.compiler.problem.IProblemIdentifierExtension;
 import org.eclipse.swt.graphics.Image;
 
 /**
@@ -31,37 +33,31 @@ public class ProblemNode extends ASTAttribute {
 		fProblem= problem;
 	}
 	
-	/* (non-Javadoc)
-	 * @see org.eclipse.php.astview.views.ASTAttribute#getParent()
-	 */
 	public Object getParent() {
 		return fParent;
 	}
 
-	/* (non-Javadoc)
-	 * @see org.eclipse.php.astview.views.ASTAttribute#getChildren()
-	 */
 	public Object[] getChildren() {
 		String[] arguments= fProblem.getArguments();
-		ArrayList children= new ArrayList();
+		ArrayList<GeneralAttribute> children= new ArrayList<GeneralAttribute>();
 		
 		children.add(new GeneralAttribute(this, "CONSTANT NAME", getConstantName()));
 		children.add(new GeneralAttribute(this, "ID", getErrorLabel()));
-		// TODO check this out for CONFIGURABLE SEVERITY
-//		children.add(new GeneralAttribute(this, "OPTION FOR CONFIGURABLE SEVERITY", DLTKCore.getOptionForConfigurableSeverity(fProblem.getID())));
-		if (fProblem instanceof CategorizedProblem) {
-			children.add(new GeneralAttribute(this, "CATEGORY ID", getCategoryCode()));
-			children.add(new GeneralAttribute(this, "MARKER TYPE", ((CategorizedProblem) fProblem).getMarkerType()));
+		children.add(new GeneralAttribute(this, "CATEGORY ID", getCategoryCode()));
+		String markerType = fProblem.isTask() ? DefaultProblem.MARKER_TYPE_TASK : DefaultProblem.MARKER_TYPE_PROBLEM;
+		if (fProblem.getID() instanceof IProblemIdentifierExtension) {
+			String tmp = ((IProblemIdentifierExtension)fProblem.getID()).getMarkerType();
+			if (tmp != null) {
+				markerType = tmp;
+			}
 		}
+		children.add(new GeneralAttribute(this, "MARKER TYPE", markerType)); //$NON-NLS-1$
 		for (int i= 0; i < arguments.length; i++) {
 			children.add(new GeneralAttribute(this, "ARGUMENT " + i, arguments[i]));
 		}
 		return children.toArray();
 	}
 
-	/* (non-Javadoc)
-	 * @see org.eclipse.php.astview.views.ASTAttribute#getLabel()
-	 */
 	public String getLabel() {
 		StringBuffer buf= new StringBuffer();
 		int offset= fProblem.getSourceStart();
@@ -200,9 +196,6 @@ public class ProblemNode extends ASTAttribute {
 		return buf.toString();
 	}
 	
-	/* (non-Javadoc)
-	 * @see org.eclipse.php.astview.views.ASTAttribute#getImage()
-	 */
 	public Image getImage() {
 		return null;
 	}
@@ -221,9 +214,6 @@ public class ProblemNode extends ASTAttribute {
 		return fProblem.getSourceEnd() + 1 - fProblem.getSourceStart();
 	}
 
-	/*
-	 * @see java.lang.Object#equals(java.lang.Object)
-	 */
 	public boolean equals(Object obj) {
 		if (this == obj)
 			return true;

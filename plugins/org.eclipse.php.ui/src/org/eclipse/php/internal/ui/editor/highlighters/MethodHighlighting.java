@@ -172,8 +172,8 @@ public class MethodHighlighting extends AbstractSemanticHighlighting {
 	}
 
 	@Override
-	public void initDefaultPreferences() {
-		getStyle().setEnabledByDefault(false);
+	protected void initDefaultPreferences() {
+		getStyle().setEnabledByDefault(true);
 	}
 
 	public String getDisplayName() {

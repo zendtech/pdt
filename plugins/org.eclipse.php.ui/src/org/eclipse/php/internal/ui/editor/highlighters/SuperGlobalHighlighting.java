@@ -50,8 +50,8 @@ public class SuperGlobalHighlighting extends AbstractSemanticHighlighting {
 	}
 
 	@Override
-	public void initDefaultPreferences() {
-		getStyle().setEnabledByDefault(false).setDefaultTextColor(127, 0, 85).setBoldByDefault(true);
+	protected void initDefaultPreferences() {
+		getStyle().setEnabledByDefault(true).setDefaultTextColor(127, 0, 85).setBoldByDefault(true);
 	}
 
 	public String getDisplayName() {

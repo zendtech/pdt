@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2009, 2015 IBM Corporation and others.
+ * Copyright (c) 2009, 2015, 2016 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -15,12 +15,12 @@ import java.util.*;
 import java.util.Map.Entry;
 
 import org.eclipse.dltk.core.*;
-import org.eclipse.dltk.evaluation.types.MultiTypeType;
 import org.eclipse.dltk.ti.GoalState;
 import org.eclipse.dltk.ti.goals.IGoal;
 import org.eclipse.dltk.ti.types.IEvaluatedType;
 import org.eclipse.php.internal.core.compiler.ast.nodes.PHPDocBlock;
 import org.eclipse.php.internal.core.compiler.ast.nodes.PHPDocTag;
+import org.eclipse.php.internal.core.compiler.ast.nodes.PHPDocTag.TagKind;
 import org.eclipse.php.internal.core.typeinference.IModelAccessCache;
 import org.eclipse.php.internal.core.typeinference.PHPModelUtils;
 import org.eclipse.php.internal.core.typeinference.PHPTypeInferenceUtils;
@@ -92,7 +92,7 @@ public class PHPDocClassVariableEvaluator extends AbstractPHPGoalEvaluator {
 
 			IModelElement space = currentNamespace != null ? currentNamespace : typeField.getSourceModule();
 
-			for (PHPDocTag tag : doc.getTags(PHPDocTag.VAR)) {
+			for (PHPDocTag tag : doc.getTags(TagKind.VAR)) {
 				// do it like for
 				// PHPDocumentationContentAccess#handleBlockTags(List tags):
 				// variable name can be optional, but if present keep only
@@ -118,14 +118,6 @@ public class PHPDocClassVariableEvaluator extends AbstractPHPGoalEvaluator {
 			evaluated.add((IEvaluatedType) result);
 		}
 		return IGoal.NO_GOALS;
-	}
-
-	/**
-	 * 
-	 * @deprecated will be removed in Mars
-	 */
-	public static MultiTypeType getArrayType(String type, IType currentNamespace, int offset) {
-		return PHPEvaluationUtils.getArrayType(type, currentNamespace, offset);
 	}
 
 }

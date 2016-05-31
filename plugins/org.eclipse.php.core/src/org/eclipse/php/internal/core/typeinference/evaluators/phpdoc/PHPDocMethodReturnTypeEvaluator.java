@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2009, 2015 IBM Corporation and others.
+ * Copyright (c) 2009, 2015, 2016 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -27,7 +27,7 @@ import org.eclipse.dltk.ti.types.IEvaluatedType;
 import org.eclipse.php.internal.core.Logger;
 import org.eclipse.php.internal.core.compiler.ast.nodes.PHPDocBlock;
 import org.eclipse.php.internal.core.compiler.ast.nodes.PHPDocTag;
-import org.eclipse.php.internal.core.compiler.ast.nodes.PHPDocTagKinds;
+import org.eclipse.php.internal.core.compiler.ast.nodes.PHPDocTag.TagKind;
 import org.eclipse.php.internal.core.index.IPHPDocAwareElement;
 import org.eclipse.php.internal.core.typeinference.IModelAccessCache;
 import org.eclipse.php.internal.core.typeinference.PHPModelUtils;
@@ -73,10 +73,13 @@ public class PHPDocMethodReturnTypeEvaluator extends AbstractMethodReturnTypeEva
 				typeNames = returnTypeList.toArray(new String[returnTypeList.size()]);
 			}
 			if (typeNames != null) {
-				AbstractMethodReturnTypeGoal goal = (AbstractMethodReturnTypeGoal) getGoal();
-				IModelElement space = currentNamespace != null ? currentNamespace : method.getSourceModule();
-				evaluated.addAll(Arrays.asList(PHPEvaluationUtils.evaluatePHPDocType(typeNames, space,
-						PHPModelUtils.getDocBlock(method).sourceStart(), goal.getTypes())));
+				PHPDocBlock docBlock = PHPModelUtils.getDocBlock(method);
+				if (docBlock != null) {
+					AbstractMethodReturnTypeGoal goal = (AbstractMethodReturnTypeGoal) getGoal();
+					IModelElement space = currentNamespace != null ? currentNamespace : method.getSourceModule();
+					evaluated.addAll(Arrays.asList(PHPEvaluationUtils.evaluatePHPDocType(typeNames, space,
+							docBlock.sourceStart(), goal.getTypes())));
+				}
 			}
 		}
 
@@ -84,8 +87,8 @@ public class PHPDocMethodReturnTypeEvaluator extends AbstractMethodReturnTypeEva
 	}
 
 	private void evaluateReturnType(List<String> returnTypeList, PHPDocBlock docBlock, IMethod method) {
-		PHPDocTag[] tags = docBlock.getTags(PHPDocTagKinds.RETURN);
-		PHPDocTag[] inherit = docBlock.getTags(PHPDocTagKinds.INHERITDOC);
+		PHPDocTag[] tags = docBlock.getTags(TagKind.RETURN);
+		PHPDocTag[] inherit = docBlock.getTags(TagKind.INHERITDOC);
 
 		if (inherit.length == 1) {
 			IType type = method.getDeclaringType();

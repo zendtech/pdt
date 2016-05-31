@@ -120,46 +120,6 @@ public class PHPCompletionEngine extends ScriptCompletionEngine implements IComp
 		}
 	}
 
-	private int nextKeywordRelevance() {
-		int relevance = relevanceKeyword--;
-		if (relevance < 1) {
-			relevance = 1;
-		}
-		return relevance;
-	}
-
-	private int nextMethodRelevance() {
-		int relevance = relevanceMethod--;
-		if (relevance < 1) {
-			relevance = 1;
-		}
-		return relevance;
-	}
-
-	private int nextClassRelevance() {
-		int relevance = relevanceClass--;
-		if (relevance < 1) {
-			relevance = 1;
-		}
-		return relevance;
-	}
-
-	private int nextVariableRelevance() {
-		int relevance = relevanceVar--;
-		if (relevance < 1) {
-			relevance = 1;
-		}
-		return relevance;
-	}
-
-	private int nextConstantRelevance() {
-		int relevance = relevanceConst--;
-		if (relevance < 1) {
-			relevance = 1;
-		}
-		return relevance;
-	}
-
 	@Override
 	public void reportField(IField field, String suffix, ISourceRange replaceRange, boolean removeDollar) {
 		reportField(field, suffix, replaceRange, removeDollar, 0);

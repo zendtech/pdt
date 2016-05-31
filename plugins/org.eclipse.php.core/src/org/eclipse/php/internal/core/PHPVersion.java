@@ -20,11 +20,6 @@ import java.util.Map;
  */
 public enum PHPVersion {
 
-	/**
-	 * @deprecated support for PHP4 is removed, PHP5 parser/lexer will be used
-	 *             for backward compatibility
-	 */
-	PHP4("php4"), //$NON-NLS-1$
 	PHP5("php5"), //$NON-NLS-1$
 
 	/**
@@ -85,6 +80,27 @@ public enum PHPVersion {
 	 */
 	public static PHPVersion getLatestVersion() {
 		return PHPVersion.PHP7_0;
+	}
+
+	/**
+	 * Translate API PHPVersion to internal PHPVersion
+	 * 
+	 * @since 4.0
+	 * @param phpVersion
+	 * @return
+	 */
+	public static PHPVersion translate(org.eclipse.php.core.PHPVersion phpVersion) {
+		return PHPVersion.valueOf(phpVersion.name());
+	}
+
+	/**
+	 * Transform internal PHPVersion to API version
+	 * 
+	 * @since 4.0
+	 * @return
+	 */
+	public org.eclipse.php.core.PHPVersion toApi() {
+		return org.eclipse.php.core.PHPVersion.valueOf(name());
 	}
 
 }

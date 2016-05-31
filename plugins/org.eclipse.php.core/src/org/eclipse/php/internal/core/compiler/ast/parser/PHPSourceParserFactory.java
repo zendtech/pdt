@@ -17,8 +17,10 @@ import org.eclipse.dltk.ast.parser.ISourceParser;
 import org.eclipse.dltk.ast.parser.ISourceParserFactory;
 import org.eclipse.dltk.compiler.env.IModuleSource;
 import org.eclipse.dltk.compiler.problem.IProblemReporter;
+import org.eclipse.php.internal.core.CoreMessages;
 import org.eclipse.php.internal.core.PHPVersion;
 import org.eclipse.php.internal.core.project.ProjectOptions;
+import org.eclipse.php.internal.core.search.Messages;
 
 public class PHPSourceParserFactory extends AbstractSourceParser implements ISourceParserFactory, ISourceParser {
 
@@ -43,7 +45,12 @@ public class PHPSourceParserFactory extends AbstractSourceParser implements ISou
 		PHPVersion phpVersion = ProjectOptions.getPhpVersion(fileName);
 		AbstractPHPSourceParser parser = createParser(fileName, phpVersion);
 		if (parser == null) {
-			throw new IllegalStateException(Messages.PHPSourceParserFactory_0);
+			if (phpVersion == null) {
+				throw new IllegalStateException(CoreMessages.getString("UnknownPHPVersion_0")); //$NON-NLS-1$
+			} else {
+				throw new IllegalStateException(
+						Messages.format(CoreMessages.getString("UnknownPHPVersion_1"), phpVersion)); //$NON-NLS-1$
+			}
 		}
 		return parser;
 	}
@@ -57,9 +64,6 @@ public class PHPSourceParserFactory extends AbstractSourceParser implements ISou
 	 *         is incompatibleS
 	 */
 	public static AbstractPHPSourceParser createParser(String fileName, PHPVersion phpVersion) {
-		if (PHPVersion.PHP4 == phpVersion) {
-			return new org.eclipse.php.internal.core.compiler.ast.parser.php5.PhpSourceParser(fileName);
-		}
 		if (PHPVersion.PHP5 == phpVersion) {
 			return new org.eclipse.php.internal.core.compiler.ast.parser.php5.PhpSourceParser(fileName);
 		}
@@ -89,9 +93,6 @@ public class PHPSourceParserFactory extends AbstractSourceParser implements ISou
 	 *         is incompatibleS
 	 */
 	public static AbstractPHPSourceParser createParser(PHPVersion phpVersion) {
-		if (PHPVersion.PHP4 == phpVersion) {
-			return new org.eclipse.php.internal.core.compiler.ast.parser.php5.PhpSourceParser();
-		}
 		if (PHPVersion.PHP5 == phpVersion) {
 			return new org.eclipse.php.internal.core.compiler.ast.parser.php5.PhpSourceParser();
 		}
